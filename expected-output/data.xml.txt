@@ -20,8 +20,8 @@ data
           notifications
             [enabled]: true
     user
-      [id]: 2
       [active]: false
+      [id]: 2
       name = Charlie <Admin>
       email = charlie@example.com
       profile
