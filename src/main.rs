@@ -106,19 +106,37 @@ fn detect_format(content: &str, file_path: &str) -> InputFormat {
     InputFormat::Xml
 }
 
-fn convert_element_to_xml(element: ElementRef) -> XmlElement {
-    let name = element.value().name().to_string();
-    let mut xml_element = XmlElement::new(name);
+fn convert_element_to_xml(element: ElementRef, format: &InputFormat) -> XmlElement {
+    let element_name = element.value().name().to_string();
+    let mut name = element_name.clone();
+    let mut xml_element = XmlElement::new(name.clone());
 
     // Extract attributes
     for (attr_name, attr_value) in element.value().attrs() {
-        xml_element.attributes.insert(attr_name.to_string(), attr_value.to_string());
+        if *format == InputFormat::Html && attr_name == "class" {
+            // For HTML mode, attach classes to the element name
+            let classes: Vec<&str> = attr_value.split_whitespace().collect();
+            
+            // If it's a div with classes, omit the div part and just use .class1.class2
+            if element_name == "div" && !classes.is_empty() {
+                name = String::new();
+            }
+            
+            for class in classes {
+                name.push('.');
+                name.push_str(class);
+            }
+            xml_element.name = name.clone();
+        } else {
+            // For XML mode or non-class attributes, keep as regular attributes
+            xml_element.attributes.insert(attr_name.to_string(), attr_value.to_string());
+        }
     }
 
     // Process child elements first to know if we have any
     for child in element.children() {
         if let Some(child_element) = ElementRef::wrap(child) {
-            xml_element.children.push(convert_element_to_xml(child_element));
+            xml_element.children.push(convert_element_to_xml(child_element, format));
         }
     }
 
@@ -140,7 +158,7 @@ fn convert_element_to_xml(element: ElementRef) -> XmlElement {
     xml_element
 }
 
-fn parse_html(content: &str) -> Result<Vec<XmlElement>> {
+fn parse_html(content: &str, format: &InputFormat) -> Result<Vec<XmlElement>> {
     let document = Html::parse_document(content);
     let mut root_elements = Vec::new();
     
@@ -154,7 +172,7 @@ fn parse_html(content: &str) -> Result<Vec<XmlElement>> {
 
     // First try to find html element
     if let Some(html_element) = document.select(&selector).next() {
-        root_elements.push(convert_element_to_xml(html_element));
+        root_elements.push(convert_element_to_xml(html_element, format));
     } else {
         // Fallback: get all top-level elements
         let all_selector = Selector::parse("body > *, html > *").unwrap_or_else(|_| {
@@ -168,7 +186,7 @@ fn parse_html(content: &str) -> Result<Vec<XmlElement>> {
             });
             
             if is_root {
-                root_elements.push(convert_element_to_xml(element));
+                root_elements.push(convert_element_to_xml(element, format));
             }
         }
     }
@@ -177,14 +195,12 @@ fn parse_html(content: &str) -> Result<Vec<XmlElement>> {
     if root_elements.is_empty() {
         let fallback_selector = Selector::parse("*").unwrap();
         for element in document.select(&fallback_selector).take(1) {
-            root_elements.push(convert_element_to_xml(element));
+            root_elements.push(convert_element_to_xml(element, format));
         }
     }
 
     Ok(root_elements)
 }
-
-
 
 fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
     let mut reader = Reader::from_str(content);
@@ -286,7 +302,7 @@ fn main() -> Result<()> {
 
     // Parse the content based on detected/specified format
     let elements = match format {
-        InputFormat::Html => parse_html(&content).context("Failed to parse HTML")?,
+        InputFormat::Html => parse_html(&content, &format).context("Failed to parse HTML")?,
         InputFormat::Xml => parse_xml(&content).context("Failed to parse XML")?,
     };
 

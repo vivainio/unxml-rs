@@ -13,41 +13,36 @@ html
         input, textarea, select { width: 100%; padding: 8px; }
         button { padding: 10px 20px; background: #007cba; color: white; border: none; cursor: pointer; }
   body
-    div
-      [class]: container
+    .container
       h1 = Contact Us
       form
-        [action]: /submit
         [id]: contactForm
+        [action]: /submit
         [method]: POST
-        div
-          [class]: form-group
+        .form-group
           label
             [for]: name = Full Name:
           input
-            [required]: 
             [name]: name
             [type]: text
             [id]: name
-        div
-          [class]: form-group
+            [required]: 
+        .form-group
           label
             [for]: email = Email Address:
           input
-            [required]: 
             [id]: email
             [type]: email
             [name]: email
-        div
-          [class]: form-group
+            [required]: 
+        .form-group
           label
             [for]: phone = Phone Number:
           input
-            [name]: phone
-            [id]: phone
             [type]: tel
-        div
-          [class]: form-group
+            [id]: phone
+            [name]: phone
+        .form-group
           label
             [for]: subject = Subject:
           select
@@ -64,27 +59,24 @@ html
               [value]: billing = Billing Question
             option
               [value]: other = Other
-        div
-          [class]: form-group
+        .form-group
           label
             [for]: message = Message:
           textarea
             [rows]: 5
-            [id]: message
             [name]: message
             [required]: 
             [placeholder]: Please enter your message here...
-        div
-          [class]: form-group
+            [id]: message
+        .form-group
           input
-            [id]: newsletter
-            [name]: newsletter
             [value]: yes
+            [name]: newsletter
+            [id]: newsletter
             [type]: checkbox
           label
             [for]: newsletter = Subscribe to our newsletter
-        div
-          [class]: form-group
+        .form-group
           button
             [type]: submit = Send Message
           button
