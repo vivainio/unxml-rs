@@ -36,6 +36,7 @@ class TestRunner:
         self.failed_files = []
         self.changed_files = []
         self.new_files = []
+        self.unxml_cmd = None  # Will be set after building the binary
         
         # Ensure sample directory exists
         if not self.sample_dir.exists():
@@ -81,46 +82,48 @@ class TestRunner:
             print(f"{Colors.YELLOW}Warning: Could not load expected output file {output_file}: {e}{Colors.RESET}")
             return None
     
+    def build_binary(self) -> None:
+        """Build a fresh binary to ensure we're testing the latest code"""
+        print(f"{Colors.BOLD}Building fresh binary...{Colors.RESET}", end=" ", flush=True)
+        
+        # First try to build release version
+        try:
+            result = subprocess.run(["cargo", "build", "--release"], check=True, capture_output=True)
+            print(f"{Colors.GREEN}✓ (release){Colors.RESET}")
+            if Path("target/release/unxml.exe").exists():
+                self.unxml_cmd = ["target/release/unxml.exe"]
+            elif Path("target/release/unxml").exists():
+                self.unxml_cmd = ["target/release/unxml"]
+        except subprocess.CalledProcessError as e:
+            print(f"{Colors.YELLOW}Release failed, trying debug...{Colors.RESET}", end=" ", flush=True)
+            # Fallback to debug build
+            try:
+                subprocess.run(["cargo", "build"], check=True, capture_output=True)
+                print(f"{Colors.GREEN}✓ (debug){Colors.RESET}")
+                if Path("target/debug/unxml.exe").exists():
+                    self.unxml_cmd = ["target/debug/unxml.exe"]
+                elif Path("target/debug/unxml").exists():
+                    self.unxml_cmd = ["target/debug/unxml"]
+            except subprocess.CalledProcessError as debug_error:
+                print(f"{Colors.RED}✗{Colors.RESET}")
+                release_error_msg = e.stderr.decode() if e.stderr else 'Unknown error'
+                debug_error_msg = debug_error.stderr.decode() if debug_error.stderr else 'Unknown error'
+                raise RuntimeError(f"Failed to build unxml binary.\nRelease build error: {release_error_msg}\nDebug build error: {debug_error_msg}")
+        
+        if not self.unxml_cmd:
+            raise RuntimeError("Could not find built unxml binary after successful build")
+    
     def run_unxml(self, file_path: Path) -> Tuple[str, str, int]:
         """
         Run the unxml tool on a file and return stdout, stderr, and return code
         """
         try:
-            # Build the unxml command - assuming it's built in target/release or target/debug
-            # Handle both Unix and Windows executables
-            unxml_cmd = None
-            if Path("target/release/unxml.exe").exists():
-                unxml_cmd = ["target/release/unxml.exe"]
-            elif Path("target/release/unxml").exists():
-                unxml_cmd = ["target/release/unxml"]
-            elif Path("target/debug/unxml.exe").exists():
-                unxml_cmd = ["target/debug/unxml.exe"]
-            elif Path("target/debug/unxml").exists():
-                unxml_cmd = ["target/debug/unxml"]
-            else:
-                # Try to find it in PATH or build it
-                try:
-                    subprocess.run(["cargo", "build", "--release"], check=True, capture_output=True)
-                    if Path("target/release/unxml.exe").exists():
-                        unxml_cmd = ["target/release/unxml.exe"]
-                    elif Path("target/release/unxml").exists():
-                        unxml_cmd = ["target/release/unxml"]
-                except subprocess.CalledProcessError:
-                    # Fallback to debug build
-                    try:
-                        subprocess.run(["cargo", "build"], check=True, capture_output=True)
-                        if Path("target/debug/unxml.exe").exists():
-                            unxml_cmd = ["target/debug/unxml.exe"]
-                        elif Path("target/debug/unxml").exists():
-                            unxml_cmd = ["target/debug/unxml"]
-                    except subprocess.CalledProcessError:
-                        raise RuntimeError("Failed to build unxml binary")
-            
-            if not unxml_cmd:
-                raise RuntimeError("Could not find or build unxml binary")
+            # Ensure binary is built
+            if not self.unxml_cmd:
+                raise RuntimeError("Binary not built. Call build_binary() first.")
             
             # Add the file path as argument
-            cmd = unxml_cmd + [str(file_path)]
+            cmd = self.unxml_cmd + [str(file_path)]
             
             result = subprocess.run(
                 cmd,
@@ -167,6 +170,10 @@ class TestRunner:
         print(f"Expected output directory: {self.output_dir}")
         print(f"Baseline file: {self.baseline_file}")
         print("-" * 60)
+        
+        # Build fresh binary first
+        self.build_binary()
+        print()
         
         test_files = self.find_test_files()
         if not test_files:
