@@ -4,8 +4,7 @@ configuration
     port = 5432
     username = admin
     password = secret123
-    ssl
-      [enabled]: true
+    ssl [enabled]: true
       cert-path = /path/to/cert.pem
       key-path = /path/to/key.pem
   logging
@@ -19,22 +18,20 @@ configuration
       [name]: authentication
       [enabled]: true
     feature
-      [name]: caching
       [enabled]: false
+      [name]: caching
     feature
-      [name]: monitoring
       [enabled]: true
+      [name]: monitoring
   servers
-    server
-      [type]: web
+    server [type]: web
       name = web-01
       ip = 192.168.1.10
       resources
         cpu = 4
         memory = 8192
         disk = 500
-    server
-      [type]: api
+    server [type]: api
       name = api-01
       ip = 192.168.1.11
       resources

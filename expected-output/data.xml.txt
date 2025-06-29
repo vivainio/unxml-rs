@@ -8,34 +8,27 @@ data
       profile
         bio = Software engineer with 5+ years of experience
         skills
-          skill
-            [level]: expert = JavaScript
-          skill
-            [level]: intermediate = Python
-          skill
-            [level]: beginner = Rust
+          skill [level]: expert = JavaScript
+          skill [level]: intermediate = Python
+          skill [level]: beginner = Rust
         preferences
           theme = dark
           language = en
-          notifications
-            [enabled]: true
+          notifications [enabled]: true
     user
-      [id]: 2
       [active]: false
+      [id]: 2
       name = Charlie <Admin>
       email = charlie@example.com
       profile
         bio
         skills
-          skill
-            [level]: expert = C++
-          skill
-            [level]: expert = Assembly
+          skill [level]: expert = C++
+          skill [level]: expert = Assembly
         preferences
           theme = light
           language = fr
-          notifications
-            [enabled]: false
+          notifications [enabled]: false
   statistics
     total-users = 2
     active-users = 1

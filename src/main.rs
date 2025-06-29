@@ -48,8 +48,15 @@ impl XmlElement {
 
         // Attributes in [square brackets]
         if !self.attributes.is_empty() {
-            for (key, value) in &self.attributes {
-                result.push_str(&format!("\n{indent_str}  [{key}]: {value}"));
+            if self.attributes.len() == 1 {
+                // Single attribute: put on same line as element name
+                let (key, value) = self.attributes.iter().next().unwrap();
+                result.push_str(&format!(" [{key}]: {value}"));
+            } else {
+                // Multiple attributes: put each on separate line
+                for (key, value) in &self.attributes {
+                    result.push_str(&format!("\n{indent_str}  [{key}]: {value}"));
+                }
             }
         }
 
