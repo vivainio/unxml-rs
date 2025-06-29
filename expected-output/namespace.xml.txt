@@ -3,8 +3,8 @@ root
   [xmlns]: http://example.com/default
   [xmlns:custom]: http://example.com/custom
   item
-    [custom:type]: product
     [custom:id]: 1
+    [custom:type]: product
     name = Default Namespace Item
     custom:metadata
       custom:category = electronics
@@ -14,8 +14,8 @@ root
   custom:special-item [xsi:type]: custom:SpecialType
     custom:properties
       custom:property
-        [value]: blue
         [name]: color
+        [value]: blue
       custom:property
         [name]: size
         [value]: large

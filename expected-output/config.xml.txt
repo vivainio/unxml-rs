@@ -21,8 +21,8 @@ configuration
       [enabled]: false
       [name]: caching
     feature
-      [enabled]: true
       [name]: monitoring
+      [enabled]: true
   servers
     server [type]: web
       name = web-01
