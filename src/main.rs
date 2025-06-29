@@ -6,7 +6,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use quick_xml::Reader;
 use quick_xml::events::Event;
-use scraper::{Html, ElementRef, Selector};
+use scraper::{ElementRef, Html, Selector};
 
 #[derive(Parser)]
 #[command(name = "unxml")]
@@ -15,7 +15,7 @@ use scraper::{Html, ElementRef, Selector};
 struct Cli {
     /// XML or HTML file to process
     file: String,
-    
+
     /// Force input format (xml or html). If not specified, format is auto-detected
     #[arg(short, long)]
     format: Option<String>,
@@ -51,45 +51,60 @@ impl XmlElement {
             // Separate boolean attributes from others
             // Boolean attributes are any empty-valued attributes EXCEPT those commonly used with empty values
             let non_boolean_empty_attrs = [
-                "value", "alt", "title", "placeholder", "data-", "aria-", "content", "href", "src"
+                "value",
+                "alt",
+                "title",
+                "placeholder",
+                "data-",
+                "aria-",
+                "content",
+                "href",
+                "src",
             ];
-            
-            let mut boolean_attrs: Vec<_> = self.attributes.iter()
+
+            let mut boolean_attrs: Vec<_> = self
+                .attributes
+                .iter()
                 .filter(|(key, value)| {
-                    value.is_empty() && !non_boolean_empty_attrs.iter().any(|&prefix| {
-                        if prefix.ends_with('-') {
-                            key.starts_with(prefix)
-                        } else {
-                            key.as_str() == prefix
-                        }
-                    })
+                    value.is_empty()
+                        && !non_boolean_empty_attrs.iter().any(|&prefix| {
+                            if prefix.ends_with('-') {
+                                key.starts_with(prefix)
+                            } else {
+                                key.as_str() == prefix
+                            }
+                        })
                 })
                 .collect();
-            let mut non_boolean_attrs: Vec<_> = self.attributes.iter()
+            let mut non_boolean_attrs: Vec<_> = self
+                .attributes
+                .iter()
                 .filter(|(key, value)| {
-                    !value.is_empty() || non_boolean_empty_attrs.iter().any(|&prefix| {
-                        if prefix.ends_with('-') {
-                            key.starts_with(prefix)
-                        } else {
-                            key.as_str() == prefix
-                        }
-                    })
+                    !value.is_empty()
+                        || non_boolean_empty_attrs.iter().any(|&prefix| {
+                            if prefix.ends_with('-') {
+                                key.starts_with(prefix)
+                            } else {
+                                key.as_str() == prefix
+                            }
+                        })
                 })
                 .collect();
-            
+
             // Sort boolean attributes for deterministic output
             boolean_attrs.sort_by_key(|(key, _)| *key);
-            
+
             // Add boolean attributes first, on the same line as element name
             for (key, _) in boolean_attrs {
                 result.push_str(&format!(" [{key}]"));
             }
-            
+
             // Handle non-boolean attributes
             if !non_boolean_attrs.is_empty() {
                 // Check for important HTML attributes that should be on the same line
-                let important_attr = self.get_important_html_attribute_from_attrs(&non_boolean_attrs);
-                
+                let important_attr =
+                    self.get_important_html_attribute_from_attrs(&non_boolean_attrs);
+
                 if non_boolean_attrs.len() == 1 {
                     // Single non-boolean attribute: put on same line as element name (after boolean attrs)
                     let (key, value) = non_boolean_attrs.iter().next().unwrap();
@@ -97,20 +112,21 @@ impl XmlElement {
                 } else if let Some((key, value)) = important_attr {
                     // Multiple non-boolean attributes but has important one: put important one on same line
                     result.push_str(&format!(" [{key}]: {value}"));
-                    
+
                     // Put remaining non-boolean attributes on separate lines (sorted for deterministic output)
-                    let mut remaining_attrs: Vec<_> = non_boolean_attrs.iter()
+                    let mut remaining_attrs: Vec<_> = non_boolean_attrs
+                        .iter()
                         .filter(|(attr_key, _)| *attr_key != &key)
                         .collect();
                     remaining_attrs.sort_by_key(|(key, _)| *key);
-                    
+
                     for (attr_key, attr_value) in remaining_attrs {
                         result.push_str(&format!("\n{indent_str}  [{attr_key}]: {attr_value}"));
                     }
                 } else {
                     // Multiple non-boolean attributes with no important ones: put each on separate line (sorted for deterministic output)
                     non_boolean_attrs.sort_by_key(|(key, _)| *key);
-                    
+
                     for (key, value) in non_boolean_attrs {
                         result.push_str(&format!("\n{indent_str}  [{key}]: {value}"));
                     }
@@ -157,7 +173,10 @@ impl XmlElement {
         None
     }
 
-    fn get_important_html_attribute_from_attrs(&self, attrs: &[(&String, &String)]) -> Option<(String, String)> {
+    fn get_important_html_attribute_from_attrs(
+        &self,
+        attrs: &[(&String, &String)],
+    ) -> Option<(String, String)> {
         // Define important HTML attributes that should be prioritized on the same line
         let important_attrs = match self.name.as_str() {
             name if name == "img" || name.starts_with("img.") => vec!["src", "alt"],
@@ -203,12 +222,13 @@ fn detect_format(content: &str, file_path: &str) -> InputFormat {
 
     // Check content for HTML-specific indicators
     let content_lower = content.to_lowercase();
-    
+
     // Look for common HTML indicators
-    if content_lower.contains("<!doctype html") 
-        || content_lower.contains("<html") 
-        || content_lower.contains("<head>") 
-        || content_lower.contains("<body>") {
+    if content_lower.contains("<!doctype html")
+        || content_lower.contains("<html")
+        || content_lower.contains("<head>")
+        || content_lower.contains("<body>")
+    {
         return InputFormat::Html;
     }
 
@@ -231,12 +251,12 @@ fn convert_element_to_xml(element: ElementRef, format: &InputFormat) -> XmlEleme
         if *format == InputFormat::Html && attr_name == "class" {
             // For HTML mode, attach classes to the element name
             let classes: Vec<&str> = attr_value.split_whitespace().collect();
-            
+
             // If it's a div with classes, omit the div part and just use .class1.class2
             if element_name == "div" && !classes.is_empty() {
                 name = String::new();
             }
-            
+
             for class in classes {
                 name.push('.');
                 name.push_str(class);
@@ -244,14 +264,18 @@ fn convert_element_to_xml(element: ElementRef, format: &InputFormat) -> XmlEleme
             xml_element.name = name.clone();
         } else {
             // For XML mode or non-class attributes, keep as regular attributes
-            xml_element.attributes.insert(attr_name.to_string(), attr_value.to_string());
+            xml_element
+                .attributes
+                .insert(attr_name.to_string(), attr_value.to_string());
         }
     }
 
     // Process child elements first to know if we have any
     for child in element.children() {
         if let Some(child_element) = ElementRef::wrap(child) {
-            xml_element.children.push(convert_element_to_xml(child_element, format));
+            xml_element
+                .children
+                .push(convert_element_to_xml(child_element, format));
         }
     }
 
@@ -264,7 +288,7 @@ fn convert_element_to_xml(element: ElementRef, format: &InputFormat) -> XmlEleme
             .join(" ")
             .trim()
             .to_string();
-        
+
         if !text_content.is_empty() {
             xml_element.text_content = text_content;
         }
@@ -276,13 +300,11 @@ fn convert_element_to_xml(element: ElementRef, format: &InputFormat) -> XmlEleme
 fn parse_html(content: &str, format: &InputFormat) -> Result<Vec<XmlElement>> {
     let document = Html::parse_document(content);
     let mut root_elements = Vec::new();
-    
+
     // Use a universal selector to find all top-level elements
     let selector = Selector::parse("html").unwrap_or_else(|_| {
         // Fallback: try to get body or any top-level element
-        Selector::parse("body").unwrap_or_else(|_| {
-            Selector::parse("*").unwrap()
-        })
+        Selector::parse("body").unwrap_or_else(|_| Selector::parse("*").unwrap())
     });
 
     // First try to find html element
@@ -290,16 +312,15 @@ fn parse_html(content: &str, format: &InputFormat) -> Result<Vec<XmlElement>> {
         root_elements.push(convert_element_to_xml(html_element, format));
     } else {
         // Fallback: get all top-level elements
-        let all_selector = Selector::parse("body > *, html > *").unwrap_or_else(|_| {
-            Selector::parse("*").unwrap()
-        });
-        
+        let all_selector =
+            Selector::parse("body > *, html > *").unwrap_or_else(|_| Selector::parse("*").unwrap());
+
         for element in document.select(&all_selector) {
             // Only include elements that don't have a parent element in our selection
-            let is_root = element.parent().map_or(true, |parent| {
-                !ElementRef::wrap(parent).is_some()
-            });
-            
+            let is_root = element
+                .parent()
+                .map_or(true, |parent| !ElementRef::wrap(parent).is_some());
+
             if is_root {
                 root_elements.push(convert_element_to_xml(element, format));
             }
@@ -409,7 +430,12 @@ fn main() -> Result<()> {
         match format_str.to_lowercase().as_str() {
             "html" => InputFormat::Html,
             "xml" => InputFormat::Xml,
-            _ => return Err(anyhow::anyhow!("Unsupported format: {}. Use 'xml' or 'html'", format_str)),
+            _ => {
+                return Err(anyhow::anyhow!(
+                    "Unsupported format: {}. Use 'xml' or 'html'",
+                    format_str
+                ));
+            }
         }
     } else {
         detect_format(&content, &cli.file)
