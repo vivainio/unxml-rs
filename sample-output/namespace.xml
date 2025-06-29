@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root xmlns="http://example.com/default"
+      xmlns:custom="http://example.com/custom"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <item custom:id="1" custom:type="product">
+        <name>Default Namespace Item</name>
+        <custom:metadata>
+            <custom:category>electronics</custom:category>
+            <custom:tags>
+                <custom:tag>mobile</custom:tag>
+                <custom:tag>smartphone</custom:tag>
+            </custom:tags>
+        </custom:metadata>
+    </item>
+    <custom:special-item xsi:type="custom:SpecialType">
+        <custom:properties>
+            <custom:property name="color" value="blue"/>
+            <custom:property name="size" value="large"/>
+        </custom:properties>
+    </custom:special-item>
+</root> 

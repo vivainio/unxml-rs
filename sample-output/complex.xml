@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xmlns="http://example.com/catalog" 
+         version="1.0">
+    <products>
+        <product category="electronics" featured="true">
+            <id>E001</id>
+            <name>Smartphone</name>
+            <description><![CDATA[Latest smartphone with advanced features]]></description>
+            <price currency="USD">599.99</price>
+            <specifications>
+                <display>
+                    <size>6.1</size>
+                    <resolution>1080x2340</resolution>
+                    <type>OLED</type>
+                </display>
+                <memory>
+                    <ram>8GB</ram>
+                    <storage>128GB</storage>
+                </memory>
+            </specifications>
+            <tags>
+                <tag>smartphone</tag>
+                <tag>electronics</tag>
+                <tag>mobile</tag>
+            </tags>
+        </product>
+        <product category="books" featured="false">
+            <id>B001</id>
+            <name>Programming Guide</name>
+            <description>Comprehensive guide to modern programming</description>
+            <price currency="USD">29.99</price>
+            <author>
+                <name>John Doe</name>
+                <email>john@example.com</email>
+            </author>
+            <chapters>
+                <chapter number="1">Introduction</chapter>
+                <chapter number="2">Basic Concepts</chapter>
+                <chapter number="3">Advanced Topics</chapter>
+            </chapters>
+        </product>
+    </products>
+    <!-- This is a comment -->
+    <metadata>
+        <created>2024-01-15T10:30:00Z</created>
+        <modified>2024-01-20T14:45:00Z</modified>
+    </metadata>
+</catalog> 

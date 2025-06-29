@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A complex HTML page demonstrating various elements">
+    <meta name="keywords" content="HTML, CSS, JavaScript, web development">
+    <meta name="author" content="Web Developer">
+    <title>Complex HTML Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">
+            <img src="logo.png" alt="Company Logo" width="100" height="50">
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#products" class="nav-link">Products</a></li>
+                <li><a href="#services" class="nav-link">Services</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li><a href="#contact" class="nav-link">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section id="hero" class="hero-section">
+            <div class="hero-content">
+                <h1>Welcome to Our Amazing Website</h1>
+                <p>Discover the power of modern web development</p>
+                <button class="cta-button">Get Started</button>
+            </div>
+            <div class="hero-image">
+                <img src="hero-image.jpg" alt="Hero Image">
+            </div>
+        </section>
+
+        <section id="products" class="products-section">
+            <h2>Our Products</h2>
+            <div class="product-grid">
+                <article class="product-card">
+                    <header>
+                        <h3>Product 1</h3>
+                        <span class="price">$99.99</span>
+                    </header>
+                    <figure>
+                        <img src="product1.jpg" alt="Product 1">
+                        <figcaption>Amazing product with great features</figcaption>
+                    </figure>
+                    <div class="product-details">
+                        <p>This is an amazing product that will revolutionize your workflow.</p>
+                        <ul class="features">
+                            <li>Feature 1</li>
+                            <li>Feature 2</li>
+                            <li>Feature 3</li>
+                        </ul>
+                        <button class="add-to-cart" data-product-id="1">Add to Cart</button>
+                    </div>
+                </article>
+                
+                <article class="product-card">
+                    <header>
+                        <h3>Product 2</h3>
+                        <span class="price">$149.99</span>
+                    </header>
+                    <figure>
+                        <img src="product2.jpg" alt="Product 2">
+                        <figcaption>Premium product for professionals</figcaption>
+                    </figure>
+                    <div class="product-details">
+                        <p>A premium solution for professional use cases.</p>
+                        <ul class="features">
+                            <li>Advanced Feature A</li>
+                            <li>Advanced Feature B</li>
+                            <li>Advanced Feature C</li>
+                        </ul>
+                        <button class="add-to-cart" data-product-id="2">Add to Cart</button>
+                    </div>
+                </article>
+            </div>
+        </section>
+
+        <section id="services" class="services-section">
+            <h2>Our Services</h2>
+            <div class="services-container">
+                <div class="service-item">
+                    <h3>Web Development</h3>
+                    <p>Custom web applications built with modern technologies.</p>
+                </div>
+                <div class="service-item">
+                    <h3>Mobile Apps</h3>
+                    <p>Native and cross-platform mobile applications.</p>
+                </div>
+                <div class="service-item">
+                    <h3>Consulting</h3>
+                    <p>Expert advice on technology and business strategies.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="testimonials" class="testimonials-section">
+            <h2>What Our Customers Say</h2>
+            <blockquote>
+                <p>"This company provided excellent service and delivered beyond our expectations."</p>
+                <cite>- John Doe, CEO of Example Corp</cite>
+            </blockquote>
+            <blockquote>
+                <p>"Professional, reliable, and innovative. Highly recommended!"</p>
+                <cite>- Jane Smith, Marketing Director</cite>
+            </blockquote>
+        </section>
+
+        <section id="contact" class="contact-section">
+            <h2>Contact Information</h2>
+            <address>
+                <strong>Our Company</strong><br>
+                123 Main Street<br>
+                City, State 12345<br>
+                Phone: <a href="tel:+1234567890">(123) 456-7890</a><br>
+                Email: <a href="mailto:info@example.com">info@example.com</a>
+            </address>
+            
+            <details>
+                <summary>Office Hours</summary>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Monday - Friday</td>
+                            <td>9:00 AM - 6:00 PM</td>
+                        </tr>
+                        <tr>
+                            <td>Saturday</td>
+                            <td>10:00 AM - 4:00 PM</td>
+                        </tr>
+                        <tr>
+                            <td>Sunday</td>
+                            <td>Closed</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </details>
+        </section>
+    </main>
+
+    <aside class="sidebar">
+        <h3>Recent News</h3>
+        <article class="news-item">
+            <time datetime="2024-01-15">January 15, 2024</time>
+            <h4>New Product Launch</h4>
+            <p>We're excited to announce our latest product...</p>
+        </article>
+        <article class="news-item">
+            <time datetime="2024-01-10">January 10, 2024</time>
+            <h4>Company Milestone</h4>
+            <p>We've reached an important milestone in our journey...</p>
+        </article>
+    </aside>
+
+    <footer class="main-footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="#privacy">Privacy Policy</a></li>
+                    <li><a href="#terms">Terms of Service</a></li>
+                    <li><a href="#support">Support</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook">Facebook</a>
+                    <a href="#" aria-label="Twitter">Twitter</a>
+                    <a href="#" aria-label="LinkedIn">LinkedIn</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2024 Our Company. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script>
+        // Inline JavaScript for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded successfully');
+            
+            // Add event listeners for cart buttons
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const productId = e.target.getAttribute('data-product-id');
+                    alert(`Added product ${productId} to cart!`);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<data>
+    <users>
+        <user id="1" active="true">
+            <name>Alice &amp; Bob</name>
+            <email>alice@example.com</email>
+            <profile>
+                <bio>Software engineer with 5+ years of experience</bio>
+                <skills>
+                    <skill level="expert">JavaScript</skill>
+                    <skill level="intermediate">Python</skill>
+                    <skill level="beginner">Rust</skill>
+                </skills>
+                <preferences>
+                    <theme>dark</theme>
+                    <language>en</language>
+                    <notifications enabled="true"/>
+                </preferences>
+            </profile>
+        </user>
+        <user id="2" active="false">
+            <name>Charlie &lt;Admin&gt;</name>
+            <email>charlie@example.com</email>
+            <profile>
+                <bio></bio>
+                <skills>
+                    <skill level="expert">C++</skill>
+                    <skill level="expert">Assembly</skill>
+                </skills>
+                <preferences>
+                    <theme>light</theme>
+                    <language>fr</language>
+                    <notifications enabled="false"/>
+                </preferences>
+            </profile>
+        </user>
+    </users>
+    <statistics>
+        <total-users>2</total-users>
+        <active-users>1</active-users>
+        <registration-date>
+            <user-1>2023-01-15</user-1>
+            <user-2>2023-03-20</user-2>
+        </registration-date>
+    </statistics>
+</data> 
