@@ -1,0 +1,44 @@
+data
+  users
+    user
+      [active]: true
+      [id]: 1
+      name = Alice & Bob
+      email = alice@example.com
+      profile
+        bio = Software engineer with 5+ years of experience
+        skills
+          skill
+            [level]: expert = JavaScript
+          skill
+            [level]: intermediate = Python
+          skill
+            [level]: beginner = Rust
+        preferences
+          theme = dark
+          language = en
+          notifications
+            [enabled]: true
+    user
+      [active]: false
+      [id]: 2
+      name = Charlie <Admin>
+      email = charlie@example.com
+      profile
+        bio
+        skills
+          skill
+            [level]: expert = C++
+          skill
+            [level]: expert = Assembly
+        preferences
+          theme = light
+          language = fr
+          notifications
+            [enabled]: false
+  statistics
+    total-users = 2
+    active-users = 1
+    registration-date
+      user-1 = 2023-01-15
+      user-2 = 2023-03-20

@@ -28,9 +28,10 @@ class Colors:
     RESET = '\033[0m'
 
 class TestRunner:
-    def __init__(self, sample_dir: str = "sample-output", baseline_file: str = "test-baseline.json"):
+    def __init__(self, sample_dir: str = "sample-output", baseline_file: str = "test-baseline.json", output_dir: str = "expected-output"):
         self.sample_dir = Path(sample_dir)
         self.baseline_file = Path(baseline_file)
+        self.output_dir = Path(output_dir)
         self.results = {}
         self.failed_files = []
         self.changed_files = []
@@ -40,6 +41,9 @@ class TestRunner:
         if not self.sample_dir.exists():
             print(f"{Colors.RED}Error: Sample directory '{sample_dir}' does not exist!{Colors.RESET}")
             sys.exit(1)
+        
+        # Create output directory if it doesn't exist
+        self.output_dir.mkdir(exist_ok=True)
     
     def find_test_files(self) -> List[Path]:
         """Find all XML and HTML files in the sample directory"""
@@ -50,6 +54,32 @@ class TestRunner:
             files.extend(self.sample_dir.glob(ext))
         
         return sorted(files)
+    
+    def get_expected_output_file(self, input_file: Path) -> Path:
+        """Get the expected output file path for a given input file"""
+        return self.output_dir / f"{input_file.name}.txt"
+    
+    def save_output_file(self, input_file: Path, stdout: str) -> None:
+        """Save the stdout to the expected output file"""
+        output_file = self.get_expected_output_file(input_file)
+        try:
+            with open(output_file, 'w', encoding='utf-8') as f:
+                f.write(stdout)
+        except IOError as e:
+            print(f"{Colors.YELLOW}Warning: Could not save output file {output_file}: {e}{Colors.RESET}")
+    
+    def load_expected_output(self, input_file: Path) -> Optional[str]:
+        """Load the expected output for a given input file"""
+        output_file = self.get_expected_output_file(input_file)
+        if not output_file.exists():
+            return None
+        
+        try:
+            with open(output_file, 'r', encoding='utf-8') as f:
+                return f.read()
+        except IOError as e:
+            print(f"{Colors.YELLOW}Warning: Could not load expected output file {output_file}: {e}{Colors.RESET}")
+            return None
     
     def run_unxml(self, file_path: Path) -> Tuple[str, str, int]:
         """
@@ -134,6 +164,7 @@ class TestRunner:
         """Run tests on all files and compare with baseline"""
         print(f"{Colors.BOLD}Running unxml test suite...{Colors.RESET}")
         print(f"Sample directory: {self.sample_dir}")
+        print(f"Expected output directory: {self.output_dir}")
         print(f"Baseline file: {self.baseline_file}")
         print("-" * 60)
         
@@ -156,6 +187,9 @@ class TestRunner:
             
             stdout, stderr, returncode = self.run_unxml(file_path)
             
+            # Save current output to .txt file
+            self.save_output_file(file_path, stdout)
+            
             # Create result record
             result = {
                 'stdout': stdout,
@@ -168,15 +202,20 @@ class TestRunner:
             
             current_results[str(file_path)] = result
             
-            # Compare with baseline
+            # Load expected output from .txt file
+            expected_output = self.load_expected_output(file_path)
+            
+            # Compare with baseline and expected output
             file_key = str(file_path)
-            if file_key in baseline:
+            if file_key in baseline and expected_output is not None:
                 baseline_result = baseline[file_key]
                 
-                # Check if output changed
-                if (result['stdout_hash'] != baseline_result.get('stdout_hash') or 
-                    result['stderr_hash'] != baseline_result.get('stderr_hash') or
-                    result['returncode'] != baseline_result.get('returncode')):
+                # Check if output changed (compare both baseline and expected output file)
+                output_changed = (stdout != expected_output or 
+                                result['stderr_hash'] != baseline_result.get('stderr_hash') or
+                                result['returncode'] != baseline_result.get('returncode'))
+                
+                if output_changed:
                     self.changed_files.append(file_path)
                     print(f"{Colors.YELLOW}CHANGED{Colors.RESET}")
                 else:
@@ -198,6 +237,8 @@ class TestRunner:
         print(f"New files: {len(self.new_files)}")
         print(f"Changed files: {len(self.changed_files)}")
         print(f"Failed files: {len(self.failed_files)}")
+        print(f"Output files saved to: {self.output_dir}/")
+        print(f"  (e.g., {self.output_dir}/simple.xml.txt)")
         
         # Show details for changed files
         if self.changed_files:
@@ -232,13 +273,23 @@ class TestRunner:
         file_key = str(file_path)
         baseline_result = baseline.get(file_key, {})
         current_result = current.get(file_key, {})
+        expected_output_file = self.get_expected_output_file(file_path)
         
         print(f"    Changes in {file_path.name}:")
         
         if baseline_result.get('returncode') != current_result.get('returncode'):
             print(f"      Return code: {baseline_result.get('returncode', 'N/A')} → {current_result.get('returncode', 'N/A')}")
         
-        if baseline_result.get('stdout_hash') != current_result.get('stdout_hash'):
+        # Compare with expected output file
+        expected_output = self.load_expected_output(file_path)
+        current_output = current_result.get('stdout', '')
+        
+        if expected_output is not None and current_output != expected_output:
+            print(f"      Output differs from expected output file: {expected_output_file}")
+            print(f"        Expected hash: {self.calculate_hash(expected_output)[:8]}...")
+            print(f"        Current hash:  {self.calculate_hash(current_output)[:8]}...")
+            print(f"        Use 'diff {expected_output_file} <(unxml {file_path})' to see differences")
+        elif baseline_result.get('stdout_hash') != current_result.get('stdout_hash'):
             print(f"      Output changed (hash: {baseline_result.get('stdout_hash', 'N/A')[:8]}... → {current_result.get('stdout_hash', 'N/A')[:8]}...)")
         
         if baseline_result.get('stderr_hash') != current_result.get('stderr_hash'):
@@ -287,6 +338,8 @@ def main():
                        help='Directory containing sample XML/HTML files')
     parser.add_argument('--baseline', default='test-baseline.json',
                        help='Baseline file to store/compare results')
+    parser.add_argument('--output-dir', default='expected-output',
+                       help='Directory to store expected output .txt files')
     parser.add_argument('--update-baseline', action='store_true',
                        help='Update baseline with current results')
     parser.add_argument('--show-output', type=str, metavar='FILENAME',
@@ -306,7 +359,7 @@ def main():
             print(f"{Colors.RED}Build failed: {e}{Colors.RESET}")
             return 1
     
-    runner = TestRunner(args.sample_dir, args.baseline)
+    runner = TestRunner(args.sample_dir, args.baseline, args.output_dir)
     
     if args.show_output:
         runner.run_tests()

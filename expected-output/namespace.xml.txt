@@ -1,0 +1,22 @@
+root
+  [xmlns:custom]: http://example.com/custom
+  [xmlns:xsi]: http://www.w3.org/2001/XMLSchema-instance
+  [xmlns]: http://example.com/default
+  item
+    [custom:type]: product
+    [custom:id]: 1
+    name = Default Namespace Item
+    custom:metadata
+      custom:category = electronics
+      custom:tags
+        custom:tag = mobile
+        custom:tag = smartphone
+  custom:special-item
+    [xsi:type]: custom:SpecialType
+    custom:properties
+      custom:property
+        [name]: color
+        [value]: blue
+      custom:property
+        [value]: large
+        [name]: size

@@ -1,0 +1,272 @@
+html
+  [lang]: en = Contact Form 
+     
+        body { font-family: Arial, sans-serif; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea, select { width: 100%; padding: 8px; }
+        button { padding: 10px 20px; background: #007cba; color: white; border: none; cursor: pointer; }
+     
+ 
+ 
+     
+         Contact Us 
+         
+             
+                 Full Name: 
+                 
+             
+             
+                 Email Address: 
+                 
+             
+             
+                 Phone Number: 
+                 
+             
+             
+                 Subject: 
+                 
+                     Choose a subject 
+                     General Inquiry 
+                     Technical Support 
+                     Billing Question 
+                     Other 
+                 
+             
+             
+                 Message: 
+                 
+             
+             
+                 
+                 Subscribe to our newsletter 
+             
+             
+                 Send Message 
+                 Clear Form 
+             
+         
+     
+     
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Form submitted successfully!');
+        });
+  head = Contact Form 
+     
+        body { font-family: Arial, sans-serif; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea, select { width: 100%; padding: 8px; }
+        button { padding: 10px 20px; background: #007cba; color: white; border: none; cursor: pointer; }
+    meta
+      [charset]: UTF-8
+    meta
+      [content]: width=device-width, initial-scale=1.0
+      [name]: viewport
+    title = Contact Form
+    style = body { font-family: Arial, sans-serif; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; }
+        input, textarea, select { width: 100%; padding: 8px; }
+        button { padding: 10px 20px; background: #007cba; color: white; border: none; cursor: pointer; }
+  body = Contact Us 
+         
+             
+                 Full Name: 
+                 
+             
+             
+                 Email Address: 
+                 
+             
+             
+                 Phone Number: 
+                 
+             
+             
+                 Subject: 
+                 
+                     Choose a subject 
+                     General Inquiry 
+                     Technical Support 
+                     Billing Question 
+                     Other 
+                 
+             
+             
+                 Message: 
+                 
+             
+             
+                 
+                 Subscribe to our newsletter 
+             
+             
+                 Send Message 
+                 Clear Form 
+             
+         
+     
+     
+        document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Form submitted successfully!');
+        });
+    div
+      [class]: container = Contact Us 
+         
+             
+                 Full Name: 
+                 
+             
+             
+                 Email Address: 
+                 
+             
+             
+                 Phone Number: 
+                 
+             
+             
+                 Subject: 
+                 
+                     Choose a subject 
+                     General Inquiry 
+                     Technical Support 
+                     Billing Question 
+                     Other 
+                 
+             
+             
+                 Message: 
+                 
+             
+             
+                 
+                 Subscribe to our newsletter 
+             
+             
+                 Send Message 
+                 Clear Form
+      h1 = Contact Us
+      form
+        [id]: contactForm
+        [method]: POST
+        [action]: /submit = Full Name: 
+                 
+             
+             
+                 Email Address: 
+                 
+             
+             
+                 Phone Number: 
+                 
+             
+             
+                 Subject: 
+                 
+                     Choose a subject 
+                     General Inquiry 
+                     Technical Support 
+                     Billing Question 
+                     Other 
+                 
+             
+             
+                 Message: 
+                 
+             
+             
+                 
+                 Subscribe to our newsletter 
+             
+             
+                 Send Message 
+                 Clear Form
+        div
+          [class]: form-group = Full Name:
+          label
+            [for]: name = Full Name:
+          input
+            [name]: name
+            [type]: text
+            [id]: name
+            [required]: 
+        div
+          [class]: form-group = Email Address:
+          label
+            [for]: email = Email Address:
+          input
+            [id]: email
+            [name]: email
+            [required]: 
+            [type]: email
+        div
+          [class]: form-group = Phone Number:
+          label
+            [for]: phone = Phone Number:
+          input
+            [id]: phone
+            [name]: phone
+            [type]: tel
+        div
+          [class]: form-group = Subject: 
+                 
+                     Choose a subject 
+                     General Inquiry 
+                     Technical Support 
+                     Billing Question 
+                     Other
+          label
+            [for]: subject = Subject:
+          select
+            [required]: 
+            [name]: subject
+            [id]: subject = Choose a subject 
+                     General Inquiry 
+                     Technical Support 
+                     Billing Question 
+                     Other
+            option
+              [value]:  = Choose a subject
+            option
+              [value]: general = General Inquiry
+            option
+              [value]: support = Technical Support
+            option
+              [value]: billing = Billing Question
+            option
+              [value]: other = Other
+        div
+          [class]: form-group = Message:
+          label
+            [for]: message = Message:
+          textarea
+            [placeholder]: Please enter your message here...
+            [rows]: 5
+            [id]: message
+            [name]: message
+            [required]: 
+        div
+          [class]: form-group = Subscribe to our newsletter
+          input
+            [type]: checkbox
+            [id]: newsletter
+            [value]: yes
+            [name]: newsletter
+          label
+            [for]: newsletter = Subscribe to our newsletter
+        div
+          [class]: form-group = Send Message 
+                 Clear Form
+          button
+            [type]: submit = Send Message
+          button
+            [type]: reset = Clear Form
+    script = document.getElementById('contactForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Form submitted successfully!');
+        });

@@ -25,6 +25,7 @@ The test suite includes various XML and HTML files to test different scenarios:
 ### Test Script
 
 - `test-suite.py` - Python script that runs the unxml tool on all sample files and compares outputs
+- `expected-output/` - Directory containing expected output files (e.g., `simple.xml.txt`, `complex.html.txt`)
 
 ## Usage
 
@@ -45,6 +46,7 @@ python test-suite.py --update-baseline
 
 - `--sample-dir DIR` - Specify a different directory for sample files (default: `sample-output`)
 - `--baseline FILE` - Specify a different baseline file (default: `test-baseline.json`)
+- `--output-dir DIR` - Specify a different directory for expected output files (default: `expected-output`)
 - `--update-baseline` - Update the baseline with current test results
 - `--show-output FILENAME` - Show detailed output for a specific file
 - `--build` - Build the unxml binary before running tests
@@ -53,8 +55,20 @@ python test-suite.py --update-baseline
 
 1. **Discovery**: The script finds all `.xml`, `.html`, and `.htm` files in the sample directory
 2. **Execution**: For each file, it runs the unxml tool and captures stdout, stderr, and return code
-3. **Comparison**: It compares the results with a baseline (stored in `test-baseline.json`)
-4. **Reporting**: It reports any changes, new files, or failures
+3. **Output Storage**: The stdout is saved to individual `.txt` files in the expected-output directory
+   - `sample-output/simple.xml` → `expected-output/simple.xml.txt`
+   - `sample-output/form.html` → `expected-output/form.html.txt`
+4. **Comparison**: It compares the current output with the stored expected output files
+5. **Reporting**: It reports any changes, new files, or failures
+
+### Expected Output Files
+
+The test suite creates individual `.txt` files containing the expected output for each test case. These files:
+
+- **Enable easy visual inspection** of what the unxml tool produces
+- **Support version control** - you can see exactly what changed in diffs
+- **Allow manual comparison** using standard diff tools
+- **Provide examples** of the unxml output format for documentation
 
 ### Test Results
 
@@ -80,6 +94,19 @@ To see the actual output produced by unxml for a specific file:
 
 ```bash
 python test-suite.py --show-output simple.xml
+```
+
+You can also directly view the expected output files:
+
+```bash
+# View expected output
+cat expected-output/simple.xml.txt
+
+# Compare current output with expected
+diff expected-output/simple.xml.txt <(unxml sample-output/simple.xml)
+
+# Or on Windows
+fc expected-output\simple.xml.txt output.tmp
 ```
 
 ## Integration with Development Workflow

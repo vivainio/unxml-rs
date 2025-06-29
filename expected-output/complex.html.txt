@@ -1,0 +1,1042 @@
+html
+  [lang]: en = Complex HTML Page 
+     
+     
+ 
+ 
+     
+         
+             
+         
+         
+             
+                 Home 
+                 Products 
+                 Services 
+                 About 
+                 Contact 
+             
+         
+     
+
+     
+         
+             
+                 Welcome to Our Amazing Website 
+                 Discover the power of modern web development 
+                 Get Started 
+             
+             
+                 
+             
+         
+
+         
+             Our Products 
+             
+                 
+                     
+                         Product 1 
+                         $99.99 
+                     
+                     
+                         
+                         Amazing product with great features 
+                     
+                     
+                         This is an amazing product that will revolutionize your workflow. 
+                         
+                             Feature 1 
+                             Feature 2 
+                             Feature 3 
+                         
+                         Add to Cart 
+                     
+                 
+                
+                 
+                     
+                         Product 2 
+                         $149.99 
+                     
+                     
+                         
+                         Premium product for professionals 
+                     
+                     
+                         A premium solution for professional use cases. 
+                         
+                             Advanced Feature A 
+                             Advanced Feature B 
+                             Advanced Feature C 
+                         
+                         Add to Cart 
+                     
+                 
+             
+         
+
+         
+             Our Services 
+             
+                 
+                     Web Development 
+                     Custom web applications built with modern technologies. 
+                 
+                 
+                     Mobile Apps 
+                     Native and cross-platform mobile applications. 
+                 
+                 
+                     Consulting 
+                     Expert advice on technology and business strategies. 
+                 
+             
+         
+
+         
+             What Our Customers Say 
+             
+                 "This company provided excellent service and delivered beyond our expectations." 
+                 - John Doe, CEO of Example Corp 
+             
+             
+                 "Professional, reliable, and innovative. Highly recommended!" 
+                 - Jane Smith, Marketing Director 
+             
+         
+
+         
+             Contact Information 
+             
+                 Our Company 
+                123 Main Street 
+                City, State 12345 
+                Phone:  (123) 456-7890 
+                Email:  info@example.com 
+             
+            
+             
+                 Office Hours 
+                 
+                     
+                         
+                             Day 
+                             Hours 
+                         
+                     
+                     
+                         
+                             Monday - Friday 
+                             9:00 AM - 6:00 PM 
+                         
+                         
+                             Saturday 
+                             10:00 AM - 4:00 PM 
+                         
+                         
+                             Sunday 
+                             Closed 
+                         
+                     
+                 
+             
+         
+     
+
+     
+         Recent News 
+         
+             January 15, 2024 
+             New Product Launch 
+             We're excited to announce our latest product... 
+         
+         
+             January 10, 2024 
+             Company Milestone 
+             We've reached an important milestone in our journey... 
+         
+     
+
+     
+         
+             
+                 Quick Links 
+                 
+                     Privacy Policy 
+                     Terms of Service 
+                     Support 
+                 
+             
+             
+                 Follow Us 
+                 
+                     Facebook 
+                     Twitter 
+                     LinkedIn 
+                 
+             
+         
+         
+             Â© 2024 Our Company. All rights reserved. 
+         
+     
+
+     
+     
+        // Inline JavaScript for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded successfully');
+            
+            // Add event listeners for cart buttons
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const productId = e.target.getAttribute('data-product-id');
+                    alert(`Added product ${productId} to cart!`);
+                });
+            });
+        });
+  head = Complex HTML Page
+    meta
+      [charset]: UTF-8
+    meta
+      [content]: width=device-width, initial-scale=1.0
+      [name]: viewport
+    meta
+      [content]: A complex HTML page demonstrating various elements
+      [name]: description
+    meta
+      [name]: keywords
+      [content]: HTML, CSS, JavaScript, web development
+    meta
+      [name]: author
+      [content]: Web Developer
+    title = Complex HTML Page
+    link
+      [href]: styles.css
+      [rel]: stylesheet
+    link
+      [rel]: icon
+      [href]: /favicon.ico
+      [type]: image/x-icon
+  body = Home 
+                 Products 
+                 Services 
+                 About 
+                 Contact 
+             
+         
+     
+
+     
+         
+             
+                 Welcome to Our Amazing Website 
+                 Discover the power of modern web development 
+                 Get Started 
+             
+             
+                 
+             
+         
+
+         
+             Our Products 
+             
+                 
+                     
+                         Product 1 
+                         $99.99 
+                     
+                     
+                         
+                         Amazing product with great features 
+                     
+                     
+                         This is an amazing product that will revolutionize your workflow. 
+                         
+                             Feature 1 
+                             Feature 2 
+                             Feature 3 
+                         
+                         Add to Cart 
+                     
+                 
+                
+                 
+                     
+                         Product 2 
+                         $149.99 
+                     
+                     
+                         
+                         Premium product for professionals 
+                     
+                     
+                         A premium solution for professional use cases. 
+                         
+                             Advanced Feature A 
+                             Advanced Feature B 
+                             Advanced Feature C 
+                         
+                         Add to Cart 
+                     
+                 
+             
+         
+
+         
+             Our Services 
+             
+                 
+                     Web Development 
+                     Custom web applications built with modern technologies. 
+                 
+                 
+                     Mobile Apps 
+                     Native and cross-platform mobile applications. 
+                 
+                 
+                     Consulting 
+                     Expert advice on technology and business strategies. 
+                 
+             
+         
+
+         
+             What Our Customers Say 
+             
+                 "This company provided excellent service and delivered beyond our expectations." 
+                 - John Doe, CEO of Example Corp 
+             
+             
+                 "Professional, reliable, and innovative. Highly recommended!" 
+                 - Jane Smith, Marketing Director 
+             
+         
+
+         
+             Contact Information 
+             
+                 Our Company 
+                123 Main Street 
+                City, State 12345 
+                Phone:  (123) 456-7890 
+                Email:  info@example.com 
+             
+            
+             
+                 Office Hours 
+                 
+                     
+                         
+                             Day 
+                             Hours 
+                         
+                     
+                     
+                         
+                             Monday - Friday 
+                             9:00 AM - 6:00 PM 
+                         
+                         
+                             Saturday 
+                             10:00 AM - 4:00 PM 
+                         
+                         
+                             Sunday 
+                             Closed 
+                         
+                     
+                 
+             
+         
+     
+
+     
+         Recent News 
+         
+             January 15, 2024 
+             New Product Launch 
+             We're excited to announce our latest product... 
+         
+         
+             January 10, 2024 
+             Company Milestone 
+             We've reached an important milestone in our journey... 
+         
+     
+
+     
+         
+             
+                 Quick Links 
+                 
+                     Privacy Policy 
+                     Terms of Service 
+                     Support 
+                 
+             
+             
+                 Follow Us 
+                 
+                     Facebook 
+                     Twitter 
+                     LinkedIn 
+                 
+             
+         
+         
+             Â© 2024 Our Company. All rights reserved. 
+         
+     
+
+     
+     
+        // Inline JavaScript for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded successfully');
+            
+            // Add event listeners for cart buttons
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const productId = e.target.getAttribute('data-product-id');
+                    alert(`Added product ${productId} to cart!`);
+                });
+            });
+        });
+    header
+      [class]: main-header = Home 
+                 Products 
+                 Services 
+                 About 
+                 Contact
+      div
+        [class]: logo
+        img
+          [width]: 100
+          [alt]: Company Logo
+          [height]: 50
+          [src]: logo.png
+      nav
+        [class]: main-nav = Home 
+                 Products 
+                 Services 
+                 About 
+                 Contact
+        ul = Home 
+                 Products 
+                 Services 
+                 About 
+                 Contact
+          li = Home
+            a
+              [class]: nav-link active
+              [href]: #home = Home
+          li = Products
+            a
+              [class]: nav-link
+              [href]: #products = Products
+          li = Services
+            a
+              [href]: #services
+              [class]: nav-link = Services
+          li = About
+            a
+              [href]: #about
+              [class]: nav-link = About
+          li = Contact
+            a
+              [class]: nav-link
+              [href]: #contact = Contact
+    main = Welcome to Our Amazing Website 
+                 Discover the power of modern web development 
+                 Get Started 
+             
+             
+                 
+             
+         
+
+         
+             Our Products 
+             
+                 
+                     
+                         Product 1 
+                         $99.99 
+                     
+                     
+                         
+                         Amazing product with great features 
+                     
+                     
+                         This is an amazing product that will revolutionize your workflow. 
+                         
+                             Feature 1 
+                             Feature 2 
+                             Feature 3 
+                         
+                         Add to Cart 
+                     
+                 
+                
+                 
+                     
+                         Product 2 
+                         $149.99 
+                     
+                     
+                         
+                         Premium product for professionals 
+                     
+                     
+                         A premium solution for professional use cases. 
+                         
+                             Advanced Feature A 
+                             Advanced Feature B 
+                             Advanced Feature C 
+                         
+                         Add to Cart 
+                     
+                 
+             
+         
+
+         
+             Our Services 
+             
+                 
+                     Web Development 
+                     Custom web applications built with modern technologies. 
+                 
+                 
+                     Mobile Apps 
+                     Native and cross-platform mobile applications. 
+                 
+                 
+                     Consulting 
+                     Expert advice on technology and business strategies. 
+                 
+             
+         
+
+         
+             What Our Customers Say 
+             
+                 "This company provided excellent service and delivered beyond our expectations." 
+                 - John Doe, CEO of Example Corp 
+             
+             
+                 "Professional, reliable, and innovative. Highly recommended!" 
+                 - Jane Smith, Marketing Director 
+             
+         
+
+         
+             Contact Information 
+             
+                 Our Company 
+                123 Main Street 
+                City, State 12345 
+                Phone:  (123) 456-7890 
+                Email:  info@example.com 
+             
+            
+             
+                 Office Hours 
+                 
+                     
+                         
+                             Day 
+                             Hours 
+                         
+                     
+                     
+                         
+                             Monday - Friday 
+                             9:00 AM - 6:00 PM 
+                         
+                         
+                             Saturday 
+                             10:00 AM - 4:00 PM 
+                         
+                         
+                             Sunday 
+                             Closed
+      section
+        [class]: hero-section
+        [id]: hero = Welcome to Our Amazing Website 
+                 Discover the power of modern web development 
+                 Get Started
+        div
+          [class]: hero-content = Welcome to Our Amazing Website 
+                 Discover the power of modern web development 
+                 Get Started
+          h1 = Welcome to Our Amazing Website
+          p = Discover the power of modern web development
+          button
+            [class]: cta-button = Get Started
+        div
+          [class]: hero-image
+          img
+            [src]: hero-image.jpg
+            [alt]: Hero Image
+      section
+        [class]: products-section
+        [id]: products = Our Products 
+             
+                 
+                     
+                         Product 1 
+                         $99.99 
+                     
+                     
+                         
+                         Amazing product with great features 
+                     
+                     
+                         This is an amazing product that will revolutionize your workflow. 
+                         
+                             Feature 1 
+                             Feature 2 
+                             Feature 3 
+                         
+                         Add to Cart 
+                     
+                 
+                
+                 
+                     
+                         Product 2 
+                         $149.99 
+                     
+                     
+                         
+                         Premium product for professionals 
+                     
+                     
+                         A premium solution for professional use cases. 
+                         
+                             Advanced Feature A 
+                             Advanced Feature B 
+                             Advanced Feature C 
+                         
+                         Add to Cart
+        h2 = Our Products
+        div
+          [class]: product-grid = Product 1 
+                         $99.99 
+                     
+                     
+                         
+                         Amazing product with great features 
+                     
+                     
+                         This is an amazing product that will revolutionize your workflow. 
+                         
+                             Feature 1 
+                             Feature 2 
+                             Feature 3 
+                         
+                         Add to Cart 
+                     
+                 
+                
+                 
+                     
+                         Product 2 
+                         $149.99 
+                     
+                     
+                         
+                         Premium product for professionals 
+                     
+                     
+                         A premium solution for professional use cases. 
+                         
+                             Advanced Feature A 
+                             Advanced Feature B 
+                             Advanced Feature C 
+                         
+                         Add to Cart
+          article
+            [class]: product-card = Product 1 
+                         $99.99 
+                     
+                     
+                         
+                         Amazing product with great features 
+                     
+                     
+                         This is an amazing product that will revolutionize your workflow. 
+                         
+                             Feature 1 
+                             Feature 2 
+                             Feature 3 
+                         
+                         Add to Cart
+            header = Product 1 
+                         $99.99
+              h3 = Product 1
+              span
+                [class]: price = $99.99
+            figure = Amazing product with great features
+              img
+                [alt]: Product 1
+                [src]: product1.jpg
+              figcaption = Amazing product with great features
+            div
+              [class]: product-details = This is an amazing product that will revolutionize your workflow. 
+                         
+                             Feature 1 
+                             Feature 2 
+                             Feature 3 
+                         
+                         Add to Cart
+              p = This is an amazing product that will revolutionize your workflow.
+              ul
+                [class]: features = Feature 1 
+                             Feature 2 
+                             Feature 3
+                li = Feature 1
+                li = Feature 2
+                li = Feature 3
+              button
+                [data-product-id]: 1
+                [class]: add-to-cart = Add to Cart
+          article
+            [class]: product-card = Product 2 
+                         $149.99 
+                     
+                     
+                         
+                         Premium product for professionals 
+                     
+                     
+                         A premium solution for professional use cases. 
+                         
+                             Advanced Feature A 
+                             Advanced Feature B 
+                             Advanced Feature C 
+                         
+                         Add to Cart
+            header = Product 2 
+                         $149.99
+              h3 = Product 2
+              span
+                [class]: price = $149.99
+            figure = Premium product for professionals
+              img
+                [src]: product2.jpg
+                [alt]: Product 2
+              figcaption = Premium product for professionals
+            div
+              [class]: product-details = A premium solution for professional use cases. 
+                         
+                             Advanced Feature A 
+                             Advanced Feature B 
+                             Advanced Feature C 
+                         
+                         Add to Cart
+              p = A premium solution for professional use cases.
+              ul
+                [class]: features = Advanced Feature A 
+                             Advanced Feature B 
+                             Advanced Feature C
+                li = Advanced Feature A
+                li = Advanced Feature B
+                li = Advanced Feature C
+              button
+                [class]: add-to-cart
+                [data-product-id]: 2 = Add to Cart
+      section
+        [class]: services-section
+        [id]: services = Our Services 
+             
+                 
+                     Web Development 
+                     Custom web applications built with modern technologies. 
+                 
+                 
+                     Mobile Apps 
+                     Native and cross-platform mobile applications. 
+                 
+                 
+                     Consulting 
+                     Expert advice on technology and business strategies.
+        h2 = Our Services
+        div
+          [class]: services-container = Web Development 
+                     Custom web applications built with modern technologies. 
+                 
+                 
+                     Mobile Apps 
+                     Native and cross-platform mobile applications. 
+                 
+                 
+                     Consulting 
+                     Expert advice on technology and business strategies.
+          div
+            [class]: service-item = Web Development 
+                     Custom web applications built with modern technologies.
+            h3 = Web Development
+            p = Custom web applications built with modern technologies.
+          div
+            [class]: service-item = Mobile Apps 
+                     Native and cross-platform mobile applications.
+            h3 = Mobile Apps
+            p = Native and cross-platform mobile applications.
+          div
+            [class]: service-item = Consulting 
+                     Expert advice on technology and business strategies.
+            h3 = Consulting
+            p = Expert advice on technology and business strategies.
+      section
+        [id]: testimonials
+        [class]: testimonials-section = What Our Customers Say 
+             
+                 "This company provided excellent service and delivered beyond our expectations." 
+                 - John Doe, CEO of Example Corp 
+             
+             
+                 "Professional, reliable, and innovative. Highly recommended!" 
+                 - Jane Smith, Marketing Director
+        h2 = What Our Customers Say
+        blockquote = "This company provided excellent service and delivered beyond our expectations." 
+                 - John Doe, CEO of Example Corp
+          p = "This company provided excellent service and delivered beyond our expectations."
+          cite = - John Doe, CEO of Example Corp
+        blockquote = "Professional, reliable, and innovative. Highly recommended!" 
+                 - Jane Smith, Marketing Director
+          p = "Professional, reliable, and innovative. Highly recommended!"
+          cite = - Jane Smith, Marketing Director
+      section
+        [class]: contact-section
+        [id]: contact = Contact Information 
+             
+                 Our Company 
+                123 Main Street 
+                City, State 12345 
+                Phone:  (123) 456-7890 
+                Email:  info@example.com 
+             
+            
+             
+                 Office Hours 
+                 
+                     
+                         
+                             Day 
+                             Hours 
+                         
+                     
+                     
+                         
+                             Monday - Friday 
+                             9:00 AM - 6:00 PM 
+                         
+                         
+                             Saturday 
+                             10:00 AM - 4:00 PM 
+                         
+                         
+                             Sunday 
+                             Closed
+        h2 = Contact Information
+        address = Our Company 
+                123 Main Street 
+                City, State 12345 
+                Phone:  (123) 456-7890 
+                Email:  info@example.com
+          strong = Our Company
+          br
+          br
+          br
+          a
+            [href]: tel:+1234567890 = (123) 456-7890
+          br
+          a
+            [href]: mailto:info@example.com = info@example.com
+        details = Office Hours 
+                 
+                     
+                         
+                             Day 
+                             Hours 
+                         
+                     
+                     
+                         
+                             Monday - Friday 
+                             9:00 AM - 6:00 PM 
+                         
+                         
+                             Saturday 
+                             10:00 AM - 4:00 PM 
+                         
+                         
+                             Sunday 
+                             Closed
+          summary = Office Hours
+          table = Day 
+                             Hours 
+                         
+                     
+                     
+                         
+                             Monday - Friday 
+                             9:00 AM - 6:00 PM 
+                         
+                         
+                             Saturday 
+                             10:00 AM - 4:00 PM 
+                         
+                         
+                             Sunday 
+                             Closed
+            thead = Day 
+                             Hours
+              tr = Day 
+                             Hours
+                th = Day
+                th = Hours
+            tbody = Monday - Friday 
+                             9:00 AM - 6:00 PM 
+                         
+                         
+                             Saturday 
+                             10:00 AM - 4:00 PM 
+                         
+                         
+                             Sunday 
+                             Closed
+              tr = Monday - Friday 
+                             9:00 AM - 6:00 PM
+                td = Monday - Friday
+                td = 9:00 AM - 6:00 PM
+              tr = Saturday 
+                             10:00 AM - 4:00 PM
+                td = Saturday
+                td = 10:00 AM - 4:00 PM
+              tr = Sunday 
+                             Closed
+                td = Sunday
+                td = Closed
+    aside
+      [class]: sidebar = Recent News 
+         
+             January 15, 2024 
+             New Product Launch 
+             We're excited to announce our latest product... 
+         
+         
+             January 10, 2024 
+             Company Milestone 
+             We've reached an important milestone in our journey...
+      h3 = Recent News
+      article
+        [class]: news-item = January 15, 2024 
+             New Product Launch 
+             We're excited to announce our latest product...
+        time
+          [datetime]: 2024-01-15 = January 15, 2024
+        h4 = New Product Launch
+        p = We're excited to announce our latest product...
+      article
+        [class]: news-item = January 10, 2024 
+             Company Milestone 
+             We've reached an important milestone in our journey...
+        time
+          [datetime]: 2024-01-10 = January 10, 2024
+        h4 = Company Milestone
+        p = We've reached an important milestone in our journey...
+    footer
+      [class]: main-footer = Quick Links 
+                 
+                     Privacy Policy 
+                     Terms of Service 
+                     Support 
+                 
+             
+             
+                 Follow Us 
+                 
+                     Facebook 
+                     Twitter 
+                     LinkedIn 
+                 
+             
+         
+         
+             Â© 2024 Our Company. All rights reserved.
+      div
+        [class]: footer-content = Quick Links 
+                 
+                     Privacy Policy 
+                     Terms of Service 
+                     Support 
+                 
+             
+             
+                 Follow Us 
+                 
+                     Facebook 
+                     Twitter 
+                     LinkedIn
+        div
+          [class]: footer-section = Quick Links 
+                 
+                     Privacy Policy 
+                     Terms of Service 
+                     Support
+          h4 = Quick Links
+          ul = Privacy Policy 
+                     Terms of Service 
+                     Support
+            li = Privacy Policy
+              a
+                [href]: #privacy = Privacy Policy
+            li = Terms of Service
+              a
+                [href]: #terms = Terms of Service
+            li = Support
+              a
+                [href]: #support = Support
+        div
+          [class]: footer-section = Follow Us 
+                 
+                     Facebook 
+                     Twitter 
+                     LinkedIn
+          h4 = Follow Us
+          div
+            [class]: social-links = Facebook 
+                     Twitter 
+                     LinkedIn
+            a
+              [href]: #
+              [aria-label]: Facebook = Facebook
+            a
+              [href]: #
+              [aria-label]: Twitter = Twitter
+            a
+              [href]: #
+              [aria-label]: LinkedIn = LinkedIn
+      div
+        [class]: footer-bottom = Â© 2024 Our Company. All rights reserved.
+        p = Â© 2024 Our Company. All rights reserved.
+    script
+      [src]: script.js
+    script = // Inline JavaScript for demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded successfully');
+            
+            // Add event listeners for cart buttons
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    const productId = e.target.getAttribute('data-product-id');
+                    alert(`Added product ${productId} to cart!`);
+                });
+            });
+        });
