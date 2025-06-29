@@ -12,8 +12,8 @@ configuration
     level = INFO
     output = console
     file
-      [rotate]: daily
       [path]: /var/log/app.log
+      [rotate]: daily
   features
     feature
       [name]: authentication

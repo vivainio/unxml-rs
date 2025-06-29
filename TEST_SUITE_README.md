@@ -4,7 +4,7 @@ This directory contains a comprehensive test suite for the unxml-rs project, whi
 
 ## Files Created
 
-### Sample Files (`sample-output/` directory)
+### Sample Files (`test-input/` directory)
 
 The test suite includes various XML and HTML files to test different scenarios:
 
@@ -32,34 +32,23 @@ The test suite includes various XML and HTML files to test different scenarios:
 ### Running the Test Suite
 
 ```bash
-# Run tests (will build the binary automatically if needed)
+# Run tests (will build the binary automatically)
 python test-suite.py
-
-# Or run with explicit build step
-python test-suite.py --build
-
-# Run tests and update the baseline
-python test-suite.py --update-baseline
 ```
 
 ### Command Line Options
 
-- `--sample-dir DIR` - Specify a different directory for sample files (default: `sample-output`)
-- `--baseline FILE` - Specify a different baseline file (default: `test-baseline.json`)
+- `--sample-dir DIR` - Specify a different directory for sample files (default: `test-input`)
 - `--output-dir DIR` - Specify a different directory for expected output files (default: `expected-output`)
-- `--update-baseline` - Update the baseline with current test results
-- `--show-output FILENAME` - Show detailed output for a specific file
-- `--build` - Build the unxml binary before running tests
 
 ### How It Works
 
 1. **Discovery**: The script finds all `.xml`, `.html`, and `.htm` files in the sample directory
 2. **Execution**: For each file, it runs the unxml tool and captures stdout, stderr, and return code
-3. **Output Storage**: The stdout is saved to individual `.txt` files in the expected-output directory
-   - `sample-output/simple.xml` → `expected-output/simple.xml.txt`
-   - `sample-output/form.html` → `expected-output/form.html.txt`
-4. **Comparison**: It compares the current output with the stored expected output files
-5. **Reporting**: It reports any changes, new files, or failures
+3. **Comparison**: It compares the current output with expected output files
+   - `test-input/simple.xml` → compared with `expected-output/simple.xml.txt`
+   - `test-input/form.html` → compared with `expected-output/form.html.txt`
+4. **Reporting**: It reports any changes, new files, or failures
 
 ### Expected Output Files
 
@@ -73,37 +62,21 @@ The test suite creates individual `.txt` files containing the expected output fo
 ### Test Results
 
 The script will show:
-- **NEW**: Files that weren't in the previous baseline
-- **PASS**: Files that produce the same output as the baseline
-- **CHANGED**: Files where the output differs from the baseline
+- **NEW**: Files that don't have expected output files yet
+- **PASS**: Files that produce output matching their expected output file
+- **CHANGED**: Files where the output differs from the expected output
 - **FAILED**: Files that caused the unxml tool to exit with a non-zero code
 
-### Baseline Management
+### Viewing Output
 
-The first time you run the test suite, all files will be marked as "NEW". To establish a baseline:
-
-```bash
-python test-suite.py --update-baseline
-```
-
-This saves the current results as the baseline for future comparisons.
-
-### Viewing Detailed Output
-
-To see the actual output produced by unxml for a specific file:
-
-```bash
-python test-suite.py --show-output simple.xml
-```
-
-You can also directly view the expected output files:
+You can directly view the expected output files or compare them with current output:
 
 ```bash
 # View expected output
 cat expected-output/simple.xml.txt
 
 # Compare current output with expected
-diff expected-output/simple.xml.txt <(unxml sample-output/simple.xml)
+diff expected-output/simple.xml.txt <(unxml test-input/simple.xml)
 
 # Or on Windows
 fc expected-output\simple.xml.txt output.tmp
@@ -113,10 +86,13 @@ fc expected-output\simple.xml.txt output.tmp
 
 ### Typical Usage Patterns
 
-1. **Initial Setup**: Run `python test-suite.py --update-baseline` to create the initial baseline
-2. **Development**: Make changes to the unxml code
-3. **Testing**: Run `python test-suite.py` to check for regressions
-4. **Update**: If changes are intentional, run `python test-suite.py --update-baseline`
+1. **Development**: Make changes to the unxml code
+2. **Testing**: Run `python test-suite.py` to check for regressions
+3. **Update**: If changes are intentional, manually update the expected output files:
+   ```bash
+   # Update a specific expected output file
+   unxml test-input/simple.xml > expected-output/simple.xml.txt
+   ```
 
 ### CI/CD Integration
 
@@ -139,9 +115,12 @@ fi
 
 To add new test cases:
 
-1. Add new XML or HTML files to the `sample-output/` directory
-2. Run the test suite - new files will be automatically detected
-3. Update the baseline if the new files are expected to pass
+1. Add new XML or HTML files to the `test-input/` directory
+2. Create expected output files by running unxml on them:
+   ```bash
+   unxml test-input/newfile.xml > expected-output/newfile.xml.txt
+   ```
+3. Run the test suite to verify everything works
 
 ## File Coverage
 

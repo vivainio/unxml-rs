@@ -15,8 +15,8 @@ root
     [xsi:type]: custom:SpecialType
     custom:properties
       custom:property
-        [value]: blue
         [name]: color
+        [value]: blue
       custom:property
-        [name]: size
         [value]: large
+        [name]: size
