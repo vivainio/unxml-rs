@@ -1,10 +1,10 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use quick_xml::events::Event;
 use quick_xml::Reader;
+use quick_xml::events::Event;
 
 #[derive(Parser)]
 #[command(name = "unxml")]
@@ -99,7 +99,7 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
             Ok(Event::Text(ref e)) => {
                 let text = e.unescape().context("Failed to unescape text")?;
                 let text_content = text.trim();
-                
+
                 if !text_content.is_empty() {
                     if let Some(current_element) = elements_stack.last_mut() {
                         if !current_element.text_content.is_empty() {
@@ -128,7 +128,13 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                 }
             }
             Ok(Event::Eof) => break,
-            Err(e) => return Err(anyhow::anyhow!("Error at position {}: {:?}", reader.error_position(), e)),
+            Err(e) => {
+                return Err(anyhow::anyhow!(
+                    "Error at position {}: {:?}",
+                    reader.error_position(),
+                    e
+                ));
+            }
             _ => {} // Ignore other events like comments, CDATA, etc.
         }
         buf.clear();
@@ -139,14 +145,13 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
-    
+
     // Read the XML file
     let content = fs::read_to_string(&cli.file)
         .with_context(|| format!("Failed to read file: {}", cli.file))?;
 
     // Parse the XML
-    let elements = parse_xml(&content)
-        .context("Failed to parse XML")?;
+    let elements = parse_xml(&content).context("Failed to parse XML")?;
 
     // Output in YAML-like format
     for element in elements {
