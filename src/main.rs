@@ -115,22 +115,25 @@ fn convert_element_to_xml(element: ElementRef) -> XmlElement {
         xml_element.attributes.insert(attr_name.to_string(), attr_value.to_string());
     }
 
-    // Get text content (direct text children only)
-    let text_content: String = element
-        .text()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .trim()
-        .to_string();
-
-    if !text_content.is_empty() {
-        xml_element.text_content = text_content;
-    }
-
-    // Process child elements
+    // Process child elements first to know if we have any
     for child in element.children() {
         if let Some(child_element) = ElementRef::wrap(child) {
             xml_element.children.push(convert_element_to_xml(child_element));
+        }
+    }
+
+    // Only get text content if this element has no child elements (leaf node)
+    // This matches XML behavior better and avoids duplicate text content
+    if xml_element.children.is_empty() {
+        let text_content: String = element
+            .text()
+            .collect::<Vec<_>>()
+            .join(" ")
+            .trim()
+            .to_string();
+        
+        if !text_content.is_empty() {
+            xml_element.text_content = text_content;
         }
     }
 

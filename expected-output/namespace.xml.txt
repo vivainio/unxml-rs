@@ -1,7 +1,7 @@
 root
   [xmlns:custom]: http://example.com/custom
-  [xmlns:xsi]: http://www.w3.org/2001/XMLSchema-instance
   [xmlns]: http://example.com/default
+  [xmlns:xsi]: http://www.w3.org/2001/XMLSchema-instance
   item
     [custom:type]: product
     [custom:id]: 1

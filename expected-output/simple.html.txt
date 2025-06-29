@@ -1,94 +1,34 @@
 html
-  [lang]: en = Simple HTML Page 
- 
- 
-     
-         Welcome to My Website 
-         
-             
-                 Home 
-                 About 
-                 Contact 
-             
-         
-     
-     
-         
-             Home Section 
-             This is the home section of the website. 
-         
-         
-             About Section 
-             Learn more about us here. 
-         
-     
-     
-         Â© 2024 My Website. All rights reserved.
-  head = Simple HTML Page
+  [lang]: en
+  head
     meta
       [charset]: UTF-8
     meta
-      [content]: width=device-width, initial-scale=1.0
       [name]: viewport
+      [content]: width=device-width, initial-scale=1.0
     title = Simple HTML Page
-  body = Welcome to My Website 
-         
-             
-                 Home 
-                 About 
-                 Contact 
-             
-         
-     
-     
-         
-             Home Section 
-             This is the home section of the website. 
-         
-         
-             About Section 
-             Learn more about us here. 
-         
-     
-     
-         Â© 2024 My Website. All rights reserved.
-    header = Welcome to My Website 
-         
-             
-                 Home 
-                 About 
-                 Contact
+  body
+    header
       h1 = Welcome to My Website
-      nav = Home 
-                 About 
-                 Contact
-        ul = Home 
-                 About 
-                 Contact
-          li = Home
+      nav
+        ul
+          li
             a
               [href]: #home = Home
-          li = About
+          li
             a
               [href]: #about = About
-          li = Contact
+          li
             a
               [href]: #contact = Contact
-    main = Home Section 
-             This is the home section of the website. 
-         
-         
-             About Section 
-             Learn more about us here.
+    main
       section
-        [id]: home = Home Section 
-             This is the home section of the website.
+        [id]: home
         h2 = Home Section
         p = This is the home section of the website.
       section
-        [id]: about = About Section 
-             Learn more about us here.
+        [id]: about
         h2 = About Section
         p = Learn more about us here.
-    footer = Â© 2024 My Website. All rights reserved.
-      p = Â© 2024 My Website. All rights reserved.
+    footer
+      p = © 2024 My Website. All rights reserved.

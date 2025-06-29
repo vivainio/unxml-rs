@@ -1,7 +1,7 @@
 catalog
-  [version]: 1.0
-  [xmlns:xsi]: http://www.w3.org/2001/XMLSchema-instance
   [xmlns]: http://example.com/catalog
+  [xmlns:xsi]: http://www.w3.org/2001/XMLSchema-instance
+  [version]: 1.0
   products
     product
       [category]: electronics
@@ -24,8 +24,8 @@ catalog
         tag = electronics
         tag = mobile
     product
-      [featured]: false
       [category]: books
+      [featured]: false
       id = B001
       name = Programming Guide
       description = Comprehensive guide to modern programming

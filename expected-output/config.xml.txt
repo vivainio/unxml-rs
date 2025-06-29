@@ -16,8 +16,8 @@ configuration
       [rotate]: daily
   features
     feature
-      [enabled]: true
       [name]: authentication
+      [enabled]: true
     feature
       [name]: caching
       [enabled]: false
