@@ -1,34 +1,27 @@
 html [lang]: en
   head
     meta [charset]: UTF-8
-    meta
+    meta [name]: viewport
       [content]: width=device-width, initial-scale=1.0
-      [name]: viewport
-    meta
-      [name]: description
+    meta [name]: description
       [content]: A complex HTML page demonstrating various elements
-    meta
+    meta [name]: keywords
       [content]: HTML, CSS, JavaScript, web development
-      [name]: keywords
-    meta
+    meta [name]: author
       [content]: Web Developer
-      [name]: author
     title = Complex HTML Page
-    link
-      [href]: styles.css
+    link [href]: styles.css
       [rel]: stylesheet
-    link
+    link [href]: /favicon.ico
       [rel]: icon
-      [href]: /favicon.ico
       [type]: image/x-icon
   body
     header.main-header
       .logo
-        img
-          [width]: 100
-          [height]: 50
+        img [src]: logo.png
           [alt]: Company Logo
-          [src]: logo.png
+          [height]: 50
+          [width]: 100
       nav.main-nav
         ul
           li
@@ -48,9 +41,8 @@ html [lang]: en
           p = Discover the power of modern web development
           button.cta-button = Get Started
         .hero-image
-          img
+          img [src]: hero-image.jpg
             [alt]: Hero Image
-            [src]: hero-image.jpg
       section.products-section [id]: products
         h2 = Our Products
         .product-grid
@@ -59,9 +51,8 @@ html [lang]: en
               h3 = Product 1
               span.price = $99.99
             figure
-              img
+              img [src]: product1.jpg
                 [alt]: Product 1
-                [src]: product1.jpg
               figcaption = Amazing product with great features
             .product-details
               p = This is an amazing product that will revolutionize your workflow.
@@ -75,9 +66,8 @@ html [lang]: en
               h3 = Product 2
               span.price = $149.99
             figure
-              img
+              img [src]: product2.jpg
                 [alt]: Product 2
-                [src]: product2.jpg
               figcaption = Premium product for professionals
             .product-details
               p = A premium solution for professional use cases.
@@ -157,17 +147,14 @@ html [lang]: en
         .footer-section
           h4 = Follow Us
           .social-links
-            a
-              [aria-label]: Facebook
-              [href]: # = Facebook
-            a
-              [href]: #
+            a [href]: #
+              [aria-label]: Facebook = Facebook
+            a [href]: #
               [aria-label]: Twitter = Twitter
-            a
-              [aria-label]: LinkedIn
-              [href]: # = LinkedIn
+            a [href]: #
+              [aria-label]: LinkedIn = LinkedIn
       .footer-bottom
-        p = © 2024 Our Company. All rights reserved.
+        p = Â© 2024 Our Company. All rights reserved.
     script [src]: script.js
     script = // Inline JavaScript for demonstration
         document.addEventListener('DOMContentLoaded', function() {

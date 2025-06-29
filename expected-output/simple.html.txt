@@ -1,9 +1,8 @@
 html [lang]: en
   head
     meta [charset]: UTF-8
-    meta
+    meta [name]: viewport
       [content]: width=device-width, initial-scale=1.0
-      [name]: viewport
     title = Simple HTML Page
   body
     header
@@ -24,4 +23,4 @@ html [lang]: en
         h2 = About Section
         p = Learn more about us here.
     footer
-      p = © 2024 My Website. All rights reserved.
+      p = Â© 2024 My Website. All rights reserved.

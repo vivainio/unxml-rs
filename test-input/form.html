@@ -18,11 +18,11 @@
         <form id="contactForm" action="/submit" method="POST">
             <div class="form-group">
                 <label for="name">Full Name:</label>
-                <input type="text" id="name" name="name" required>
+                <input type="text" id="name" name="name" required cdkFocusInitial>
             </div>
             <div class="form-group">
                 <label for="email">Email Address:</label>
-                <input type="email" id="email" name="email" required>
+                <input type="email" id="email" name="email" required mat-input>
             </div>
             <div class="form-group">
                 <label for="phone">Phone Number:</label>
@@ -31,7 +31,7 @@
             <div class="form-group">
                 <label for="subject">Subject:</label>
                 <select id="subject" name="subject" required>
-                    <option value="">Choose a subject</option>
+                    <option value="" data-empty="">Choose a subject</option>
                     <option value="general">General Inquiry</option>
                     <option value="support">Technical Support</option>
                     <option value="billing">Billing Question</option>
@@ -47,8 +47,8 @@
                 <label for="newsletter">Subscribe to our newsletter</label>
             </div>
             <div class="form-group">
-                <button type="submit">Send Message</button>
-                <button type="reset">Clear Form</button>
+                <button type="submit" mat-button mat-raised-button>Send Message</button>
+                <button type="reset" mat-button>Clear Form</button>
             </div>
         </form>
     </div>

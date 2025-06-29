@@ -1,8 +1,8 @@
 data
   users
     user
-      [id]: 1
       [active]: true
+      [id]: 1
       name = Alice & Bob
       email = alice@example.com
       profile
@@ -16,8 +16,8 @@ data
           language = en
           notifications [enabled]: true
     user
-      [id]: 2
       [active]: false
+      [id]: 2
       name = Charlie <Admin>
       email = charlie@example.com
       profile

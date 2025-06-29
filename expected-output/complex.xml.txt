@@ -1,11 +1,11 @@
 catalog
-  [xmlns:xsi]: http://www.w3.org/2001/XMLSchema-instance
-  [xmlns]: http://example.com/catalog
   [version]: 1.0
+  [xmlns]: http://example.com/catalog
+  [xmlns:xsi]: http://www.w3.org/2001/XMLSchema-instance
   products
     product
-      [featured]: true
       [category]: electronics
+      [featured]: true
       id = E001
       name = Smartphone
       description

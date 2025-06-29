@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angular Control Flow Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .section { 
+            margin-bottom: 30px; 
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .highlight { 
+            background-color: #f0f8ff; 
+            padding: 5px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Angular Control Flow Constructs Test</h1>
+    
+    <!-- @if, @else-if, @else constructs -->
+    <div class="section">
+        <h2>@if / @else-if / @else Examples</h2>
+        
+        <!-- Simple @if -->
+        @if (user.isLoggedIn) {
+            <p class="highlight">Welcome back, {{user.name}}!</p>
+        }
+        
+        <!-- @if with @else -->
+        @if (items.length > 0) {
+            <p>You have {{items.length}} items in your cart.</p>
+        } @else {
+            <p>Your cart is empty.</p>
+        }
+        
+        <!-- @if with @else-if and @else -->
+        @if (user.role === 'admin') {
+            <div class="highlight">
+                <h3>Admin Dashboard</h3>
+                <p>You have full access to all features.</p>
+            </div>
+        } @else if (user.role === 'editor') {
+            <div class="highlight">
+                <h3>Editor Dashboard</h3>
+                <p>You can create and edit content.</p>
+            </div>
+        } @else if (user.role === 'viewer') {
+            <div class="highlight">
+                <h3>Viewer Dashboard</h3>
+                <p>You have read-only access.</p>
+            </div>
+        } @else {
+            <div class="highlight">
+                <h3>Guest Access</h3>
+                <p>Please log in to access more features.</p>
+            </div>
+        }
+        
+        <!-- @if with variable assignment -->
+        @if (user.profile.settings.startDate; as startDate) {
+            <p>Your account was created on: <strong>{{startDate}}</strong></p>
+        }
+    </div>
+
+    <!-- @for construct with @empty -->
+    <div class="section">
+        <h2>@for / @empty Examples</h2>
+        
+        <!-- Basic @for loop -->
+        <h3>Product List:</h3>
+        <ul>
+            @for (product of products; track product.id) {
+                <li>{{product.name}} - ${{product.price}}</li>
+            }
+        </ul>
+        
+        <!-- @for with @empty fallback -->
+        <h3>User Comments:</h3>
+        <div>
+            @for (comment of comments; track comment.id) {
+                <div class="highlight">
+                    <strong>{{comment.author}}</strong>: {{comment.text}}
+                    <small>({{comment.date}})</small>
+                </div>
+            } @empty {
+                <p><em>No comments yet. Be the first to comment!</em></p>
+            }
+        </div>
+        
+        <!-- @for with contextual variables -->
+        <h3>Team Members (with indices):</h3>
+        <ol>
+            @for (member of teamMembers; track member.id; let idx = $index, isFirst = $first, isLast = $last, isEven = $even) {
+                <li class="@if (isEven) { highlight }">
+                    <strong>Member #{{idx + 1}}</strong>: {{member.name}} ({{member.role}})
+                    @if (isFirst) {
+                        <span style="color: green;"> - Team Lead</span>
+                    }
+                    @if (isLast) {
+                        <span style="color: blue;"> - Newest Member</span>
+                    }
+                </li>
+            }
+        </ol>
+        
+        <!-- @for with complex tracking -->
+        <h3>Order History:</h3>
+        @for (order of orders; track order.orderNumber) {
+            <div class="highlight">
+                <h4>Order #{{order.orderNumber}}</h4>
+                <p>Date: {{order.date}} | Status: {{order.status}}</p>
+                <ul>
+                    @for (item of order.items; track item.sku) {
+                        <li>{{item.name}} x{{item.quantity}} = ${{item.total}}</li>
+                    }
+                </ul>
+                <strong>Total: ${{order.total}}</strong>
+            </div>
+        } @empty {
+            <p>You haven't placed any orders yet.</p>
+        }
+    </div>
+
+    <!-- @switch construct -->
+    <div class="section">
+        <h2>@switch / @case / @default Examples</h2>
+        
+        <!-- Basic @switch -->
+        <h3>User Permission Level:</h3>
+        @switch (userPermissions) {
+            @case ('admin') {
+                <div class="highlight" style="background-color: #ffebee;">
+                    <h4>🔧 Admin Dashboard</h4>
+                    <p>Full system access granted.</p>
+                    <ul>
+                        <li>Manage users</li>
+                        <li>System configuration</li>
+                        <li>View analytics</li>
+                        <li>Data backup/restore</li>
+                    </ul>
+                </div>
+            }
+            @case ('reviewer') {
+                <div class="highlight" style="background-color: #fff3e0;">
+                    <h4>👀 Reviewer Dashboard</h4>
+                    <p>Content review and approval access.</p>
+                    <ul>
+                        <li>Review submissions</li>
+                        <li>Approve/reject content</li>
+                        <li>View pending items</li>
+                    </ul>
+                </div>
+            }
+            @case ('editor') {
+                <div class="highlight" style="background-color: #e8f5e8;">
+                    <h4>✏️ Editor Dashboard</h4>
+                    <p>Content creation and editing access.</p>
+                    <ul>
+                        <li>Create new content</li>
+                        <li>Edit existing content</li>
+                        <li>Upload media</li>
+                    </ul>
+                </div>
+            }
+            @case ('contributor') {
+                <div class="highlight" style="background-color: #e3f2fd;">
+                    <h4>📝 Contributor Dashboard</h4>
+                    <p>Limited content creation access.</p>
+                    <ul>
+                        <li>Submit content for review</li>
+                        <li>Edit own content</li>
+                    </ul>
+                </div>
+            }
+            @default {
+                <div class="highlight" style="background-color: #fafafa;">
+                    <h4>👤 Viewer Dashboard</h4>
+                    <p>Read-only access to public content.</p>
+                    <ul>
+                        <li>Browse public content</li>
+                        <li>View your profile</li>
+                    </ul>
+                </div>
+            }
+        }
+        
+        <!-- @switch with different data types -->
+        <h3>Subscription Status:</h3>
+        @switch (subscription.status) {
+            @case ('active') {
+                <p style="color: green;">✅ Your subscription is active until {{subscription.expiryDate}}</p>
+            }
+            @case ('expired') {
+                <p style="color: red;">❌ Your subscription expired on {{subscription.expiryDate}}</p>
+            }
+            @case ('cancelled') {
+                <p style="color: orange;">🚫 Your subscription was cancelled</p>
+            }
+            @case ('pending') {
+                <p style="color: blue;">⏳ Your subscription is pending activation</p>
+            }
+            @default {
+                <p style="color: gray;">❔ Unknown subscription status</p>
+            }
+        }
+        
+        <!-- Nested @switch inside @for -->
+        <h3>Task Status Overview:</h3>
+        @for (task of tasks; track task.id) {
+            <div class="highlight">
+                <h4>{{task.title}}</h4>
+                @switch (task.priority) {
+                    @case ('high') {
+                        <span style="color: red; font-weight: bold;">🔴 HIGH PRIORITY</span>
+                    }
+                    @case ('medium') {
+                        <span style="color: orange; font-weight: bold;">🟡 MEDIUM PRIORITY</span>
+                    }
+                    @case ('low') {
+                        <span style="color: green;">🟢 Low Priority</span>
+                    }
+                    @default {
+                        <span style="color: gray;">⚪ No Priority Set</span>
+                    }
+                }
+                
+                @switch (task.status) {
+                    @case ('completed') {
+                        <p style="color: green;">✅ Completed on {{task.completedDate}}</p>
+                    }
+                    @case ('in-progress') {
+                        <p style="color: blue;">🔄 In Progress ({{task.progress}}% complete)</p>
+                    }
+                    @case ('pending') {
+                        <p style="color: orange;">⏸️ Pending</p>
+                    }
+                    @default {
+                        <p style="color: gray;">❔ Unknown Status</p>
+                    }
+                }
+            </div>
+        } @empty {
+            <p>No tasks found.</p>
+        }
+    </div>
+
+    <!-- Complex nested example -->
+    <div class="section">
+        <h2>Complex Nested Control Flow</h2>
+        
+        @if (currentUser) {
+            <div class="highlight">
+                <h3>Welcome, {{currentUser.name}}!</h3>
+                
+                @switch (currentUser.accountType) {
+                    @case ('premium') {
+                        <h4>🌟 Premium Features</h4>
+                        @for (feature of premiumFeatures; track feature.id) {
+                            <div>
+                                <strong>{{feature.name}}</strong>
+                                @if (feature.isNew) {
+                                    <span style="background: gold; padding: 2px 5px; border-radius: 3px; font-size: 0.8em;">NEW</span>
+                                }
+                                <p>{{feature.description}}</p>
+                            </div>
+                        } @empty {
+                            <p>No premium features available.</p>
+                        }
+                    }
+                    @case ('basic') {
+                        <h4>📋 Basic Features</h4>
+                        @for (feature of basicFeatures; track feature.id) {
+                            <div>
+                                <strong>{{feature.name}}</strong>: {{feature.description}}
+                            </div>
+                        }
+                    }
+                    @default {
+                        <h4>🆓 Free Trial</h4>
+                        <p>Upgrade to unlock more features!</p>
+                    }
+                }
+                
+                @if (currentUser.notifications && currentUser.notifications.length > 0) {
+                    <h4>🔔 Your Notifications</h4>
+                    @for (notification of currentUser.notifications; track notification.id; let isFirst = $first) {
+                        <div class="@if (isFirst) { highlight }">
+                            @switch (notification.type) {
+                                @case ('urgent') {
+                                    <span style="color: red;">🚨 URGENT:</span>
+                                }
+                                @case ('info') {
+                                    <span style="color: blue;">ℹ️ INFO:</span>
+                                }
+                                @case ('success') {
+                                    <span style="color: green;">✅ SUCCESS:</span>
+                                }
+                                @default {
+                                    <span style="color: gray;">📢</span>
+                                }
+                            }
+                            {{notification.message}}
+                            <small>({{notification.timestamp}})</small>
+                        </div>
+                    }
+                } @else {
+                    <p>No new notifications.</p>
+                }
+            </div>
+        } @else {
+            <div class="highlight">
+                <h3>Please log in to access your dashboard</h3>
+                <button>Sign In</button>
+                <button>Create Account</button>
+            </div>
+        }
+    </div>
+
+    <script>
+        // Sample data that would typically come from Angular component
+        const sampleData = {
+            user: {
+                isLoggedIn: true,
+                name: 'John Doe',
+                role: 'editor',
+                profile: {
+                    settings: {
+                        startDate: '2023-01-15'
+                    }
+                }
+            },
+            items: ['item1', 'item2', 'item3'],
+            products: [
+                { id: 1, name: 'Laptop', price: 999 },
+                { id: 2, name: 'Mouse', price: 25 },
+                { id: 3, name: 'Keyboard', price: 75 }
+            ],
+            comments: [
+                { id: 1, author: 'Alice', text: 'Great product!', date: '2024-01-01' },
+                { id: 2, author: 'Bob', text: 'Highly recommended', date: '2024-01-02' }
+            ],
+            teamMembers: [
+                { id: 1, name: 'Sarah', role: 'Lead Developer' },
+                { id: 2, name: 'Mike', role: 'Designer' },
+                { id: 3, name: 'Lisa', role: 'QA Engineer' }
+            ],
+            userPermissions: 'admin',
+            subscription: {
+                status: 'active',
+                expiryDate: '2024-12-31'
+            },
+            tasks: [
+                { id: 1, title: 'Fix login bug', priority: 'high', status: 'completed', completedDate: '2024-01-10' },
+                { id: 2, title: 'Update documentation', priority: 'medium', status: 'in-progress', progress: 75 },
+                { id: 3, title: 'Code review', priority: 'low', status: 'pending' }
+            ]
+        };
+        
+        console.log('Sample data for Angular control flow:', sampleData);
+    </script>
+</body>
+</html> 

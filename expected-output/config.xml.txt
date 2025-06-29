@@ -15,14 +15,14 @@ configuration
       [rotate]: daily
   features
     feature
-      [name]: authentication
       [enabled]: true
+      [name]: authentication
     feature
       [enabled]: false
       [name]: caching
     feature
-      [name]: monitoring
       [enabled]: true
+      [name]: monitoring
   servers
     server [type]: web
       name = web-01

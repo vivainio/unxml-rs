@@ -48,14 +48,72 @@ impl XmlElement {
 
         // Attributes in [square brackets]
         if !self.attributes.is_empty() {
-            if self.attributes.len() == 1 {
-                // Single attribute: put on same line as element name
-                let (key, value) = self.attributes.iter().next().unwrap();
-                result.push_str(&format!(" [{key}]: {value}"));
-            } else {
-                // Multiple attributes: put each on separate line
-                for (key, value) in &self.attributes {
-                    result.push_str(&format!("\n{indent_str}  [{key}]: {value}"));
+            // Separate boolean attributes from others
+            // Boolean attributes are any empty-valued attributes EXCEPT those commonly used with empty values
+            let non_boolean_empty_attrs = [
+                "value", "alt", "title", "placeholder", "data-", "aria-", "content", "href", "src"
+            ];
+            
+            let mut boolean_attrs: Vec<_> = self.attributes.iter()
+                .filter(|(key, value)| {
+                    value.is_empty() && !non_boolean_empty_attrs.iter().any(|&prefix| {
+                        if prefix.ends_with('-') {
+                            key.starts_with(prefix)
+                        } else {
+                            key.as_str() == prefix
+                        }
+                    })
+                })
+                .collect();
+            let mut non_boolean_attrs: Vec<_> = self.attributes.iter()
+                .filter(|(key, value)| {
+                    !value.is_empty() || non_boolean_empty_attrs.iter().any(|&prefix| {
+                        if prefix.ends_with('-') {
+                            key.starts_with(prefix)
+                        } else {
+                            key.as_str() == prefix
+                        }
+                    })
+                })
+                .collect();
+            
+            // Sort boolean attributes for deterministic output
+            boolean_attrs.sort_by_key(|(key, _)| *key);
+            
+            // Add boolean attributes first, on the same line as element name
+            for (key, _) in boolean_attrs {
+                result.push_str(&format!(" [{key}]"));
+            }
+            
+            // Handle non-boolean attributes
+            if !non_boolean_attrs.is_empty() {
+                // Check for important HTML attributes that should be on the same line
+                let important_attr = self.get_important_html_attribute_from_attrs(&non_boolean_attrs);
+                
+                if non_boolean_attrs.len() == 1 {
+                    // Single non-boolean attribute: put on same line as element name (after boolean attrs)
+                    let (key, value) = non_boolean_attrs.iter().next().unwrap();
+                    result.push_str(&format!(" [{key}]: {value}"));
+                } else if let Some((key, value)) = important_attr {
+                    // Multiple non-boolean attributes but has important one: put important one on same line
+                    result.push_str(&format!(" [{key}]: {value}"));
+                    
+                    // Put remaining non-boolean attributes on separate lines (sorted for deterministic output)
+                    let mut remaining_attrs: Vec<_> = non_boolean_attrs.iter()
+                        .filter(|(attr_key, _)| *attr_key != &key)
+                        .collect();
+                    remaining_attrs.sort_by_key(|(key, _)| *key);
+                    
+                    for (attr_key, attr_value) in remaining_attrs {
+                        result.push_str(&format!("\n{indent_str}  [{attr_key}]: {attr_value}"));
+                    }
+                } else {
+                    // Multiple non-boolean attributes with no important ones: put each on separate line (sorted for deterministic output)
+                    non_boolean_attrs.sort_by_key(|(key, _)| *key);
+                    
+                    for (key, value) in non_boolean_attrs {
+                        result.push_str(&format!("\n{indent_str}  [{key}]: {value}"));
+                    }
                 }
             }
         }
@@ -73,6 +131,56 @@ impl XmlElement {
         }
 
         result
+    }
+
+    fn get_important_html_attribute(&self) -> Option<(String, String)> {
+        // Define important HTML attributes that should be prioritized on the same line
+        let important_attrs = match self.name.as_str() {
+            name if name == "img" || name.starts_with("img.") => vec!["src", "alt"],
+            name if name == "a" || name.starts_with("a.") => vec!["href"],
+            name if name == "link" || name.starts_with("link.") => vec!["href", "rel"],
+            name if name == "script" || name.starts_with("script.") => vec!["src"],
+            name if name == "form" || name.starts_with("form.") => vec!["action", "method"],
+            name if name == "input" || name.starts_with("input.") => vec!["type", "name"],
+            name if name == "meta" || name.starts_with("meta.") => vec!["name", "charset"],
+            name if name == "iframe" || name.starts_with("iframe.") => vec!["src"],
+            _ => vec![],
+        };
+
+        // Find the first important attribute that exists
+        for attr_name in important_attrs {
+            if let Some(attr_value) = self.attributes.get(attr_name) {
+                return Some((attr_name.to_string(), attr_value.clone()));
+            }
+        }
+
+        None
+    }
+
+    fn get_important_html_attribute_from_attrs(&self, attrs: &[(&String, &String)]) -> Option<(String, String)> {
+        // Define important HTML attributes that should be prioritized on the same line
+        let important_attrs = match self.name.as_str() {
+            name if name == "img" || name.starts_with("img.") => vec!["src", "alt"],
+            name if name == "a" || name.starts_with("a.") => vec!["href"],
+            name if name == "link" || name.starts_with("link.") => vec!["href", "rel"],
+            name if name == "script" || name.starts_with("script.") => vec!["src"],
+            name if name == "form" || name.starts_with("form.") => vec!["action", "method"],
+            name if name == "input" || name.starts_with("input.") => vec!["type", "name"],
+            name if name == "meta" || name.starts_with("meta.") => vec!["name", "charset"],
+            name if name == "iframe" || name.starts_with("iframe.") => vec!["src"],
+            _ => vec![],
+        };
+
+        // Find the first important attribute that exists in the provided attrs
+        for attr_name in important_attrs {
+            for (key, value) in attrs {
+                if *key == attr_name {
+                    return Some((attr_name.to_string(), (*value).clone()));
+                }
+            }
+        }
+
+        None
     }
 }
 
