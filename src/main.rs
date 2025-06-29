@@ -43,7 +43,7 @@ impl XmlElement {
         // Attributes in [square brackets]
         if !self.attributes.is_empty() {
             for (key, value) in &self.attributes {
-                result.push_str(&format!("\n{}  [{}]: {}", indent_str, key, value));
+                result.push_str(&format!("\n{indent_str}  [{key}]: {value}"));
             }
         }
 
