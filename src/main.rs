@@ -107,7 +107,7 @@ impl XmlElement {
 
                 if non_boolean_attrs.len() == 1 {
                     // Single non-boolean attribute: put on same line as element name (after boolean attrs)
-                    let (key, value) = non_boolean_attrs.iter().next().unwrap();
+                    let (key, value) = non_boolean_attrs.first().unwrap();
                     result.push_str(&format!(" [{key}]: {value}"));
                 } else if let Some((key, value)) = important_attr {
                     // Multiple non-boolean attributes but has important one: put important one on same line
@@ -147,30 +147,6 @@ impl XmlElement {
         }
 
         result
-    }
-
-    fn get_important_html_attribute(&self) -> Option<(String, String)> {
-        // Define important HTML attributes that should be prioritized on the same line
-        let important_attrs = match self.name.as_str() {
-            name if name == "img" || name.starts_with("img.") => vec!["src", "alt"],
-            name if name == "a" || name.starts_with("a.") => vec!["href"],
-            name if name == "link" || name.starts_with("link.") => vec!["href", "rel"],
-            name if name == "script" || name.starts_with("script.") => vec!["src"],
-            name if name == "form" || name.starts_with("form.") => vec!["action", "method"],
-            name if name == "input" || name.starts_with("input.") => vec!["type", "name"],
-            name if name == "meta" || name.starts_with("meta.") => vec!["name", "charset"],
-            name if name == "iframe" || name.starts_with("iframe.") => vec!["src"],
-            _ => vec![],
-        };
-
-        // Find the first important attribute that exists
-        for attr_name in important_attrs {
-            if let Some(attr_value) = self.attributes.get(attr_name) {
-                return Some((attr_name.to_string(), attr_value.clone()));
-            }
-        }
-
-        None
     }
 
     fn get_important_html_attribute_from_attrs(
@@ -319,7 +295,7 @@ fn parse_html(content: &str, format: &InputFormat) -> Result<Vec<XmlElement>> {
             // Only include elements that don't have a parent element in our selection
             let is_root = element
                 .parent()
-                .map_or(true, |parent| !ElementRef::wrap(parent).is_some());
+                .is_none_or(|parent| ElementRef::wrap(parent).is_none());
 
             if is_root {
                 root_elements.push(convert_element_to_xml(element, format));
