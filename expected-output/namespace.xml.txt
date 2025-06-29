@@ -1,10 +1,10 @@
 root
   [xmlns:xsi]: http://www.w3.org/2001/XMLSchema-instance
-  [xmlns:custom]: http://example.com/custom
   [xmlns]: http://example.com/default
+  [xmlns:custom]: http://example.com/custom
   item
-    [custom:type]: product
     [custom:id]: 1
+    [custom:type]: product
     name = Default Namespace Item
     custom:metadata
       custom:category = electronics
@@ -15,8 +15,8 @@ root
     [xsi:type]: custom:SpecialType
     custom:properties
       custom:property
-        [name]: color
         [value]: blue
+        [name]: color
       custom:property
         [name]: size
         [value]: large
