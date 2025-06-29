@@ -1,18 +1,24 @@
 use std::collections::HashMap;
 use std::fs;
+use std::path::Path;
 
 use anyhow::{Context, Result};
 use clap::Parser;
 use quick_xml::Reader;
 use quick_xml::events::Event;
+use scraper::{Html, ElementRef, Selector};
 
 #[derive(Parser)]
 #[command(name = "unxml")]
-#[command(about = "Simplify and 'flatten' XML files")]
+#[command(about = "Simplify and 'flatten' XML and HTML files")]
 #[command(version = "1.0.0")]
 struct Cli {
-    /// XML file to process
+    /// XML or HTML file to process
     file: String,
+    
+    /// Force input format (xml or html). If not specified, format is auto-detected
+    #[arg(short, long)]
+    format: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -62,6 +68,120 @@ impl XmlElement {
         result
     }
 }
+
+#[derive(Debug, PartialEq)]
+enum InputFormat {
+    Xml,
+    Html,
+}
+
+fn detect_format(content: &str, file_path: &str) -> InputFormat {
+    // Check file extension first
+    if let Some(extension) = Path::new(file_path).extension() {
+        let ext = extension.to_string_lossy().to_lowercase();
+        match ext.as_str() {
+            "html" | "htm" => return InputFormat::Html,
+            "xml" | "xsl" | "xsd" | "wsdl" => return InputFormat::Xml,
+            _ => {}
+        }
+    }
+
+    // Check content for HTML-specific indicators
+    let content_lower = content.to_lowercase();
+    
+    // Look for common HTML indicators
+    if content_lower.contains("<!doctype html") 
+        || content_lower.contains("<html") 
+        || content_lower.contains("<head>") 
+        || content_lower.contains("<body>") {
+        return InputFormat::Html;
+    }
+
+    // Look for XML declaration
+    if content.trim_start().starts_with("<?xml") {
+        return InputFormat::Xml;
+    }
+
+    // Default to XML for ambiguous cases
+    InputFormat::Xml
+}
+
+fn convert_element_to_xml(element: ElementRef) -> XmlElement {
+    let name = element.value().name().to_string();
+    let mut xml_element = XmlElement::new(name);
+
+    // Extract attributes
+    for (attr_name, attr_value) in element.value().attrs() {
+        xml_element.attributes.insert(attr_name.to_string(), attr_value.to_string());
+    }
+
+    // Get text content (direct text children only)
+    let text_content: String = element
+        .text()
+        .collect::<Vec<_>>()
+        .join(" ")
+        .trim()
+        .to_string();
+
+    if !text_content.is_empty() {
+        xml_element.text_content = text_content;
+    }
+
+    // Process child elements
+    for child in element.children() {
+        if let Some(child_element) = ElementRef::wrap(child) {
+            xml_element.children.push(convert_element_to_xml(child_element));
+        }
+    }
+
+    xml_element
+}
+
+fn parse_html(content: &str) -> Result<Vec<XmlElement>> {
+    let document = Html::parse_document(content);
+    let mut root_elements = Vec::new();
+    
+    // Use a universal selector to find all top-level elements
+    let selector = Selector::parse("html").unwrap_or_else(|_| {
+        // Fallback: try to get body or any top-level element
+        Selector::parse("body").unwrap_or_else(|_| {
+            Selector::parse("*").unwrap()
+        })
+    });
+
+    // First try to find html element
+    if let Some(html_element) = document.select(&selector).next() {
+        root_elements.push(convert_element_to_xml(html_element));
+    } else {
+        // Fallback: get all top-level elements
+        let all_selector = Selector::parse("body > *, html > *").unwrap_or_else(|_| {
+            Selector::parse("*").unwrap()
+        });
+        
+        for element in document.select(&all_selector) {
+            // Only include elements that don't have a parent element in our selection
+            let is_root = element.parent().map_or(true, |parent| {
+                !ElementRef::wrap(parent).is_some()
+            });
+            
+            if is_root {
+                root_elements.push(convert_element_to_xml(element));
+            }
+        }
+    }
+
+    // If we still don't have anything, try a more aggressive approach
+    if root_elements.is_empty() {
+        let fallback_selector = Selector::parse("*").unwrap();
+        for element in document.select(&fallback_selector).take(1) {
+            root_elements.push(convert_element_to_xml(element));
+        }
+    }
+
+    Ok(root_elements)
+}
+
+
 
 fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
     let mut reader = Reader::from_str(content);
@@ -146,12 +266,26 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
-    // Read the XML file
+    // Read the file
     let content = fs::read_to_string(&cli.file)
         .with_context(|| format!("Failed to read file: {}", cli.file))?;
 
-    // Parse the XML
-    let elements = parse_xml(&content).context("Failed to parse XML")?;
+    // Determine input format
+    let format = if let Some(format_str) = &cli.format {
+        match format_str.to_lowercase().as_str() {
+            "html" => InputFormat::Html,
+            "xml" => InputFormat::Xml,
+            _ => return Err(anyhow::anyhow!("Unsupported format: {}. Use 'xml' or 'html'", format_str)),
+        }
+    } else {
+        detect_format(&content, &cli.file)
+    };
+
+    // Parse the content based on detected/specified format
+    let elements = match format {
+        InputFormat::Html => parse_html(&content).context("Failed to parse HTML")?,
+        InputFormat::Xml => parse_xml(&content).context("Failed to parse XML")?,
+    };
 
     // Output in YAML-like format
     for element in elements {
