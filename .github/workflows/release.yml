@@ -1,0 +1,138 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            archive-name: unxml-linux-x86_64.tar.gz
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            archive-name: unxml-windows-x86_64.zip
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            archive-name: unxml-macos-x86_64.tar.gz
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            archive-name: unxml-macos-arm64.tar.gz
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: ${{ matrix.target }}
+
+    - name: Cache Cargo dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          target/
+        key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-${{ matrix.target }}-
+
+    - name: Build release binary
+      run: cargo build --release --target ${{ matrix.target }}
+
+    - name: Create archive (Unix)
+      if: matrix.os != 'windows-latest'
+      run: |
+        cd target/${{ matrix.target }}/release
+        tar czf ../../../${{ matrix.archive-name }} unxml
+        cd -
+
+    - name: Create archive (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        cd target/${{ matrix.target }}/release
+        7z a ../../../${{ matrix.archive-name }} unxml.exe
+        cd -
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.archive-name }}
+        path: ${{ matrix.archive-name }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts/
+
+    - name: Move artifacts to root
+      run: |
+        find artifacts/ -name "*.tar.gz" -o -name "*.zip" | while read file; do
+          mv "$file" .
+        done
+
+    - name: Extract version from tag
+      id: version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
+        body: |
+          ## unxml ${{ steps.version.outputs.VERSION }}
+          
+          A tool to pretty-print XML files in a light, YAML-like, readable format.
+          
+          ### Installation
+          
+          Download the appropriate binary for your platform:
+          - **Linux (x86_64)**: `unxml-linux-x86_64.tar.gz`
+          - **Windows (x86_64)**: `unxml-windows-x86_64.zip`  
+          - **macOS (Intel)**: `unxml-macos-x86_64.tar.gz`
+          - **macOS (Apple Silicon)**: `unxml-macos-arm64.tar.gz`
+          
+          ### Usage
+          
+          ```bash
+          unxml your-file.xml
+          ```
+          
+          This will output the XML in a simplified, YAML-like format for easier reading.
+          
+          ### Changes
+          
+          See the [commit history](https://github.com/${{ github.repository }}/commits/${{ github.ref_name }}) for details.
+        files: |
+          unxml-linux-x86_64.tar.gz
+          unxml-windows-x86_64.zip
+          unxml-macos-x86_64.tar.gz
+          unxml-macos-arm64.tar.gz
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

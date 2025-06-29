@@ -6,6 +6,17 @@ This is a Rust clone of the original [unxml](https://github.com/vivainio/unxml) 
 
 ## Installation
 
+### Pre-built Binaries (Recommended)
+
+Download the latest release for your platform from the [GitHub Releases](https://github.com/yourusername/unxml-rs/releases) page:
+
+- **Linux (x86_64)**: `unxml-linux-x86_64.tar.gz`
+- **Windows (x86_64)**: `unxml-windows-x86_64.zip`
+- **macOS (Intel)**: `unxml-macos-x86_64.tar.gz`
+- **macOS (Apple Silicon)**: `unxml-macos-arm64.tar.gz`
+
+Extract the archive and place the `unxml` binary in your PATH.
+
 ### From Source
 
 ```bash
@@ -91,4 +102,19 @@ MIT License - see LICENSE file for details.
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request. 
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+### Creating Releases
+
+To create a new release:
+
+1. Update the version in `Cargo.toml` and `src/main.rs`
+2. Commit the version changes
+3. Create and push a version tag:
+   ```bash
+   git tag v1.0.1
+   git push origin v1.0.1
+   ```
+4. The GitHub Actions workflow will automatically build binaries for all platforms and create a release
+
+The CI workflow runs on every push to ensure code quality with formatting checks, linting, and tests. 

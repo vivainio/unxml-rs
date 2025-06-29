@@ -1,1 +1,19 @@
+# Rust build artifacts
 /target
+
+# Release archives (in case they're generated locally)
+*.tar.gz
+*.zip
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Debug files
+*.pdb
