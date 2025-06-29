@@ -90,9 +90,7 @@ jobs:
 
     - name: Move artifacts to root
       run: |
-        find artifacts/ -name "*.tar.gz" -o -name "*.zip" | while read file; do
-          mv "$file" .
-        done
+        find artifacts/ -type f \( -name "*.tar.gz" -o -name "*.zip" \) -exec mv {} . \;
 
     - name: Extract version from tag
       id: version
