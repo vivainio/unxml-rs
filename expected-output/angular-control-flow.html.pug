@@ -1,0 +1,190 @@
+html(lang=en)
+  head
+    meta(charset=UTF-8)
+    meta(content="width=device-width, initial-scale=1.0", name=viewport)
+    title = Angular Control Flow Test
+    style = body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .section { 
+            margin-bottom: 30px; 
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .highlight { 
+            background-color: #f0f8ff; 
+            padding: 5px;
+            border-radius: 3px;
+        }
+  body
+    h1 = Angular Control Flow Constructs Test
+    .section
+      h2 = @if / @else-if / @else Examples
+      p.highlight = Welcome back, {{user.name}}!
+      p = You have {{items.length}} items in your cart.
+      p = Your cart is empty.
+      .highlight
+        h3 = Admin Dashboard
+        p = You have full access to all features.
+      .highlight
+        h3 = Editor Dashboard
+        p = You can create and edit content.
+      .highlight
+        h3 = Viewer Dashboard
+        p = You have read-only access.
+      .highlight
+        h3 = Guest Access
+        p = Please log in to access more features.
+      p
+        strong = {{startDate}}
+    .section
+      h2 = @for / @empty Examples
+      h3 = Product List:
+      ul
+        li = {{product.name}} - ${{product.price}}
+      h3 = User Comments:
+      div
+        .highlight
+          strong = {{comment.author}}
+          small = ({{comment.date}})
+        p
+          em = No comments yet. Be the first to comment!
+      h3 = Team Members (with indices):
+      ol
+        li.@if.(isEven).{.highlight.}
+          strong = Member #{{idx + 1}}
+          span(style="color: green;") = - Team Lead
+          span(style="color: blue;") = - Newest Member
+      h3 = Order History:
+      .highlight
+        h4 = Order #{{order.orderNumber}}
+        p = Date: {{order.date}} | Status: {{order.status}}
+        ul
+          li = {{item.name}} x{{item.quantity}} = ${{item.total}}
+        strong = Total: ${{order.total}}
+      p = You haven't placed any orders yet.
+    .section
+      h2 = @switch / @case / @default Examples
+      h3 = User Permission Level:
+      .highlight(style="background-color: #ffebee;")
+        h4 = 🔧 Admin Dashboard
+        p = Full system access granted.
+        ul
+          li = Manage users
+          li = System configuration
+          li = View analytics
+          li = Data backup/restore
+      .highlight(style="background-color: #fff3e0;")
+        h4 = 👀 Reviewer Dashboard
+        p = Content review and approval access.
+        ul
+          li = Review submissions
+          li = Approve/reject content
+          li = View pending items
+      .highlight(style="background-color: #e8f5e8;")
+        h4 = ✏️ Editor Dashboard
+        p = Content creation and editing access.
+        ul
+          li = Create new content
+          li = Edit existing content
+          li = Upload media
+      .highlight(style="background-color: #e3f2fd;")
+        h4 = 📝 Contributor Dashboard
+        p = Limited content creation access.
+        ul
+          li = Submit content for review
+          li = Edit own content
+      .highlight(style="background-color: #fafafa;")
+        h4 = 👤 Viewer Dashboard
+        p = Read-only access to public content.
+        ul
+          li = Browse public content
+          li = View your profile
+      h3 = Subscription Status:
+      p(style="color: green;") = ✅ Your subscription is active until {{subscription.expiryDate}}
+      p(style="color: red;") = ❌ Your subscription expired on {{subscription.expiryDate}}
+      p(style="color: orange;") = 🚫 Your subscription was cancelled
+      p(style="color: blue;") = ⏳ Your subscription is pending activation
+      p(style="color: gray;") = ❔ Unknown subscription status
+      h3 = Task Status Overview:
+      .highlight
+        h4 = {{task.title}}
+        span(style="color: red; font-weight: bold;") = 🔴 HIGH PRIORITY
+        span(style="color: orange; font-weight: bold;") = 🟡 MEDIUM PRIORITY
+        span(style="color: green;") = 🟢 Low Priority
+        span(style="color: gray;") = ⚪ No Priority Set
+        p(style="color: green;") = ✅ Completed on {{task.completedDate}}
+        p(style="color: blue;") = 🔄 In Progress ({{task.progress}}% complete)
+        p(style="color: orange;") = ⏸️ Pending
+        p(style="color: gray;") = ❔ Unknown Status
+      p = No tasks found.
+    .section
+      h2 = Complex Nested Control Flow
+      .highlight
+        h3 = Welcome, {{currentUser.name}}!
+        h4 = 🌟 Premium Features
+        div
+          strong = {{feature.name}}
+          span(style="background: gold; padding: 2px 5px; border-radius: 3px; font-size: 0.8em;") = NEW
+          p = {{feature.description}}
+        p = No premium features available.
+        h4 = 📋 Basic Features
+        div
+          strong = {{feature.name}}
+        h4 = 🆓 Free Trial
+        p = Upgrade to unlock more features!
+        h4 = 🔔 Your Notifications
+        .@if.(isFirst).{.highlight.}
+          span(style="color: red;") = 🚨 URGENT:
+          span(style="color: blue;") = ℹ️ INFO:
+          span(style="color: green;") = ✅ SUCCESS:
+          span(style="color: gray;") = 📢
+          small = ({{notification.timestamp}})
+        p = No new notifications.
+      .highlight
+        h3 = Please log in to access your dashboard
+        button = Sign In
+        button = Create Account
+    script = // Sample data that would typically come from Angular component
+        const sampleData = {
+            user: {
+                isLoggedIn: true,
+                name: 'John Doe',
+                role: 'editor',
+                profile: {
+                    settings: {
+                        startDate: '2023-01-15'
+                    }
+                }
+            },
+            items: ['item1', 'item2', 'item3'],
+            products: [
+                { id: 1, name: 'Laptop', price: 999 },
+                { id: 2, name: 'Mouse', price: 25 },
+                { id: 3, name: 'Keyboard', price: 75 }
+            ],
+            comments: [
+                { id: 1, author: 'Alice', text: 'Great product!', date: '2024-01-01' },
+                { id: 2, author: 'Bob', text: 'Highly recommended', date: '2024-01-02' }
+            ],
+            teamMembers: [
+                { id: 1, name: 'Sarah', role: 'Lead Developer' },
+                { id: 2, name: 'Mike', role: 'Designer' },
+                { id: 3, name: 'Lisa', role: 'QA Engineer' }
+            ],
+            userPermissions: 'admin',
+            subscription: {
+                status: 'active',
+                expiryDate: '2024-12-31'
+            },
+            tasks: [
+                { id: 1, title: 'Fix login bug', priority: 'high', status: 'completed', completedDate: '2024-01-10' },
+                { id: 2, title: 'Update documentation', priority: 'medium', status: 'in-progress', progress: 75 },
+                { id: 3, title: 'Code review', priority: 'low', status: 'pending' }
+            ]
+        };
+        
+        console.log('Sample data for Angular control flow:', sampleData);

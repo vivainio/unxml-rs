@@ -1,0 +1,38 @@
+warning: method `get_important_html_attribute` is never used
+   --> src\main.rs:161:8
+    |
+38  | impl XmlElement {
+    | --------------- method in this implementation
+...
+161 |     fn get_important_html_attribute(&self) -> Option<(String, String)> {
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: `unxml` (bin "unxml") generated 1 warning
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.12s
+     Running `target\debug\unxml.exe test-input/angular-control-flow.html --angular`
+html [lang]: en
+  head
+    meta [charset]: UTF-8
+    meta [name]: viewport
+      [content]: width=device-width, initial-scale=1.0
+    title = Angular Control Flow Test
+    style = body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .section { 
+            margin-bottom: 30px; 
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .highlight { 
+            background-color: #f0f8ff; 
+            padding: 5px;
+            border-radius: 3px;
+        }
+  body
+    h1 = Angular Control Flow Constructs Test

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angular Control Flow with Comments</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; }
+        .highlight { background-color: #f0f8ff; padding: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Angular Control Flow with Preservation Comments</h1>
+    
+    <!-- This demonstrates how to manually mark Angular constructs for preservation -->
+    
+    <div class="section">
+        <h2>Conditional Rendering</h2>
+        
+        <!-- ng-if: user.isLoggedIn -->
+        <p class="highlight">Welcome back, {{user.name}}!</p>
+        <!-- /ng-if -->
+        
+        <!-- ng-if: items.length > 0 -->
+        <p>You have {{items.length}} items.</p>
+        <!-- ng-else -->
+        <p>Your cart is empty.</p>
+        <!-- /ng-if -->
+        
+        <!-- ng-if: user.role === 'admin' -->
+        <div class="highlight">
+            <h3>Admin Panel</h3>
+            <p>Full access granted.</p>
+        </div>
+        <!-- ng-else-if: user.role === 'editor' -->
+        <div class="highlight">
+            <h3>Editor Panel</h3>
+            <p>Edit access granted.</p>
+        </div>
+        <!-- ng-else -->
+        <div class="highlight">
+            <h3>Viewer Panel</h3>
+            <p>Read-only access.</p>
+        </div>
+        <!-- /ng-if -->
+    </div>
+
+    <div class="section">
+        <h2>Loops and Iteration</h2>
+        
+        <!-- ng-for: product of products track product.id -->
+        <div class="product">
+            <h3>{{product.name}}</h3>
+            <p>Price: ${{product.price}}</p>
+        </div>
+        <!-- ng-empty -->
+        <p>No products available.</p>
+        <!-- /ng-for -->
+        
+        <!-- ng-for: user of users track user.id -->
+        <div class="user-card">
+            <h4>{{user.name}}</h4>
+            <p>Email: {{user.email}}</p>
+            
+            <!-- ng-if: user.isActive -->
+            <span class="status active">Active</span>
+            <!-- ng-else -->
+            <span class="status inactive">Inactive</span>
+            <!-- /ng-if -->
+        </div>
+        <!-- /ng-for -->
+    </div>
+
+    <div class="section">
+        <h2>Switch Statements</h2>
+        
+        <!-- ng-switch: user.role -->
+        
+        <!-- ng-case: 'admin' -->
+        <div class="admin-dashboard">
+                            <h3>[ADMIN] Administrator Dashboard</h3>
+            <ul>
+                <li>Manage users</li>
+                <li>System settings</li>
+                <li>View reports</li>
+            </ul>
+        </div>
+        <!-- /ng-case -->
+        
+        <!-- ng-case: 'editor' -->
+        <div class="editor-dashboard">
+                            <h3>[EDIT] Editor Dashboard</h3>
+            <ul>
+                <li>Create content</li>
+                <li>Edit posts</li>
+                <li>Manage media</li>
+            </ul>
+        </div>
+        <!-- /ng-case -->
+        
+        <!-- ng-case: 'viewer' -->
+        <div class="viewer-dashboard">
+                            <h3>[VIEW] Viewer Dashboard</h3>
+            <ul>
+                <li>Browse content</li>
+                <li>View profile</li>
+            </ul>
+        </div>
+        <!-- /ng-case -->
+        
+        <!-- ng-default -->
+        <div class="guest-dashboard">
+                            <h3>[GUEST] Guest Access</h3>
+            <p>Please log in to access more features.</p>
+        </div>
+        <!-- /ng-default -->
+        
+        <!-- /ng-switch -->
+    </div>
+
+    <div class="section">
+        <h2>Complex Nested Example</h2>
+        
+        <!-- ng-if: currentUser -->
+        <div class="user-profile">
+            <h3>Welcome, {{currentUser.name}}!</h3>
+            
+            <!-- ng-switch: currentUser.accountType -->
+            
+            <!-- ng-case: 'premium' -->
+            <div class="premium-features">
+                                    <h4>[PREMIUM] Premium Features</h4>
+                
+                <!-- ng-for: feature of premiumFeatures track feature.id -->
+                <div class="feature">
+                    <strong>{{feature.name}}</strong>
+                    
+                    <!-- ng-if: feature.isNew -->
+                    <span class="new-badge">NEW</span>
+                    <!-- /ng-if -->
+                    
+                    <p>{{feature.description}}</p>
+                </div>
+                <!-- ng-empty -->
+                <p>No premium features available.</p>
+                <!-- /ng-for -->
+            </div>
+            <!-- /ng-case -->
+            
+            <!-- ng-case: 'basic' -->
+            <div class="basic-features">
+                                    <h4>[BASIC] Basic Features</h4>
+                <p>Upgrade to premium for more features!</p>
+            </div>
+            <!-- /ng-case -->
+            
+            <!-- ng-default -->
+            <div class="trial-features">
+                                    <h4>[TRIAL] Free Trial</h4>
+                <p>Enjoy your free trial period!</p>
+            </div>
+            <!-- /ng-default -->
+            
+            <!-- /ng-switch -->
+            
+            <!-- ng-if: currentUser.notifications.length > 0 -->
+            <div class="notifications">
+                                    <h4>[NOTIFY] Notifications</h4>
+                
+                <!-- ng-for: notification of currentUser.notifications track notification.id -->
+                <div class="notification">
+                    <!-- ng-switch: notification.type -->
+                    
+                    <!-- ng-case: 'urgent' -->
+                                            <span class="urgent">[URGENT] URGENT:</span>
+                    <!-- /ng-case -->
+                    
+                    <!-- ng-case: 'info' -->
+                                            <span class="info">[INFO] INFO:</span>
+                    <!-- /ng-case -->
+                    
+                    <!-- ng-default -->
+                                            <span class="default">[NOTICE]</span>
+                    <!-- /ng-default -->
+                    
+                    <!-- /ng-switch -->
+                    
+                    {{notification.message}}
+                    <small>({{notification.timestamp}})</small>
+                </div>
+                <!-- /ng-for -->
+            </div>
+            <!-- ng-else -->
+            <p>No new notifications.</p>
+            <!-- /ng-if -->
+        </div>
+        <!-- ng-else -->
+        <div class="login-prompt">
+            <h3>Please log in</h3>
+            <button>Sign In</button>
+            <button>Create Account</button>
+        </div>
+        <!-- /ng-if -->
+    </div>
+
+    <script>
+        // Sample data for Angular templates
+        const sampleData = {
+            user: { isLoggedIn: true, name: 'John Doe', role: 'admin' },
+            items: ['item1', 'item2'],
+            products: [
+                { id: 1, name: 'Laptop', price: 999 },
+                { id: 2, name: 'Mouse', price: 25 }
+            ],
+            users: [
+                { id: 1, name: 'Alice', email: 'alice@example.com', isActive: true },
+                { id: 2, name: 'Bob', email: 'bob@example.com', isActive: false }
+            ]
+        };
+    </script>
+</body>
+</html> 

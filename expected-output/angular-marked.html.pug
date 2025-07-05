@@ -1,0 +1,99 @@
+html(lang=en)
+  head
+    meta(charset=UTF-8)
+    meta(content="width=device-width, initial-scale=1.0", name=viewport)
+    title = Angular Control Flow with Comments
+    style = body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; }
+        .highlight { background-color: #f0f8ff; padding: 5px; }
+  body
+    h1 = Angular Control Flow with Preservation Comments
+    .section
+      h2 = Conditional Rendering
+      p.highlight = Welcome back, {{user.name}}!
+      p = You have {{items.length}} items.
+      p = Your cart is empty.
+      .highlight
+        h3 = Admin Panel
+        p = Full access granted.
+      .highlight
+        h3 = Editor Panel
+        p = Edit access granted.
+      .highlight
+        h3 = Viewer Panel
+        p = Read-only access.
+    .section
+      h2 = Loops and Iteration
+      .product
+        h3 = {{product.name}}
+        p = Price: ${{product.price}}
+      p = No products available.
+      .user-card
+        h4 = {{user.name}}
+        p = Email: {{user.email}}
+        span.status.active = Active
+        span.status.inactive = Inactive
+    .section
+      h2 = Switch Statements
+      .admin-dashboard
+        h3 = [ADMIN] Administrator Dashboard
+        ul
+          li = Manage users
+          li = System settings
+          li = View reports
+      .editor-dashboard
+        h3 = [EDIT] Editor Dashboard
+        ul
+          li = Create content
+          li = Edit posts
+          li = Manage media
+      .viewer-dashboard
+        h3 = [VIEW] Viewer Dashboard
+        ul
+          li = Browse content
+          li = View profile
+      .guest-dashboard
+        h3 = [GUEST] Guest Access
+        p = Please log in to access more features.
+    .section
+      h2 = Complex Nested Example
+      .user-profile
+        h3 = Welcome, {{currentUser.name}}!
+        .premium-features
+          h4 = [PREMIUM] Premium Features
+          .feature
+            strong = {{feature.name}}
+            span.new-badge = NEW
+            p = {{feature.description}}
+          p = No premium features available.
+        .basic-features
+          h4 = [BASIC] Basic Features
+          p = Upgrade to premium for more features!
+        .trial-features
+          h4 = [TRIAL] Free Trial
+          p = Enjoy your free trial period!
+        .notifications
+          h4 = [NOTIFY] Notifications
+          .notification
+            span.urgent = [URGENT] URGENT:
+            span.info = [INFO] INFO:
+            span.default = [NOTICE]
+            small = ({{notification.timestamp}})
+        p = No new notifications.
+      .login-prompt
+        h3 = Please log in
+        button = Sign In
+        button = Create Account
+    script = // Sample data for Angular templates
+        const sampleData = {
+            user: { isLoggedIn: true, name: 'John Doe', role: 'admin' },
+            items: ['item1', 'item2'],
+            products: [
+                { id: 1, name: 'Laptop', price: 999 },
+                { id: 2, name: 'Mouse', price: 25 }
+            ],
+            users: [
+                { id: 1, name: 'Alice', email: 'alice@example.com', isActive: true },
+                { id: 2, name: 'Bob', email: 'bob@example.com', isActive: false }
+            ]
+        };

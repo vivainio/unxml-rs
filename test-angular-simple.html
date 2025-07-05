@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Angular Test</title>
+</head>
+<body>
+    <div>
+        <h1>Angular Control Flow Test</h1>
+        @if (user.isLoggedIn) {
+            <p>Welcome back!</p>
+        }
+        
+        @for (item of items; track item.id) {
+            <p>Item: {{item.name}}</p>
+        } @empty {
+            <p>No items found</p>
+        }
+        
+        @switch (status) {
+            @case ('active') {
+                <p>Status is active</p>
+            }
+            @default {
+                <p>Unknown status</p>
+            }
+        }
+    </div>
+</body>
+</html> 

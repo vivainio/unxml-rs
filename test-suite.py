@@ -57,7 +57,7 @@ class TestRunner:
     
     def get_expected_output_file(self, input_file: Path) -> Path:
         """Get the expected output file path for a given input file"""
-        return self.output_dir / f"{input_file.name}.txt"
+        return self.output_dir / f"{input_file.name}.pug"
     
     def load_expected_output(self, input_file: Path) -> Optional[str]:
         """Load the expected output for a given input file"""
@@ -131,6 +131,7 @@ class TestRunner:
                 cmd,
                 capture_output=True,
                 text=True,
+                encoding='utf-8',
                 timeout=30  # 30 second timeout
             )
             
