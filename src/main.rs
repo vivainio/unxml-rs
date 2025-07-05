@@ -100,17 +100,9 @@ impl XmlElement {
             
             // Add non-boolean attributes first with quoted values
             for (key, value) in non_boolean_attrs {
-                if value.contains(' ') || value.contains('"') || value.contains('\'') {
-                    // Use double quotes, escape any internal quotes
-                    let escaped_value = value.replace('"', "&quot;");
-                    attr_parts.push(format!("{}=\"{}\"", key, escaped_value));
-                } else if !value.is_empty() {
-                    // Simple value without quotes if no spaces/quotes
-                    attr_parts.push(format!("{}={}", key, value));
-                } else {
-                    // Empty value gets quoted
-                    attr_parts.push(format!("{}=\"\"", key));
-                }
+                // Always quote all attribute values for consistency and safety
+                let escaped_value = value.replace('"', "&quot;");
+                attr_parts.push(format!("{}=\"{}\"", key, escaped_value));
             }
             
             // Add boolean attributes (just the attribute name)

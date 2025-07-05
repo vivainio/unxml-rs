@@ -1,10 +1,10 @@
-catalog(version=1.0, xmlns=http://example.com/catalog, xmlns:xsi=http://www.w3.org/2001/XMLSchema-instance)
+catalog(version="1.0", xmlns="http://example.com/catalog", xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance")
   products
-    product(category=electronics, featured=true)
+    product(category="electronics", featured="true")
       id = E001
       name = Smartphone
       description
-      price(currency=USD) = 599.99
+      price(currency="USD") = 599.99
       specifications
         display
           size = 6.1
@@ -17,18 +17,18 @@ catalog(version=1.0, xmlns=http://example.com/catalog, xmlns:xsi=http://www.w3.o
         tag = smartphone
         tag = electronics
         tag = mobile
-    product(category=books, featured=false)
+    product(category="books", featured="false")
       id = B001
       name = Programming Guide
       description = Comprehensive guide to modern programming
-      price(currency=USD) = 29.99
+      price(currency="USD") = 29.99
       author
         name = John Doe
         email = john@example.com
       chapters
-        chapter(number=1) = Introduction
-        chapter(number=2) = Basic Concepts
-        chapter(number=3) = Advanced Topics
+        chapter(number="1") = Introduction
+        chapter(number="2") = Basic Concepts
+        chapter(number="3") = Advanced Topics
   metadata
     created = 2024-01-15T10:30:00Z
     modified = 2024-01-20T14:45:00Z

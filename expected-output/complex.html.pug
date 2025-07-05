@@ -1,38 +1,38 @@
-html(lang=en)
+html(lang="en")
   head
-    meta(charset=UTF-8)
-    meta(content="width=device-width, initial-scale=1.0", name=viewport)
-    meta(content="A complex HTML page demonstrating various elements", name=description)
-    meta(content="HTML, CSS, JavaScript, web development", name=keywords)
-    meta(content="Web Developer", name=author)
+    meta(charset="UTF-8")
+    meta(content="width=device-width, initial-scale=1.0", name="viewport")
+    meta(content="A complex HTML page demonstrating various elements", name="description")
+    meta(content="HTML, CSS, JavaScript, web development", name="keywords")
+    meta(content="Web Developer", name="author")
     title = Complex HTML Page
-    link(href=styles.css, rel=stylesheet)
-    link(href=/favicon.ico, rel=icon, type=image/x-icon)
+    link(href="styles.css", rel="stylesheet")
+    link(href="/favicon.ico", rel="icon", type="image/x-icon")
   body
     header.main-header
       .logo
-        img(alt="Company Logo", height=50, src=logo.png, width=100)
+        img(alt="Company Logo", height="50", src="logo.png", width="100")
       nav.main-nav
         ul
           li
-            a.nav-link.active(href=#home) = Home
+            a.nav-link.active(href="#home") = Home
           li
-            a.nav-link(href=#products) = Products
+            a.nav-link(href="#products") = Products
           li
-            a.nav-link(href=#services) = Services
+            a.nav-link(href="#services") = Services
           li
-            a.nav-link(href=#about) = About
+            a.nav-link(href="#about") = About
           li
-            a.nav-link(href=#contact) = Contact
+            a.nav-link(href="#contact") = Contact
     main
-      section.hero-section(id=hero)
+      section.hero-section(id="hero")
         .hero-content
           h1 = Welcome to Our Amazing Website
           p = Discover the power of modern web development
           button.cta-button = Get Started
         .hero-image
-          img(alt="Hero Image", src=hero-image.jpg)
-      section.products-section(id=products)
+          img(alt="Hero Image", src="hero-image.jpg")
+      section.products-section(id="products")
         h2 = Our Products
         .product-grid
           article.product-card
@@ -40,7 +40,7 @@ html(lang=en)
               h3 = Product 1
               span.price = $99.99
             figure
-              img(alt="Product 1", src=product1.jpg)
+              img(alt="Product 1", src="product1.jpg")
               figcaption = Amazing product with great features
             .product-details
               p = This is an amazing product that will revolutionize your workflow.
@@ -48,13 +48,13 @@ html(lang=en)
                 li = Feature 1
                 li = Feature 2
                 li = Feature 3
-              button.add-to-cart(data-product-id=1) = Add to Cart
+              button.add-to-cart(data-product-id="1") = Add to Cart
           article.product-card
             header
               h3 = Product 2
               span.price = $149.99
             figure
-              img(alt="Product 2", src=product2.jpg)
+              img(alt="Product 2", src="product2.jpg")
               figcaption = Premium product for professionals
             .product-details
               p = A premium solution for professional use cases.
@@ -62,8 +62,8 @@ html(lang=en)
                 li = Advanced Feature A
                 li = Advanced Feature B
                 li = Advanced Feature C
-              button.add-to-cart(data-product-id=2) = Add to Cart
-      section.services-section(id=services)
+              button.add-to-cart(data-product-id="2") = Add to Cart
+      section.services-section(id="services")
         h2 = Our Services
         .services-container
           .service-item
@@ -75,7 +75,7 @@ html(lang=en)
           .service-item
             h3 = Consulting
             p = Expert advice on technology and business strategies.
-      section.testimonials-section(id=testimonials)
+      section.testimonials-section(id="testimonials")
         h2 = What Our Customers Say
         blockquote
           p = "This company provided excellent service and delivered beyond our expectations."
@@ -83,16 +83,16 @@ html(lang=en)
         blockquote
           p = "Professional, reliable, and innovative. Highly recommended!"
           cite = - Jane Smith, Marketing Director
-      section.contact-section(id=contact)
+      section.contact-section(id="contact")
         h2 = Contact Information
         address
           strong = Our Company
           br
           br
           br
-          a(href=tel:+1234567890) = (123) 456-7890
+          a(href="tel:+1234567890") = (123) 456-7890
           br
-          a(href=mailto:info@example.com) = info@example.com
+          a(href="mailto:info@example.com") = info@example.com
         details
           summary = Office Hours
           table
@@ -113,11 +113,11 @@ html(lang=en)
     aside.sidebar
       h3 = Recent News
       article.news-item
-        time(datetime=2024-01-15) = January 15, 2024
+        time(datetime="2024-01-15") = January 15, 2024
         h4 = New Product Launch
         p = We're excited to announce our latest product...
       article.news-item
-        time(datetime=2024-01-10) = January 10, 2024
+        time(datetime="2024-01-10") = January 10, 2024
         h4 = Company Milestone
         p = We've reached an important milestone in our journey...
     footer.main-footer
@@ -126,20 +126,20 @@ html(lang=en)
           h4 = Quick Links
           ul
             li
-              a(href=#privacy) = Privacy Policy
+              a(href="#privacy") = Privacy Policy
             li
-              a(href=#terms) = Terms of Service
+              a(href="#terms") = Terms of Service
             li
-              a(href=#support) = Support
+              a(href="#support") = Support
         .footer-section
           h4 = Follow Us
           .social-links
-            a(aria-label=Facebook, href=#) = Facebook
-            a(aria-label=Twitter, href=#) = Twitter
-            a(aria-label=LinkedIn, href=#) = LinkedIn
+            a(aria-label="Facebook", href="#") = Facebook
+            a(aria-label="Twitter", href="#") = Twitter
+            a(aria-label="LinkedIn", href="#") = LinkedIn
       .footer-bottom
         p = © 2024 Our Company. All rights reserved.
-    script(src=script.js)
+    script(src="script.js")
     script = // Inline JavaScript for demonstration
         document.addEventListener('DOMContentLoaded', function() {
             console.log('Page loaded successfully');
