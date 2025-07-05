@@ -124,8 +124,14 @@ class TestRunner:
             if not self.unxml_cmd:
                 raise RuntimeError("Binary not built. Call build_binary() first.")
             
-            # Add the file path as argument
-            cmd = self.unxml_cmd + [str(file_path)]
+            # Build command with file path
+            cmd = self.unxml_cmd.copy()
+            
+            # Add --special flag for special-elements.xml
+            if file_path.name == "special-elements.xml":
+                cmd.append("--special")
+            
+            cmd.append(str(file_path))
             
             result = subprocess.run(
                 cmd,

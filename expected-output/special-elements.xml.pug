@@ -1,3 +1,4 @@
+// FILE: test-input\special-elements.xml
 businessWorkflow
   foo_XML_Input()
     XMLSource := {BT.Mime,FileName}
@@ -20,3 +21,28 @@ businessWorkflow
     ProcessedCount :== 0
     ErrorCount :== 0
     LastProcessedTime :== 
+  if development
+    LogLevel :== DEBUG
+    EnableTracing :== true
+  if premium
+    advancedProcessing()
+      UseAI := true
+      MaxConcurrency := 10
+    PremiumMode :== enabled
+  if testing
+    testingTools(name="QualityAssurance")
+      RunTests := true
+      TestMode :== unit
+  if debug
+    DebugEnabled := true
+  if config
+    ConfigPath :== /etc/config.xml
+  if advanced
+    parameter(name="AdvancedParam", type="boolean") = false
+  if system
+    variable(name="SystemVar", readonly="true") = system_value
+  WorkflowEngine::ProcessWorkflow(name="ProcessWorkflowData")
+    enableAutoProcess := true
+    maxRetries :== 3
+  ValidationService::ValidateInput()
+    strictMode := false

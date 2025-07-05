@@ -20,6 +20,10 @@ struct Cli {
     /// Force input format (xml or html). If not specified, format is auto-detected
     #[arg(short, long)]
     format: Option<String>,
+
+    /// Enable proprietary special element handling rules
+    #[arg(long)]
+    special: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -40,12 +44,12 @@ impl XmlElement {
         }
     }
 
-    fn format_yaml_like(&self, indent: usize) -> String {
+    fn format_yaml_like(&self, indent: usize, special: bool) -> String {
         let mut result = String::new();
         let indent_str = "  ".repeat(indent);
 
         // Special handling for elements with include="foo" attribute
-        if let Some(include_value) = self.attributes.get("include") {
+        if special && let Some(include_value) = self.attributes.get("include") {
             result.push_str(&format!("{indent_str}if {include_value}"));
             result.push('\n');
 
@@ -67,128 +71,147 @@ impl XmlElement {
             {
                 // Process children directly
                 for child in &modified_element.children {
-                    result.push_str(&child.format_yaml_like(indent + 1));
+                    result.push_str(&child.format_yaml_like(indent + 1, special));
                 }
             } else {
                 // Process the modified element normally
-                result.push_str(&modified_element.format_yaml_like(indent + 1));
+                result.push_str(&modified_element.format_yaml_like(indent + 1, special));
             }
 
             return result;
         }
 
         // Special handling for specific XML elements
-        match self.name.as_str() {
-            "builtInMethodParameterList" => {
-                if let Some(name) = self.attributes.get("name") {
-                    result.push_str(&format!("{indent_str}{name}()"));
-                    result.push('\n');
-
-                    // Process children elements
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1));
-                    }
-
-                    return result;
-                }
-            }
-            "parameter" => {
-                // Only apply special transformation if element has only the 'name' attribute
-                if let Some(name) = self.attributes.get("name") {
-                    if self.attributes.len() == 1 {
-                        if !self.text_content.trim().is_empty() {
-                            result.push_str(&format!(
-                                "{}{} := {}",
-                                indent_str,
-                                name,
-                                self.text_content.trim()
-                            ));
-                        } else {
-                            result.push_str(&format!("{indent_str}{name} := "));
-                        }
+        if special {
+            match self.name.as_str() {
+                "builtInMethodParameterList" => {
+                    if let Some(name) = self.attributes.get("name") {
+                        result.push_str(&format!("{indent_str}{name}()"));
                         result.push('\n');
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1));
+                            result.push_str(&child.format_yaml_like(indent + 1, special));
                         }
 
                         return result;
                     }
                 }
-            }
-            "variable" => {
-                // Only apply special transformation if element has only the 'name' attribute
-                if let Some(name) = self.attributes.get("name") {
-                    if self.attributes.len() == 1 {
-                        if !self.text_content.trim().is_empty() {
-                            result.push_str(&format!(
-                                "{}{} :== {}",
-                                indent_str,
-                                name,
-                                self.text_content.trim()
-                            ));
-                        } else {
-                            result.push_str(&format!("{indent_str}{name} :== "));
-                        }
-                        result.push('\n');
+                "parameter" => {
+                    // Only apply special transformation if element has only the 'name' attribute
+                    if let Some(name) = self.attributes.get("name") {
+                        if self.attributes.len() == 1 {
+                            if !self.text_content.trim().is_empty() {
+                                result.push_str(&format!(
+                                    "{}{} := {}",
+                                    indent_str,
+                                    name,
+                                    self.text_content.trim()
+                                ));
+                            } else {
+                                result.push_str(&format!("{indent_str}{name} := "));
+                            }
+                            result.push('\n');
 
-                        // Process children elements
-                        for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1));
-                        }
+                            // Process children elements
+                            for child in &self.children {
+                                result.push_str(&child.format_yaml_like(indent + 1, special));
+                            }
 
-                        return result;
+                            return result;
+                        }
                     }
                 }
-            }
-            "method" => {
-                // Special transformation for method elements with jumpToXmlFile and jumpToXPath
-                if let (Some(jump_to_xml_file), Some(jump_to_xpath)) = (
-                    self.attributes.get("jumpToXmlFile"),
-                    self.attributes.get("jumpToXPath"),
-                ) {
-                    // Extract the file name from jumpToXmlFile (remove {v, prefix and } suffix)
-                    let xml_file =
-                        if jump_to_xml_file.starts_with("{v,") && jump_to_xml_file.ends_with('}') {
+                "variable" => {
+                    // Only apply special transformation if element has only the 'name' attribute
+                    if let Some(name) = self.attributes.get("name") {
+                        if self.attributes.len() == 1 {
+                            if !self.text_content.trim().is_empty() {
+                                result.push_str(&format!(
+                                    "{}{} :== {}",
+                                    indent_str,
+                                    name,
+                                    self.text_content.trim()
+                                ));
+                            } else {
+                                result.push_str(&format!("{indent_str}{name} :== "));
+                            }
+                            result.push('\n');
+
+                            // Process children elements
+                            for child in &self.children {
+                                result.push_str(&child.format_yaml_like(indent + 1, special));
+                            }
+
+                            return result;
+                        }
+                    }
+                }
+                "method" => {
+                    // Special transformation for method elements with jumpToXmlFile and jumpToXPath
+                    if let (Some(jump_to_xml_file), Some(jump_to_xpath)) = (
+                        self.attributes.get("jumpToXmlFile"),
+                        self.attributes.get("jumpToXPath"),
+                    ) {
+                        // Extract the file name from jumpToXmlFile (remove {v, prefix and } suffix)
+                        let xml_file = if jump_to_xml_file.starts_with("{v,")
+                            && jump_to_xml_file.ends_with('}')
+                        {
                             &jump_to_xml_file[3..jump_to_xml_file.len() - 1]
                         } else {
                             jump_to_xml_file
                         };
 
-                    // Extract section name from jumpToXPath using pattern //section[@name='SECTION_NAME']
-                    let section_name = if let Some(start) = jump_to_xpath.find("[@name='") {
-                        let start_idx = start + 8; // Length of "[@name='"
-                        if let Some(end) = jump_to_xpath[start_idx..].find("']") {
-                            &jump_to_xpath[start_idx..start_idx + end]
+                        // Extract section name from jumpToXPath using pattern //section[@name='SECTION_NAME']
+                        let section_name = if let Some(start) = jump_to_xpath.find("[@name='") {
+                            let start_idx = start + 8; // Length of "[@name='"
+                            if let Some(end) = jump_to_xpath[start_idx..].find("']") {
+                                &jump_to_xpath[start_idx..start_idx + end]
+                            } else {
+                                "UnknownSection"
+                            }
                         } else {
                             "UnknownSection"
+                        };
+
+                        // Build the transformation: XmlFile::SectionName(name="methodName")
+                        result.push_str(&format!("{indent_str}{xml_file}::{section_name}"));
+
+                        // Add name parameter if present
+                        if let Some(name) = self.attributes.get("name") {
+                            result.push_str(&format!("(name=\"{name}\")"));
+                        } else {
+                            result.push_str("()");
                         }
-                    } else {
-                        "UnknownSection"
-                    };
 
-                    // Build the transformation: XmlFile::SectionName(name="methodName")
-                    result.push_str(&format!("{indent_str}{xml_file}::{section_name}"));
+                        result.push('\n');
 
-                    // Add name parameter if present
-                    if let Some(name) = self.attributes.get("name") {
-                        result.push_str(&format!("(name=\"{name}\")"));
-                    } else {
-                        result.push_str("()");
+                        // Process children elements
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1, special));
+                        }
+
+                        return result;
                     }
-
-                    result.push('\n');
-
-                    // Process children elements
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1));
-                    }
-
-                    return result;
                 }
+                "section" => {
+                    // Only apply special transformation if element has only the 'name' attribute
+                    if let Some(name) = self.attributes.get("name") {
+                        if self.attributes.len() == 1 {
+                            result.push_str(&format!("{indent_str}#{name}"));
+                            result.push('\n');
+
+                            // Process children elements
+                            for child in &self.children {
+                                result.push_str(&child.format_yaml_like(indent + 1, special));
+                            }
+
+                            return result;
+                        }
+                    }
+                }
+                _ => {}
             }
-            _ => {}
         }
 
         // Element name
@@ -272,7 +295,7 @@ impl XmlElement {
 
         // Children elements
         for child in &self.children {
-            result.push_str(&child.format_yaml_like(indent + 1));
+            result.push_str(&child.format_yaml_like(indent + 1, special));
         }
 
         result
@@ -494,7 +517,7 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
     Ok(root_elements)
 }
 
-fn process_file(file_path: &str, format_override: Option<&str>) -> Result<String> {
+fn process_file(file_path: &str, format_override: Option<&str>, special: bool) -> Result<String> {
     // Read the file
     let content = fs::read_to_string(file_path)
         .with_context(|| format!("Failed to read file: {file_path}"))?;
@@ -524,7 +547,7 @@ fn process_file(file_path: &str, format_override: Option<&str>) -> Result<String
     // Format output
     let mut output = String::new();
     for element in elements {
-        output.push_str(&element.format_yaml_like(0));
+        output.push_str(&element.format_yaml_like(0, special));
     }
 
     Ok(output)
@@ -587,7 +610,7 @@ fn main() -> Result<()> {
         println!("// FILE: {file_path}");
 
         // Process and output the file
-        match process_file(file_path, cli.format.as_deref()) {
+        match process_file(file_path, cli.format.as_deref(), cli.special) {
             Ok(output) => print!("{output}"),
             Err(e) => {
                 eprintln!("Error processing file '{file_path}': {e}");
