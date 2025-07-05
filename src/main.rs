@@ -43,6 +43,68 @@ impl XmlElement {
         let mut result = String::new();
         let indent_str = "  ".repeat(indent);
 
+        // Special handling for specific XML elements
+        match self.name.as_str() {
+            "builtInMethodParameterList" => {
+                if let Some(name) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}{name}()"));
+                    result.push('\n');
+
+                    // Process children elements
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1));
+                    }
+
+                    return result;
+                }
+            }
+            "parameter" => {
+                if let Some(name) = self.attributes.get("name") {
+                    if !self.text_content.trim().is_empty() {
+                        result.push_str(&format!(
+                            "{}{} := {}",
+                            indent_str,
+                            name,
+                            self.text_content.trim()
+                        ));
+                    } else {
+                        result.push_str(&format!("{indent_str}{name} := "));
+                    }
+                    result.push('\n');
+
+                    // Process children elements
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1));
+                    }
+
+                    return result;
+                }
+            }
+            "variable" => {
+                if let Some(name) = self.attributes.get("name") {
+                    if !self.text_content.trim().is_empty() {
+                        result.push_str(&format!(
+                            "{}{} :== {}",
+                            indent_str,
+                            name,
+                            self.text_content.trim()
+                        ));
+                    } else {
+                        result.push_str(&format!("{indent_str}{name} :== "));
+                    }
+                    result.push('\n');
+
+                    // Process children elements
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1));
+                    }
+
+                    return result;
+                }
+            }
+            _ => {}
+        }
+
         // Element name
         result.push_str(&format!("{}{}", indent_str, self.name));
 

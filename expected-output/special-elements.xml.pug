@@ -1,0 +1,22 @@
+businessWorkflow
+  foo_XML_Input()
+    XMLSource := {BT.Mime,FileName}
+    ProcessingMode := strict
+    ValidateSchema := true
+  configuration
+    DefaultOrigin :== 2
+    MaxRetries :== 5
+    EnableLogging :== true
+    ConnectionTimeout :== 30
+  dataProcessing
+    foo_ProcessXML()
+      InputFile := {$XMLSource}
+      OutputFormat := JSON
+      Encoding := UTF-8
+    foo_TransformData()
+      TransformationType := XSL
+      StylesheetPath := /path/to/stylesheet.xsl
+  variables
+    ProcessedCount :== 0
+    ErrorCount :== 0
+    LastProcessedTime :== 

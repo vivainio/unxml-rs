@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<businessWorkflow>
+    <builtInMethodParameterList name="foo_XML_Input">
+        <parameter name="XMLSource">{BT.Mime,FileName}</parameter>
+        <parameter name="ProcessingMode">strict</parameter>
+        <parameter name="ValidateSchema">true</parameter>
+    </builtInMethodParameterList>
+    
+    <configuration>
+        <variable name="DefaultOrigin">2</variable>
+        <variable name="MaxRetries">5</variable>
+        <variable name="EnableLogging">true</variable>
+        <variable name="ConnectionTimeout">30</variable>
+    </configuration>
+    
+    <dataProcessing>
+        <builtInMethodParameterList name="foo_ProcessXML">
+            <parameter name="InputFile">{$XMLSource}</parameter>
+            <parameter name="OutputFormat">JSON</parameter>
+            <parameter name="Encoding">UTF-8</parameter>
+        </builtInMethodParameterList>
+        
+        <builtInMethodParameterList name="foo_TransformData">
+            <parameter name="TransformationType">XSL</parameter>
+            <parameter name="StylesheetPath">/path/to/stylesheet.xsl</parameter>
+        </builtInMethodParameterList>
+    </dataProcessing>
+    
+    <variables>
+        <variable name="ProcessedCount">0</variable>
+        <variable name="ErrorCount">0</variable>
+        <variable name="LastProcessedTime"></variable>
+    </variables>
+</businessWorkflow> 
