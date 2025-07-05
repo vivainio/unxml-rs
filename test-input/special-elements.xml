@@ -31,4 +31,42 @@
         <variable name="ErrorCount">0</variable>
         <variable name="LastProcessedTime"></variable>
     </variables>
+    
+    <!-- Elements with include attributes to test the new transformation -->
+    <debugConfiguration include="development">
+        <variable name="LogLevel">DEBUG</variable>
+        <variable name="EnableTracing">true</variable>
+    </debugConfiguration>
+    
+    <premiumFeatures include="premium">
+        <builtInMethodParameterList name="advancedProcessing">
+            <parameter name="UseAI">true</parameter>
+            <parameter name="MaxConcurrency">10</parameter>
+        </builtInMethodParameterList>
+        <variable name="PremiumMode">enabled</variable>
+    </premiumFeatures>
+    
+    <testingTools include="testing" name="QualityAssurance">
+        <parameter name="RunTests">true</parameter>
+        <variable name="TestMode">unit</variable>
+    </testingTools>
+    
+    <!-- Parameter and variable elements with include attributes -->
+    <!-- These should show "if foo" followed by abbreviated form -->
+    <parameter include="debug" name="DebugEnabled">true</parameter>
+    <variable include="config" name="ConfigPath">/etc/config.xml</variable>
+    
+    <!-- These have extra attributes, so should NOT get abbreviated after include is removed -->
+    <parameter include="advanced" name="AdvancedParam" type="boolean">false</parameter>
+    <variable include="system" name="SystemVar" readonly="true">system_value</variable>
+    
+    <!-- Method elements with jumpToXmlFile and jumpToXPath -->
+    <method name="ProcessWorkflowData" jumpToXmlFile="{v,WorkflowEngine}" jumpToXPath="//section[@name='ProcessWorkflow']">
+        <parameter name="enableAutoProcess">true</parameter>
+        <variable name="maxRetries">3</variable>
+    </method>
+    
+    <method jumpToXmlFile="{v,ValidationService}" jumpToXPath="//section[@name='ValidateInput']">
+        <parameter name="strictMode">false</parameter>
+    </method>
 </businessWorkflow> 

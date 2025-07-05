@@ -4,6 +4,7 @@ use std::path::Path;
 
 use anyhow::{Context, Result};
 use clap::Parser;
+use glob::glob;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use scraper::{ElementRef, Html, Selector};
@@ -13,8 +14,8 @@ use scraper::{ElementRef, Html, Selector};
 #[command(about = "Simplify and 'flatten' XML and HTML files")]
 #[command(version = "1.0.0")]
 struct Cli {
-    /// XML or HTML file to process
-    file: String,
+    /// XML or HTML files to process (supports glob patterns)
+    files: Vec<String>,
 
     /// Force input format (xml or html). If not specified, format is auto-detected
     #[arg(short, long)]
@@ -43,6 +44,39 @@ impl XmlElement {
         let mut result = String::new();
         let indent_str = "  ".repeat(indent);
 
+        // Special handling for elements with include="foo" attribute
+        if let Some(include_value) = self.attributes.get("include") {
+            result.push_str(&format!("{indent_str}if {include_value}"));
+            result.push('\n');
+
+            // Create a modified element without the include attribute
+            let mut modified_attributes = self.attributes.clone();
+            modified_attributes.remove("include");
+
+            let modified_element = XmlElement {
+                name: self.name.clone(),
+                attributes: modified_attributes,
+                text_content: self.text_content.clone(),
+                children: self.children.clone(),
+            };
+
+            // Process the modified element - if it has no attributes left and no text content,
+            // just process its children directly
+            if modified_element.attributes.is_empty()
+                && modified_element.text_content.trim().is_empty()
+            {
+                // Process children directly
+                for child in &modified_element.children {
+                    result.push_str(&child.format_yaml_like(indent + 1));
+                }
+            } else {
+                // Process the modified element normally
+                result.push_str(&modified_element.format_yaml_like(indent + 1));
+            }
+
+            return result;
+        }
+
         // Special handling for specific XML elements
         match self.name.as_str() {
             "builtInMethodParameterList" => {
@@ -59,39 +93,91 @@ impl XmlElement {
                 }
             }
             "parameter" => {
+                // Only apply special transformation if element has only the 'name' attribute
                 if let Some(name) = self.attributes.get("name") {
-                    if !self.text_content.trim().is_empty() {
-                        result.push_str(&format!(
-                            "{}{} := {}",
-                            indent_str,
-                            name,
-                            self.text_content.trim()
-                        ));
-                    } else {
-                        result.push_str(&format!("{indent_str}{name} := "));
-                    }
-                    result.push('\n');
+                    if self.attributes.len() == 1 {
+                        if !self.text_content.trim().is_empty() {
+                            result.push_str(&format!(
+                                "{}{} := {}",
+                                indent_str,
+                                name,
+                                self.text_content.trim()
+                            ));
+                        } else {
+                            result.push_str(&format!("{indent_str}{name} := "));
+                        }
+                        result.push('\n');
 
-                    // Process children elements
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1));
-                    }
+                        // Process children elements
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1));
+                        }
 
-                    return result;
+                        return result;
+                    }
                 }
             }
             "variable" => {
+                // Only apply special transformation if element has only the 'name' attribute
                 if let Some(name) = self.attributes.get("name") {
-                    if !self.text_content.trim().is_empty() {
-                        result.push_str(&format!(
-                            "{}{} :== {}",
-                            indent_str,
-                            name,
-                            self.text_content.trim()
-                        ));
-                    } else {
-                        result.push_str(&format!("{indent_str}{name} :== "));
+                    if self.attributes.len() == 1 {
+                        if !self.text_content.trim().is_empty() {
+                            result.push_str(&format!(
+                                "{}{} :== {}",
+                                indent_str,
+                                name,
+                                self.text_content.trim()
+                            ));
+                        } else {
+                            result.push_str(&format!("{indent_str}{name} :== "));
+                        }
+                        result.push('\n');
+
+                        // Process children elements
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1));
+                        }
+
+                        return result;
                     }
+                }
+            }
+            "method" => {
+                // Special transformation for method elements with jumpToXmlFile and jumpToXPath
+                if let (Some(jump_to_xml_file), Some(jump_to_xpath)) = (
+                    self.attributes.get("jumpToXmlFile"),
+                    self.attributes.get("jumpToXPath"),
+                ) {
+                    // Extract the file name from jumpToXmlFile (remove {v, prefix and } suffix)
+                    let xml_file =
+                        if jump_to_xml_file.starts_with("{v,") && jump_to_xml_file.ends_with('}') {
+                            &jump_to_xml_file[3..jump_to_xml_file.len() - 1]
+                        } else {
+                            jump_to_xml_file
+                        };
+
+                    // Extract section name from jumpToXPath using pattern //section[@name='SECTION_NAME']
+                    let section_name = if let Some(start) = jump_to_xpath.find("[@name='") {
+                        let start_idx = start + 8; // Length of "[@name='"
+                        if let Some(end) = jump_to_xpath[start_idx..].find("']") {
+                            &jump_to_xpath[start_idx..start_idx + end]
+                        } else {
+                            "UnknownSection"
+                        }
+                    } else {
+                        "UnknownSection"
+                    };
+
+                    // Build the transformation: XmlFile::SectionName(name="methodName")
+                    result.push_str(&format!("{indent_str}{xml_file}::{section_name}"));
+
+                    // Add name parameter if present
+                    if let Some(name) = self.attributes.get("name") {
+                        result.push_str(&format!("(name=\"{name}\")"));
+                    } else {
+                        result.push_str("()");
+                    }
+
                     result.push('\n');
 
                     // Process children elements
@@ -408,15 +494,13 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
     Ok(root_elements)
 }
 
-fn main() -> Result<()> {
-    let cli = Cli::parse();
-
+fn process_file(file_path: &str, format_override: Option<&str>) -> Result<String> {
     // Read the file
-    let content = fs::read_to_string(&cli.file)
-        .with_context(|| format!("Failed to read file: {}", cli.file))?;
+    let content = fs::read_to_string(file_path)
+        .with_context(|| format!("Failed to read file: {file_path}"))?;
 
     // Determine input format
-    let format = if let Some(format_str) = &cli.format {
+    let format = if let Some(format_str) = format_override {
         match format_str.to_lowercase().as_str() {
             "html" => InputFormat::Html,
             "xml" => InputFormat::Xml,
@@ -428,7 +512,7 @@ fn main() -> Result<()> {
             }
         }
     } else {
-        detect_format(&content, &cli.file)
+        detect_format(&content, file_path)
     };
 
     // Parse the content based on detected/specified format
@@ -437,9 +521,79 @@ fn main() -> Result<()> {
         InputFormat::Xml => parse_xml(&content).context("Failed to parse XML")?,
     };
 
-    // Output in YAML-like format
+    // Format output
+    let mut output = String::new();
     for element in elements {
-        print!("{}", element.format_yaml_like(0));
+        output.push_str(&element.format_yaml_like(0));
+    }
+
+    Ok(output)
+}
+
+fn main() -> Result<()> {
+    let cli = Cli::parse();
+
+    if cli.files.is_empty() {
+        return Err(anyhow::anyhow!(
+            "No files specified. Please provide at least one file or glob pattern."
+        ));
+    }
+
+    let mut all_files = Vec::new();
+
+    // Expand glob patterns and collect all files
+    for pattern in &cli.files {
+        if pattern.contains('*') || pattern.contains('?') || pattern.contains('[') {
+            // This is a glob pattern
+            match glob(pattern) {
+                Ok(paths) => {
+                    for entry in paths {
+                        match entry {
+                            Ok(path) => {
+                                if let Some(path_str) = path.to_str() {
+                                    all_files.push(path_str.to_string());
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("Warning: Error reading glob entry: {e}");
+                            }
+                        }
+                    }
+                }
+                Err(e) => {
+                    return Err(anyhow::anyhow!("Invalid glob pattern '{}': {}", pattern, e));
+                }
+            }
+        } else {
+            // This is a regular file path
+            all_files.push(pattern.clone());
+        }
+    }
+
+    if all_files.is_empty() {
+        return Err(anyhow::anyhow!(
+            "No files found matching the specified patterns."
+        ));
+    }
+
+    // Process each file
+    for (i, file_path) in all_files.iter().enumerate() {
+        // Add file separator comment (except for the first file)
+        if i > 0 {
+            println!();
+        }
+
+        // Add file header comment
+        println!("// FILE: {file_path}");
+
+        // Process and output the file
+        match process_file(file_path, cli.format.as_deref()) {
+            Ok(output) => print!("{output}"),
+            Err(e) => {
+                eprintln!("Error processing file '{file_path}': {e}");
+                // Continue processing other files instead of stopping
+            }
+        }
     }
 
     Ok(())
