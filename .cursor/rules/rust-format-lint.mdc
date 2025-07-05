@@ -1,0 +1,82 @@
+---
+globs: *.rs
+description: Rust formatting and linting requirements before commits
+---
+
+# Rust Code Formatting and Linting
+
+## Pre-Commit Requirements
+
+Before committing any Rust code, ensure the following tools are run:
+
+### 1. Code Formatting with rustfmt
+- Run `cargo fmt` to format all Rust code according to the standard style
+- Use `cargo fmt -- --check` to verify formatting without making changes
+- All code must pass formatting checks before commit
+
+### 2. Code Linting with clippy
+- Run `cargo clippy` to catch common mistakes and improve code quality
+- Use `cargo clippy -- -D warnings` to treat warnings as errors
+- All clippy suggestions should be addressed before commit
+
+### 3. Additional Quality Checks
+- Run `cargo check` to ensure code compiles successfully
+- Run `cargo test` to verify all tests pass
+- Consider running `cargo doc` to check documentation builds
+
+## Recommended Pre-Commit Hook Setup
+
+To automate these checks, consider setting up a pre-commit hook:
+
+```bash
+# Create .git/hooks/pre-commit
+#!/bin/sh
+set -e
+
+echo "Running Rust pre-commit checks..."
+
+# Format check
+echo "Checking code formatting..."
+cargo fmt -- --check
+
+# Lint check
+echo "Running clippy..."
+cargo clippy -- -D warnings
+
+# Compile check
+echo "Checking compilation..."
+cargo check
+
+# Test check
+echo "Running tests..."
+cargo test
+
+echo "All checks passed!"
+```
+
+## IDE Integration
+
+Configure your editor to:
+- Format on save using rustfmt
+- Show clippy warnings inline
+- Run checks automatically
+
+## Project Configuration
+
+The project uses standard Rust tooling configured in [Cargo.toml](mdc:Cargo.toml).
+
+## Quick Commands
+
+```bash
+# Format all code
+cargo fmt
+
+# Check formatting
+cargo fmt -- --check
+
+# Run clippy
+cargo clippy
+
+# Run all checks
+cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
+```

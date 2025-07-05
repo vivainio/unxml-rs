@@ -97,19 +97,19 @@ impl XmlElement {
 
             // Build all attributes in Pug-style parentheses
             let mut attr_parts = Vec::new();
-            
+
             // Add non-boolean attributes first with quoted values
             for (key, value) in non_boolean_attrs {
                 // Always quote all attribute values for consistency and safety
                 let escaped_value = value.replace('"', "&quot;");
-                attr_parts.push(format!("{}=\"{}\"", key, escaped_value));
+                attr_parts.push(format!("{key}=\"{escaped_value}\""));
             }
-            
+
             // Add boolean attributes (just the attribute name)
             for (key, _) in boolean_attrs {
                 attr_parts.push(key.to_string());
             }
-            
+
             if !attr_parts.is_empty() {
                 result.push_str(&format!("({})", attr_parts.join(", ")));
             }
@@ -129,8 +129,6 @@ impl XmlElement {
 
         result
     }
-
-
 }
 
 #[derive(Debug, PartialEq)]
