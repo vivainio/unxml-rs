@@ -88,4 +88,27 @@
     <command type="startelement" priority="high">
         <parameter name="element">important</parameter>
     </command>
+    
+    <!-- loopDataSource elements with different formats -->
+    <dataProcessing loopDataSource="dataItem;/ROOT/CONTAINER/ITEMS/ITEM/ENTRIES/ENTRY">
+        <parameter name="processItem">true</parameter>
+        <variable name="itemCount">0</variable>
+    </dataProcessing>
+    
+    <section loopDataSource="record;/path/to/records">
+        <parameter name="id">recordId</parameter>
+        <variable name="status">active</variable>
+    </section>
+    
+    <!-- Simple loopDataSource without semicolon -->
+    <container loopDataSource="item">
+        <parameter name="name">itemName</parameter>
+        <variable name="processed">false</variable>
+    </container>
+    
+    <!-- loopDataSource with other attributes -->
+    <processor loopDataSource="entry;/data/entries" id="main" priority="high">
+        <parameter name="mode">batch</parameter>
+        <variable name="batchSize">100</variable>
+    </processor>
 </businessWorkflow> 

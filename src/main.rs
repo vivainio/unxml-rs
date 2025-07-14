@@ -53,6 +53,39 @@ impl XmlElement {
         let mut result = String::new();
         let indent_str = "  ".repeat(indent);
 
+        // Special handling for elements with loopDataSource attribute
+        if special && let Some(loop_data_source) = self.attributes.get("loopDataSource") {
+            // Parse loopDataSource - two formats:
+            // 1. "dataItem;/ROOT/CONTAINER/ITEMS/ITEM/ENTRIES/ENTRY"
+            // 2. "foo" (just emit "each foo")
+            if let Some(semicolon_pos) = loop_data_source.find(';') {
+                let variable_name = &loop_data_source[..semicolon_pos];
+                let xpath = &loop_data_source[semicolon_pos + 1..];
+
+                result.push_str(&format!("{indent_str}each {variable_name} in {xpath}"));
+            } else {
+                // No semicolon, just emit "each {value}"
+                result.push_str(&format!("{indent_str}each {loop_data_source}"));
+            }
+            result.push('\n');
+
+            // Create a modified element without the loopDataSource attribute
+            let mut modified_attributes = self.attributes.clone();
+            modified_attributes.remove("loopDataSource");
+
+            let modified_element = XmlElement {
+                name: self.name.clone(),
+                attributes: modified_attributes,
+                text_content: self.text_content.clone(),
+                children: self.children.clone(),
+            };
+
+            // Always process the modified element normally (section should still appear)
+            result.push_str(&modified_element.format_yaml_like(indent + 1, special));
+
+            return result;
+        }
+
         // Special handling for elements with include="foo" attribute
         if special && let Some(include_value) = self.attributes.get("include") {
             result.push_str(&format!("{indent_str}if {include_value}"));

@@ -54,3 +54,19 @@ businessWorkflow
     content := Some text content
   command.startelement(priority="high")
     element := important
+  each dataItem in /ROOT/CONTAINER/ITEMS/ITEM/ENTRIES/ENTRY
+    dataProcessing
+      processItem := true
+      itemCount :== 0
+  each record in /path/to/records
+    section
+      id := recordId
+      status :== active
+  each item
+    container
+      name := itemName
+      processed :== false
+  each entry in /data/entries
+    processor(id="main", priority="high")
+      mode := batch
+      batchSize :== 100
