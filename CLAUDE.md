@@ -26,6 +26,15 @@ python test-suite.py --update
 
 # Run specific test on single file
 ./target/release/unxml test-input/simple.xml
+
+# Process XML from stdin (assumes XML format)
+echo '<root><item>test</item></root>' | ./target/release/unxml --stdin
+
+# Process from stdin with format override
+cat some_file.html | ./target/release/unxml --stdin --format html
+
+# Process from stdin with special transformations
+cat business_file.xml | ./target/release/unxml --stdin --special
 ```
 
 ### Code Quality Commands

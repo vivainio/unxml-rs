@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
+use std::io::{self, Read};
 use std::path::Path;
 
 use anyhow::{Context, Result};
@@ -24,6 +25,10 @@ struct Cli {
     /// Enable proprietary special element handling rules
     #[arg(long)]
     special: bool,
+
+    /// Read input from stdin (assumes XML format)
+    #[arg(long)]
+    stdin: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -72,17 +77,17 @@ impl XmlElement {
                         // Apply the #name transformation
                         result.push_str(&format!("{}#{}", "  ".repeat(indent + 1), name));
                         result.push('\n');
-                        
+
                         // Process children elements
                         for child in &modified_element.children {
                             result.push_str(&child.format_yaml_like(indent + 2, special));
                         }
-                        
+
                         return result;
                     }
                 }
             }
-            
+
             // Process the modified element - if it has no attributes left and no text content,
             // just process its children directly
             if modified_element.attributes.is_empty()
@@ -536,11 +541,12 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
     Ok(root_elements)
 }
 
-fn process_file(file_path: &str, format_override: Option<&str>, special: bool) -> Result<String> {
-    // Read the file
-    let content = fs::read_to_string(file_path)
-        .with_context(|| format!("Failed to read file: {file_path}"))?;
-
+fn process_content(
+    content: &str,
+    file_path: &str,
+    format_override: Option<&str>,
+    special: bool,
+) -> Result<String> {
     // Determine input format
     let format = if let Some(format_str) = format_override {
         match format_str.to_lowercase().as_str() {
@@ -554,13 +560,13 @@ fn process_file(file_path: &str, format_override: Option<&str>, special: bool) -
             }
         }
     } else {
-        detect_format(&content, file_path)
+        detect_format(content, file_path)
     };
 
     // Parse the content based on detected/specified format
     let elements = match format {
-        InputFormat::Html => parse_html(&content, &format).context("Failed to parse HTML")?,
-        InputFormat::Xml => parse_xml(&content).context("Failed to parse XML")?,
+        InputFormat::Html => parse_html(content, &format).context("Failed to parse HTML")?,
+        InputFormat::Xml => parse_xml(content).context("Failed to parse XML")?,
     };
 
     // Format output
@@ -572,12 +578,51 @@ fn process_file(file_path: &str, format_override: Option<&str>, special: bool) -
     Ok(output)
 }
 
+fn process_file(file_path: &str, format_override: Option<&str>, special: bool) -> Result<String> {
+    // Read the file
+    let content = fs::read_to_string(file_path)
+        .with_context(|| format!("Failed to read file: {file_path}"))?;
+
+    process_content(&content, file_path, format_override, special)
+}
+
+fn process_stdin(format_override: Option<&str>, special: bool) -> Result<String> {
+    // Read from stdin
+    let mut content = String::new();
+    io::stdin()
+        .read_to_string(&mut content)
+        .context("Failed to read from stdin")?;
+
+    process_content(&content, "stdin", format_override, special)
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
+    // Handle stdin input
+    if cli.stdin {
+        // When using stdin, files should be empty
+        if !cli.files.is_empty() {
+            return Err(anyhow::anyhow!(
+                "Cannot specify both --stdin and file arguments"
+            ));
+        }
+
+        // Process stdin input
+        match process_stdin(cli.format.as_deref(), cli.special) {
+            Ok(output) => print!("{output}"),
+            Err(e) => {
+                eprintln!("Error processing stdin: {e}");
+                return Err(e);
+            }
+        }
+        return Ok(());
+    }
+
+    // Handle file input
     if cli.files.is_empty() {
         return Err(anyhow::anyhow!(
-            "No files specified. Please provide at least one file or glob pattern."
+            "No files specified. Please provide at least one file or glob pattern, or use --stdin."
         ));
     }
 
