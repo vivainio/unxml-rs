@@ -670,8 +670,10 @@ fn main() -> Result<()> {
             println!();
         }
 
-        // Add file header comment
-        println!("// FILE: {file_path}");
+        // Add file header comment only if there are multiple files
+        if all_files.len() > 1 {
+            println!("// FILE: {file_path}");
+        }
 
         // Process and output the file
         match process_file(file_path, cli.format.as_deref(), cli.special) {

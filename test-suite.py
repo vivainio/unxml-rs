@@ -91,7 +91,7 @@ class TestRunner:
         # First try to build release version
         try:
             result = subprocess.run(["cargo", "build", "--release"], check=True, capture_output=True)
-            print(f"{Colors.GREEN}✓ (release){Colors.RESET}")
+            print(f"{Colors.GREEN}OK (release){Colors.RESET}")
             if Path("target/release/unxml.exe").exists():
                 self.unxml_cmd = ["target/release/unxml.exe"]
             elif Path("target/release/unxml").exists():
@@ -101,13 +101,13 @@ class TestRunner:
             # Fallback to debug build
             try:
                 subprocess.run(["cargo", "build"], check=True, capture_output=True)
-                print(f"{Colors.GREEN}✓ (debug){Colors.RESET}")
+                print(f"{Colors.GREEN}OK (debug){Colors.RESET}")
                 if Path("target/debug/unxml.exe").exists():
                     self.unxml_cmd = ["target/debug/unxml.exe"]
                 elif Path("target/debug/unxml").exists():
                     self.unxml_cmd = ["target/debug/unxml"]
             except subprocess.CalledProcessError as debug_error:
-                print(f"{Colors.RED}✗{Colors.RESET}")
+                print(f"{Colors.RED}FAILED{Colors.RESET}")
                 release_error_msg = e.stderr.decode() if e.stderr else 'Unknown error'
                 debug_error_msg = debug_error.stderr.decode() if debug_error.stderr else 'Unknown error'
                 raise RuntimeError(f"Failed to build unxml binary.\nRelease build error: {release_error_msg}\nDebug build error: {debug_error_msg}")
