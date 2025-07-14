@@ -234,6 +234,66 @@ impl XmlElement {
                         }
                     }
                 }
+                "command" => {
+                    // Special transformation for command elements with type attribute
+                    if let Some(command_type) = self.attributes.get("type") {
+                        // Create a modified element without the type attribute
+                        let mut modified_attributes = self.attributes.clone();
+                        modified_attributes.remove("type");
+
+                        // Build the command.{type} name
+                        result.push_str(&format!("{indent_str}command.{command_type}"));
+
+                        // Add remaining attributes in Pug-style parentheses if any
+                        if !modified_attributes.is_empty() {
+                            // For XML (--special context), treat empty values as boolean attributes
+                            let mut boolean_attrs: Vec<_> = modified_attributes
+                                .iter()
+                                .filter(|(_, value)| value.is_empty())
+                                .collect();
+                            let mut non_boolean_attrs: Vec<_> = modified_attributes
+                                .iter()
+                                .filter(|(_, value)| !value.is_empty())
+                                .collect();
+
+                            // Sort attributes for deterministic output
+                            boolean_attrs.sort_by_key(|(key, _)| *key);
+                            non_boolean_attrs.sort_by_key(|(key, _)| *key);
+
+                            // Build all attributes in Pug-style parentheses
+                            let mut attr_parts = Vec::new();
+
+                            // Add non-boolean attributes first with quoted values
+                            for (key, value) in non_boolean_attrs {
+                                let escaped_value = value.replace('"', "&quot;");
+                                attr_parts.push(format!("{key}=\"{escaped_value}\""));
+                            }
+
+                            // Add boolean attributes (just the attribute name)
+                            for (key, _) in boolean_attrs {
+                                attr_parts.push(key.to_string());
+                            }
+
+                            if !attr_parts.is_empty() {
+                                result.push_str(&format!("({})", attr_parts.join(", ")));
+                            }
+                        }
+
+                        // Text content with = assignment
+                        if !self.text_content.trim().is_empty() {
+                            result.push_str(&format!(" = {}", self.text_content.trim()));
+                        }
+
+                        result.push('\n');
+
+                        // Process children elements
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1, special));
+                        }
+
+                        return result;
+                    }
+                }
                 _ => {}
             }
         }

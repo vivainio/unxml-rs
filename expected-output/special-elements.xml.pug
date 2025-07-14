@@ -45,3 +45,12 @@ businessWorkflow
     maxRetries :== 3
   ValidationService::ValidateInput()
     strictMode := false
+  command.startelement
+    element := root
+    attributes := xmlns="http://example.com"
+  command.endelement
+    element := root
+  command.textelement
+    content := Some text content
+  command.startelement(priority="high")
+    element := important

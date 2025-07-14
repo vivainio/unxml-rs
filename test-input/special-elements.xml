@@ -69,4 +69,23 @@
     <method jumpToXmlFile="{v,ValidationService}" jumpToXPath="//section[@name='ValidateInput']">
         <parameter name="strictMode">false</parameter>
     </method>
+    
+    <!-- Command elements with type attribute -->
+    <command type="startelement">
+        <parameter name="element">root</parameter>
+        <parameter name="attributes">xmlns="http://example.com"</parameter>
+    </command>
+    
+    <command type="endelement">
+        <parameter name="element">root</parameter>
+    </command>
+    
+    <command type="textelement">
+        <parameter name="content">Some text content</parameter>
+    </command>
+    
+    <!-- Command element with extra attributes (should not transform) -->
+    <command type="startelement" priority="high">
+        <parameter name="element">important</parameter>
+    </command>
 </businessWorkflow> 
