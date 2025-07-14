@@ -64,6 +64,25 @@ impl XmlElement {
                 children: self.children.clone(),
             };
 
+            // Special handling for section elements after include processing
+            if self.name == "section" {
+                // For sections, check if after removing include, we only have a name attribute
+                if let Some(name) = modified_element.attributes.get("name") {
+                    if modified_element.attributes.len() == 1 {
+                        // Apply the #name transformation
+                        result.push_str(&format!("{}#{}", "  ".repeat(indent + 1), name));
+                        result.push('\n');
+                        
+                        // Process children elements
+                        for child in &modified_element.children {
+                            result.push_str(&child.format_yaml_like(indent + 2, special));
+                        }
+                        
+                        return result;
+                    }
+                }
+            }
+            
             // Process the modified element - if it has no attributes left and no text content,
             // just process its children directly
             if modified_element.attributes.is_empty()
@@ -84,7 +103,7 @@ impl XmlElement {
         // Special handling for specific XML elements
         if special {
             match self.name.as_str() {
-                "builtInMethodParameterList" => {
+                "builtInMethodParameterList" | "builtinmethodparameterlist" => {
                     if let Some(name) = self.attributes.get("name") {
                         result.push_str(&format!("{indent_str}{name}()"));
                         result.push('\n');
