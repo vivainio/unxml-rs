@@ -474,9 +474,9 @@ impl XmlElement {
                 Some(result)
             }
             "xsl:value-of" => {
-                // xsl:value-of(select="X") → = X
+                // xsl:value-of(select="X") → <- X
                 if let Some(select) = self.attributes.get("select") {
-                    result.push_str(&format!("{indent_str}= {select}\n"));
+                    result.push_str(&format!("{indent_str}<- {select}\n"));
                     Some(result)
                 } else {
                     None
