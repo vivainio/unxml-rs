@@ -26,6 +26,10 @@ struct Cli {
     #[arg(long)]
     special: bool,
 
+    /// Enable XSLT-specific formatting transformations
+    #[arg(long)]
+    xslt: bool,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     stdin: bool,
@@ -49,9 +53,16 @@ impl XmlElement {
         }
     }
 
-    fn format_yaml_like(&self, indent: usize, special: bool) -> String {
+    fn format_yaml_like(&self, indent: usize, special: bool, xslt: bool) -> String {
         let mut result = String::new();
         let indent_str = "  ".repeat(indent);
+
+        // XSLT-specific transformations
+        if xslt
+            && let Some(transformed) = self.format_xslt_element(indent, &indent_str)
+        {
+            return transformed;
+        }
 
         // Special handling for elements with loopDataSource attribute
         if special && let Some(loop_data_source) = self.attributes.get("loopDataSource") {
@@ -81,7 +92,7 @@ impl XmlElement {
             };
 
             // Always process the modified element normally (section should still appear)
-            result.push_str(&modified_element.format_yaml_like(indent + 1, special));
+            result.push_str(&modified_element.format_yaml_like(indent + 1, special, xslt));
 
             return result;
         }
@@ -103,22 +114,20 @@ impl XmlElement {
             };
 
             // Special handling for section elements after include processing
-            if self.name == "section" {
-                // For sections, check if after removing include, we only have a name attribute
-                if let Some(name) = modified_element.attributes.get("name") {
-                    if modified_element.attributes.len() == 1 {
-                        // Apply the #name transformation
-                        result.push_str(&format!("{}#{}", "  ".repeat(indent + 1), name));
-                        result.push('\n');
+            if self.name == "section"
+                && let Some(name) = modified_element.attributes.get("name")
+                && modified_element.attributes.len() == 1
+            {
+                // Apply the #name transformation
+                result.push_str(&format!("{}#{}", "  ".repeat(indent + 1), name));
+                result.push('\n');
 
-                        // Process children elements
-                        for child in &modified_element.children {
-                            result.push_str(&child.format_yaml_like(indent + 2, special));
-                        }
-
-                        return result;
-                    }
+                // Process children elements
+                for child in &modified_element.children {
+                    result.push_str(&child.format_yaml_like(indent + 2, special, xslt));
                 }
+
+                return result;
             }
 
             // Process the modified element - if it has no attributes left and no text content,
@@ -128,11 +137,11 @@ impl XmlElement {
             {
                 // Process children directly
                 for child in &modified_element.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, special));
+                    result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
                 }
             } else {
                 // Process the modified element normally
-                result.push_str(&modified_element.format_yaml_like(indent + 1, special));
+                result.push_str(&modified_element.format_yaml_like(indent + 1, special, xslt));
             }
 
             return result;
@@ -148,7 +157,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
                         }
 
                         return result;
@@ -156,52 +165,52 @@ impl XmlElement {
                 }
                 "parameter" => {
                     // Only apply special transformation if element has only the 'name' attribute
-                    if let Some(name) = self.attributes.get("name") {
-                        if self.attributes.len() == 1 {
-                            if !self.text_content.trim().is_empty() {
-                                result.push_str(&format!(
-                                    "{}{} := {}",
-                                    indent_str,
-                                    name,
-                                    self.text_content.trim()
-                                ));
-                            } else {
-                                result.push_str(&format!("{indent_str}{name} := "));
-                            }
-                            result.push('\n');
-
-                            // Process children elements
-                            for child in &self.children {
-                                result.push_str(&child.format_yaml_like(indent + 1, special));
-                            }
-
-                            return result;
+                    if let Some(name) = self.attributes.get("name")
+                        && self.attributes.len() == 1
+                    {
+                        if !self.text_content.trim().is_empty() {
+                            result.push_str(&format!(
+                                "{}{} := {}",
+                                indent_str,
+                                name,
+                                self.text_content.trim()
+                            ));
+                        } else {
+                            result.push_str(&format!("{indent_str}{name} := "));
                         }
+                        result.push('\n');
+
+                        // Process children elements
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                        }
+
+                        return result;
                     }
                 }
                 "variable" => {
                     // Only apply special transformation if element has only the 'name' attribute
-                    if let Some(name) = self.attributes.get("name") {
-                        if self.attributes.len() == 1 {
-                            if !self.text_content.trim().is_empty() {
-                                result.push_str(&format!(
-                                    "{}{} :== {}",
-                                    indent_str,
-                                    name,
-                                    self.text_content.trim()
-                                ));
-                            } else {
-                                result.push_str(&format!("{indent_str}{name} :== "));
-                            }
-                            result.push('\n');
-
-                            // Process children elements
-                            for child in &self.children {
-                                result.push_str(&child.format_yaml_like(indent + 1, special));
-                            }
-
-                            return result;
+                    if let Some(name) = self.attributes.get("name")
+                        && self.attributes.len() == 1
+                    {
+                        if !self.text_content.trim().is_empty() {
+                            result.push_str(&format!(
+                                "{}{} :== {}",
+                                indent_str,
+                                name,
+                                self.text_content.trim()
+                            ));
+                        } else {
+                            result.push_str(&format!("{indent_str}{name} :== "));
                         }
+                        result.push('\n');
+
+                        // Process children elements
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                        }
+
+                        return result;
                     }
                 }
                 "method" => {
@@ -245,7 +254,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
                         }
 
                         return result;
@@ -253,18 +262,18 @@ impl XmlElement {
                 }
                 "section" => {
                     // Only apply special transformation if element has only the 'name' attribute
-                    if let Some(name) = self.attributes.get("name") {
-                        if self.attributes.len() == 1 {
-                            result.push_str(&format!("{indent_str}#{name}"));
-                            result.push('\n');
+                    if let Some(name) = self.attributes.get("name")
+                        && self.attributes.len() == 1
+                    {
+                        result.push_str(&format!("{indent_str}#{name}"));
+                        result.push('\n');
 
-                            // Process children elements
-                            for child in &self.children {
-                                result.push_str(&child.format_yaml_like(indent + 1, special));
-                            }
-
-                            return result;
+                        // Process children elements
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
                         }
+
+                        return result;
                     }
                 }
                 "command" => {
@@ -321,7 +330,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
                         }
 
                         return result;
@@ -412,10 +421,244 @@ impl XmlElement {
 
         // Children elements
         for child in &self.children {
-            result.push_str(&child.format_yaml_like(indent + 1, special));
+            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
         }
 
         result
+    }
+
+    fn format_xslt_element(&self, indent: usize, indent_str: &str) -> Option<String> {
+        let mut result = String::new();
+
+        match self.name.as_str() {
+            "xsl:template" => {
+                // xsl:template(match="X") → template X
+                // xsl:template(name="X") → template #X
+                if let Some(match_val) = self.attributes.get("match") {
+                    result.push_str(&format!("{indent_str}template {match_val}"));
+                } else if let Some(name_val) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}template #{name_val}"));
+                } else {
+                    return None;
+                }
+
+                // Add any extra attributes (like xmlns declarations)
+                let extra_attrs: Vec<_> = self
+                    .attributes
+                    .iter()
+                    .filter(|(k, _)| *k != "match" && *k != "name")
+                    .collect();
+                if !extra_attrs.is_empty() {
+                    let mut sorted_attrs: Vec<_> = extra_attrs.into_iter().collect();
+                    sorted_attrs.sort_by_key(|(k, _)| *k);
+                    let attr_str: Vec<String> = sorted_attrs
+                        .iter()
+                        .map(|(k, v)| format!("{k}=\"{v}\""))
+                        .collect();
+                    result.push_str(&format!(" ({})", attr_str.join(", ")));
+                }
+
+                result.push('\n');
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                }
+                Some(result)
+            }
+            "xsl:apply-templates" => {
+                // xsl:apply-templates(select="X") → apply X
+                if let Some(select) = self.attributes.get("select") {
+                    result.push_str(&format!("{indent_str}apply {select}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}apply\n"));
+                }
+                Some(result)
+            }
+            "xsl:value-of" => {
+                // xsl:value-of(select="X") → = X
+                if let Some(select) = self.attributes.get("select") {
+                    result.push_str(&format!("{indent_str}= {select}\n"));
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:copy-of" => {
+                // xsl:copy-of(select="X") → copy X
+                if let Some(select) = self.attributes.get("select") {
+                    result.push_str(&format!("{indent_str}copy {select}\n"));
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:if" => {
+                // xsl:if(test="X") → if X
+                if let Some(test) = self.attributes.get("test") {
+                    result.push_str(&format!("{indent_str}if {test}\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:choose" => {
+                // xsl:choose stays as choose but children get transformed
+                result.push_str(&format!("{indent_str}choose\n"));
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                }
+                Some(result)
+            }
+            "xsl:when" => {
+                // xsl:when(test="X") → when X
+                if let Some(test) = self.attributes.get("test") {
+                    result.push_str(&format!("{indent_str}when {test}\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:otherwise" => {
+                // xsl:otherwise → else
+                result.push_str(&format!("{indent_str}else\n"));
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                }
+                Some(result)
+            }
+            "xsl:variable" => {
+                // xsl:variable(name="x", select="...") → x := ...
+                if let Some(name) = self.attributes.get("name") {
+                    if let Some(select) = self.attributes.get("select") {
+                        result.push_str(&format!("{indent_str}{name} := {select}\n"));
+                    } else if !self.text_content.trim().is_empty() {
+                        result.push_str(&format!(
+                            "{indent_str}{name} := {}\n",
+                            self.text_content.trim()
+                        ));
+                    } else if !self.children.is_empty() {
+                        result.push_str(&format!("{indent_str}{name} :=\n"));
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                        }
+                    } else {
+                        result.push_str(&format!("{indent_str}{name} :=\n"));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:with-param" => {
+                // xsl:with-param(name="x", select="...") → x := ...
+                if let Some(name) = self.attributes.get("name") {
+                    if let Some(select) = self.attributes.get("select") {
+                        result.push_str(&format!("{indent_str}{name} := {select}\n"));
+                    } else if !self.text_content.trim().is_empty() {
+                        result.push_str(&format!(
+                            "{indent_str}{name} := {}\n",
+                            self.text_content.trim()
+                        ));
+                    } else if !self.children.is_empty() {
+                        result.push_str(&format!("{indent_str}{name} :=\n"));
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                        }
+                    } else {
+                        result.push_str(&format!("{indent_str}{name} :=\n"));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:call-template" => {
+                // xsl:call-template(name="X") → call X
+                if let Some(name) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}call {name}\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:for-each" => {
+                // xsl:for-each(select="X") → foreach X
+                if let Some(select) = self.attributes.get("select") {
+                    result.push_str(&format!("{indent_str}foreach {select}\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:text" => {
+                // xsl:text → just the text content
+                if !self.text_content.trim().is_empty() {
+                    result.push_str(&format!("{indent_str}\"{}\"", self.text_content.trim()));
+                    result.push('\n');
+                    Some(result)
+                } else {
+                    Some(String::new()) // Empty xsl:text, skip it
+                }
+            }
+            "xsl:element" => {
+                // xsl:element(name="X") → element X
+                if let Some(name) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}element {name}\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:attribute" => {
+                // xsl:attribute(name="X") → @X = ...
+                if let Some(name) = self.attributes.get("name") {
+                    if !self.text_content.trim().is_empty() {
+                        result.push_str(&format!(
+                            "{indent_str}@{name} = {}\n",
+                            self.text_content.trim()
+                        ));
+                    } else if !self.children.is_empty() {
+                        result.push_str(&format!("{indent_str}@{name}\n"));
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                        }
+                    } else {
+                        result.push_str(&format!("{indent_str}@{name}\n"));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:param" => {
+                // xsl:param(name="x", select="...") → param x := ...
+                if let Some(name) = self.attributes.get("name") {
+                    if let Some(select) = self.attributes.get("select") {
+                        result.push_str(&format!("{indent_str}param {name} := {select}\n"));
+                    } else {
+                        result.push_str(&format!("{indent_str}param {name}\n"));
+                    }
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            _ => None,
+        }
     }
 }
 
@@ -591,13 +834,13 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                 let text = e.unescape().context("Failed to unescape text")?;
                 let text_content = text.trim();
 
-                if !text_content.is_empty() {
-                    if let Some(current_element) = elements_stack.last_mut() {
-                        if !current_element.text_content.is_empty() {
-                            current_element.text_content.push(' ');
-                        }
-                        current_element.text_content.push_str(text_content);
+                if !text_content.is_empty()
+                    && let Some(current_element) = elements_stack.last_mut()
+                {
+                    if !current_element.text_content.is_empty() {
+                        current_element.text_content.push(' ');
                     }
+                    current_element.text_content.push_str(text_content);
                 }
             }
             Ok(Event::Empty(ref e)) => {
@@ -639,6 +882,7 @@ fn process_content(
     file_path: &str,
     format_override: Option<&str>,
     special: bool,
+    xslt: bool,
 ) -> Result<String> {
     // Determine input format
     let format = if let Some(format_str) = format_override {
@@ -665,28 +909,33 @@ fn process_content(
     // Format output
     let mut output = String::new();
     for element in elements {
-        output.push_str(&element.format_yaml_like(0, special));
+        output.push_str(&element.format_yaml_like(0, special, xslt));
     }
 
     Ok(output)
 }
 
-fn process_file(file_path: &str, format_override: Option<&str>, special: bool) -> Result<String> {
+fn process_file(
+    file_path: &str,
+    format_override: Option<&str>,
+    special: bool,
+    xslt: bool,
+) -> Result<String> {
     // Read the file
     let content = fs::read_to_string(file_path)
         .with_context(|| format!("Failed to read file: {file_path}"))?;
 
-    process_content(&content, file_path, format_override, special)
+    process_content(&content, file_path, format_override, special, xslt)
 }
 
-fn process_stdin(format_override: Option<&str>, special: bool) -> Result<String> {
+fn process_stdin(format_override: Option<&str>, special: bool, xslt: bool) -> Result<String> {
     // Read from stdin
     let mut content = String::new();
     io::stdin()
         .read_to_string(&mut content)
         .context("Failed to read from stdin")?;
 
-    process_content(&content, "stdin", format_override, special)
+    process_content(&content, "stdin", format_override, special, xslt)
 }
 
 fn main() -> Result<()> {
@@ -702,7 +951,7 @@ fn main() -> Result<()> {
         }
 
         // Process stdin input
-        match process_stdin(cli.format.as_deref(), cli.special) {
+        match process_stdin(cli.format.as_deref(), cli.special, cli.xslt) {
             Ok(output) => print!("{output}"),
             Err(e) => {
                 eprintln!("Error processing stdin: {e}");
@@ -769,7 +1018,7 @@ fn main() -> Result<()> {
         }
 
         // Process and output the file
-        match process_file(file_path, cli.format.as_deref(), cli.special) {
+        match process_file(file_path, cli.format.as_deref(), cli.special, cli.xslt) {
             Ok(output) => print!("{output}"),
             Err(e) => {
                 eprintln!("Error processing file '{file_path}': {e}");
