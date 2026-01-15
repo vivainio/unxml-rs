@@ -58,9 +58,7 @@ impl XmlElement {
         let indent_str = "  ".repeat(indent);
 
         // XSLT-specific transformations
-        if xslt
-            && let Some(transformed) = self.format_xslt_element(indent, &indent_str)
-        {
+        if xslt && let Some(transformed) = self.format_xslt_element(indent, &indent_str) {
             return transformed;
         }
 
