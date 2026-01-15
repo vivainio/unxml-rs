@@ -47,7 +47,7 @@ class TestRunner:
     
     def find_test_files(self) -> List[Path]:
         """Find all XML and HTML files in the sample directory"""
-        extensions = ['*.xml', '*.html', '*.htm']
+        extensions = ['*.xml', '*.html', '*.htm', '*.xsl']
         files = []
         
         for ext in extensions:
@@ -130,6 +130,10 @@ class TestRunner:
             # Add --special flag for special-elements.xml
             if file_path.name == "special-elements.xml":
                 cmd.append("--special")
+
+            # Add --xslt flag for .xsl files
+            if file_path.suffix == ".xsl":
+                cmd.append("--xslt")
             
             cmd.append(str(file_path))
             
