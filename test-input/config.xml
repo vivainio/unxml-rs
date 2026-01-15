@@ -3,8 +3,8 @@
     <database>
         <host>localhost</host>
         <port>5432</port>
-        <username>admin</username>
-        <password>secret123</password>
+        <username>dbuser</username>
+        <password>xxxxxxxx</password>
         <ssl enabled="true">
             <cert-path>/path/to/cert.pem</cert-path>
             <key-path>/path/to/key.pem</key-path>
