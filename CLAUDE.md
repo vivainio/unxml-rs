@@ -55,15 +55,6 @@ cargo clippy -- -D warnings
 cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
 ```
 
-### Angular Template Processing
-```bash
-# Process Angular templates with control flow preservation
-python preprocess-angular.py test-input/angular-control-flow.html
-
-# Standard HTML processing
-cargo run -- test-input/simple.html
-```
-
 ## Architecture Overview
 
 ### Core Components
@@ -100,21 +91,6 @@ cargo run -- test-input/simple.html
 **Test Files:**
 - `test-input/`: Sample XML and HTML files covering various scenarios
 - `expected-output/`: Expected `.pug` output files for regression testing
-- Includes Angular template tests with control flow preservation
-
-### Angular Template Support
-
-**Preprocessing (`preprocess-angular.py`):**
-- Converts Angular control flow syntax (`@if`, `@for`, `@switch`) to temporary XML elements
-- Processes through standard parser pipeline
-- Restores Angular syntax in final output
-- Supports complex nesting, conditions, and contextual variables
-
-**Angular Constructs:**
-- `@if/@else-if/@else` conditions
-- `@for` loops with `@empty` fallbacks
-- `@switch/@case/@default` statements
-- Variable assignments and contextual variables
 
 ## Development Workflow
 
@@ -134,8 +110,6 @@ cargo run -- test-input/simple.html
 ## File Organization
 
 - `src/main.rs`: Main parser implementation
-- `test-input/`: Test files (XML, HTML, Angular templates)
+- `test-input/`: Test files (XML, HTML)
 - `expected-output/`: Expected output files for regression testing
 - `test-suite.py`: Test runner script
-- `preprocess-angular.py`: Angular template preprocessing
-- `.cursor/rules/rust-format-lint.mdc`: Formatting and linting requirements
