@@ -30,6 +30,10 @@ struct Cli {
     #[arg(long)]
     xslt: bool,
 
+    /// Expand xsl:apply-templates by inlining matching templates from imports
+    #[arg(long)]
+    expand: bool,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     stdin: bool,
@@ -53,13 +57,21 @@ impl XmlElement {
         }
     }
 
-    fn format_yaml_like(&self, indent: usize, special: bool, xslt: bool) -> String {
+    fn format_yaml_like(
+        &self,
+        indent: usize,
+        special: bool,
+        xslt: bool,
+        registry: Option<&TemplateRegistry>,
+    ) -> String {
         let mut result = String::new();
         let indent_str = "  ".repeat(indent);
 
         // XSLT-specific transformations
-        if xslt && let Some(transformed) = self.format_xslt_element(indent, &indent_str) {
-            return transformed;
+        if xslt {
+            if let Some(transformed) = self.format_xslt_element(indent, &indent_str, registry) {
+                return transformed;
+            }
         }
 
         // Special handling for elements with loopDataSource attribute
@@ -90,7 +102,7 @@ impl XmlElement {
             };
 
             // Always process the modified element normally (section should still appear)
-            result.push_str(&modified_element.format_yaml_like(indent + 1, special, xslt));
+            result.push_str(&modified_element.format_yaml_like(indent + 1, special, xslt, registry));
 
             return result;
         }
@@ -122,7 +134,7 @@ impl XmlElement {
 
                 // Process children elements
                 for child in &modified_element.children {
-                    result.push_str(&child.format_yaml_like(indent + 2, special, xslt));
+                    result.push_str(&child.format_yaml_like(indent + 2, special, xslt, registry));
                 }
 
                 return result;
@@ -135,11 +147,11 @@ impl XmlElement {
             {
                 // Process children directly
                 for child in &modified_element.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                    result.push_str(&child.format_yaml_like(indent + 1, special, xslt, registry));
                 }
             } else {
                 // Process the modified element normally
-                result.push_str(&modified_element.format_yaml_like(indent + 1, special, xslt));
+                result.push_str(&modified_element.format_yaml_like(indent + 1, special, xslt, registry));
             }
 
             return result;
@@ -155,7 +167,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt, registry));
                         }
 
                         return result;
@@ -180,7 +192,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt, registry));
                         }
 
                         return result;
@@ -205,7 +217,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt, registry));
                         }
 
                         return result;
@@ -252,7 +264,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt, registry));
                         }
 
                         return result;
@@ -268,7 +280,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt, registry));
                         }
 
                         return result;
@@ -328,7 +340,7 @@ impl XmlElement {
 
                         // Process children elements
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+                            result.push_str(&child.format_yaml_like(indent + 1, special, xslt, registry));
                         }
 
                         return result;
@@ -419,13 +431,18 @@ impl XmlElement {
 
         // Children elements
         for child in &self.children {
-            result.push_str(&child.format_yaml_like(indent + 1, special, xslt));
+            result.push_str(&child.format_yaml_like(indent + 1, special, xslt, registry));
         }
 
         result
     }
 
-    fn format_xslt_element(&self, indent: usize, indent_str: &str) -> Option<String> {
+    fn format_xslt_element(
+        &self,
+        indent: usize,
+        indent_str: &str,
+        registry: Option<&TemplateRegistry>,
+    ) -> Option<String> {
         let mut result = String::new();
 
         match self.name.as_str() {
@@ -458,13 +475,31 @@ impl XmlElement {
 
                 result.push('\n');
                 for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                    result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                 }
                 Some(result)
             }
             "xsl:apply-templates" => {
                 // xsl:apply-templates(select="X") → apply X
+                // With --expand, inline the matching template if found
                 if let Some(select) = self.attributes.get("select") {
+                    // Check if we should expand this template
+                    if let Some(reg) = registry {
+                        if let Some(template) = reg.get(select) {
+                            // Expand: add comment and inline template content
+                            result.push_str(&format!("{indent_str}# [expanded: apply {select}]\n"));
+                            for child in &template.children {
+                                result.push_str(&child.format_yaml_like(
+                                    indent,
+                                    false,
+                                    true,
+                                    Some(reg),
+                                ));
+                            }
+                            return Some(result);
+                        }
+                    }
+                    // No expansion, just output apply
                     result.push_str(&format!("{indent_str}apply {select}\n"));
                 } else {
                     result.push_str(&format!("{indent_str}apply\n"));
@@ -494,7 +529,7 @@ impl XmlElement {
                 if let Some(test) = self.attributes.get("test") {
                     result.push_str(&format!("{indent_str}if {test}\n"));
                     for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                     }
                     Some(result)
                 } else {
@@ -505,7 +540,7 @@ impl XmlElement {
                 // xsl:choose stays as choose but children get transformed
                 result.push_str(&format!("{indent_str}choose\n"));
                 for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                    result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                 }
                 Some(result)
             }
@@ -514,7 +549,7 @@ impl XmlElement {
                 if let Some(test) = self.attributes.get("test") {
                     result.push_str(&format!("{indent_str}when {test}\n"));
                     for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                     }
                     Some(result)
                 } else {
@@ -525,7 +560,7 @@ impl XmlElement {
                 // xsl:otherwise → else
                 result.push_str(&format!("{indent_str}else\n"));
                 for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                    result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                 }
                 Some(result)
             }
@@ -542,7 +577,7 @@ impl XmlElement {
                     } else if !self.children.is_empty() {
                         result.push_str(&format!("{indent_str}{name} :=\n"));
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                            result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                         }
                     } else {
                         result.push_str(&format!("{indent_str}{name} :=\n"));
@@ -565,7 +600,7 @@ impl XmlElement {
                     } else if !self.children.is_empty() {
                         result.push_str(&format!("{indent_str}{name} :=\n"));
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                            result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                         }
                     } else {
                         result.push_str(&format!("{indent_str}{name} :=\n"));
@@ -580,7 +615,7 @@ impl XmlElement {
                 if let Some(name) = self.attributes.get("name") {
                     result.push_str(&format!("{indent_str}call {name}\n"));
                     for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                     }
                     Some(result)
                 } else {
@@ -592,7 +627,7 @@ impl XmlElement {
                 if let Some(select) = self.attributes.get("select") {
                     result.push_str(&format!("{indent_str}foreach {select}\n"));
                     for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                     }
                     Some(result)
                 } else {
@@ -614,7 +649,7 @@ impl XmlElement {
                 if let Some(name) = self.attributes.get("name") {
                     result.push_str(&format!("{indent_str}element {name}\n"));
                     for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                        result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                     }
                     Some(result)
                 } else {
@@ -632,7 +667,7 @@ impl XmlElement {
                     } else if !self.children.is_empty() {
                         result.push_str(&format!("{indent_str}@{name}\n"));
                         for child in &self.children {
-                            result.push_str(&child.format_yaml_like(indent + 1, false, true));
+                            result.push_str(&child.format_yaml_like(indent + 1, false, true, registry));
                         }
                     } else {
                         result.push_str(&format!("{indent_str}@{name}\n"));
@@ -657,6 +692,123 @@ impl XmlElement {
             }
             _ => None,
         }
+    }
+}
+
+/// Registry of templates collected from XSLT files for expansion
+#[derive(Debug, Default)]
+struct TemplateRegistry {
+    /// Map from match pattern to template element
+    templates: HashMap<String, XmlElement>,
+}
+
+impl TemplateRegistry {
+    fn new() -> Self {
+        Self {
+            templates: HashMap::new(),
+        }
+    }
+
+    /// Get a template by its match pattern
+    /// Handles XSLT union patterns like "PAYEE|RECEIVER" matching "PAYEE"
+    /// Also handles path selects like "Input/Header" matching template "Header"
+    fn get(&self, select: &str) -> Option<&XmlElement> {
+        // First try exact match
+        if let Some(template) = self.templates.get(select) {
+            return Some(template);
+        }
+
+        // Get the last segment of the select path for matching
+        // e.g., "Input/Header" -> "Header"
+        let select_element = select.rsplit('/').next().unwrap_or(select);
+
+        // Try matching against union patterns (e.g., "PAYEE|RECEIVER" matches "PAYEE")
+        for (pattern, template) in &self.templates {
+            // Split on | and check if any part matches
+            for part in pattern.split('|') {
+                let part = part.trim();
+                if part == select || part == select_element {
+                    return Some(template);
+                }
+            }
+        }
+
+        None
+    }
+
+    /// Collect templates from an XmlElement tree (looks for xsl:template elements)
+    fn collect_from_element(&mut self, element: &XmlElement) {
+        if element.name == "xsl:template" {
+            if let Some(match_attr) = element.attributes.get("match") {
+                self.templates.insert(match_attr.clone(), element.clone());
+            }
+        }
+        for child in &element.children {
+            self.collect_from_element(child);
+        }
+    }
+
+    /// Collect xsl:import hrefs from an element tree
+    fn collect_imports(element: &XmlElement) -> Vec<String> {
+        let mut imports = Vec::new();
+        if element.name == "xsl:import" || element.name == "xsl:include" {
+            if let Some(href) = element.attributes.get("href") {
+                imports.push(href.clone());
+            }
+        }
+        for child in &element.children {
+            imports.extend(Self::collect_imports(child));
+        }
+        imports
+    }
+
+    /// Build registry from a file, following imports recursively
+    fn build_from_file(file_path: &str) -> Result<Self> {
+        let mut registry = Self::new();
+        let mut processed = std::collections::HashSet::new();
+        registry.process_file_recursive(file_path, &mut processed)?;
+        Ok(registry)
+    }
+
+    fn process_file_recursive(
+        &mut self,
+        file_path: &str,
+        processed: &mut std::collections::HashSet<String>,
+    ) -> Result<()> {
+        let canonical = std::fs::canonicalize(file_path)
+            .unwrap_or_else(|_| std::path::PathBuf::from(file_path));
+        let canonical_str = canonical.to_string_lossy().to_string();
+
+        if processed.contains(&canonical_str) {
+            return Ok(());
+        }
+        processed.insert(canonical_str);
+
+        let content = fs::read_to_string(file_path)
+            .with_context(|| format!("Failed to read file for template expansion: {file_path}"))?;
+
+        let elements = parse_xml(&content)?;
+
+        // Collect templates from this file
+        for element in &elements {
+            self.collect_from_element(element);
+        }
+
+        // Find and process imports
+        let base_dir = Path::new(file_path).parent().unwrap_or(Path::new("."));
+        for element in &elements {
+            for import_href in Self::collect_imports(element) {
+                let import_path = base_dir.join(&import_href);
+                if import_path.exists() {
+                    self.process_file_recursive(
+                        import_path.to_string_lossy().as_ref(),
+                        processed,
+                    )?;
+                }
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -881,6 +1033,7 @@ fn process_content(
     format_override: Option<&str>,
     special: bool,
     xslt: bool,
+    registry: Option<&TemplateRegistry>,
 ) -> Result<String> {
     // Determine input format
     let format = if let Some(format_str) = format_override {
@@ -907,7 +1060,7 @@ fn process_content(
     // Format output
     let mut output = String::new();
     for element in elements {
-        output.push_str(&element.format_yaml_like(0, special, xslt));
+        output.push_str(&element.format_yaml_like(0, special, xslt, registry));
     }
 
     Ok(output)
@@ -918,12 +1071,27 @@ fn process_file(
     format_override: Option<&str>,
     special: bool,
     xslt: bool,
+    expand: bool,
 ) -> Result<String> {
+    // Build template registry if expand mode is enabled
+    let registry = if expand && xslt {
+        Some(TemplateRegistry::build_from_file(file_path)?)
+    } else {
+        None
+    };
+
     // Read the file
     let content = fs::read_to_string(file_path)
         .with_context(|| format!("Failed to read file: {file_path}"))?;
 
-    process_content(&content, file_path, format_override, special, xslt)
+    process_content(
+        &content,
+        file_path,
+        format_override,
+        special,
+        xslt,
+        registry.as_ref(),
+    )
 }
 
 fn process_stdin(format_override: Option<&str>, special: bool, xslt: bool) -> Result<String> {
@@ -933,7 +1101,8 @@ fn process_stdin(format_override: Option<&str>, special: bool, xslt: bool) -> Re
         .read_to_string(&mut content)
         .context("Failed to read from stdin")?;
 
-    process_content(&content, "stdin", format_override, special, xslt)
+    // Note: expand mode not supported for stdin since we need file paths for imports
+    process_content(&content, "stdin", format_override, special, xslt, None)
 }
 
 fn main() -> Result<()> {
@@ -1016,7 +1185,13 @@ fn main() -> Result<()> {
         }
 
         // Process and output the file
-        match process_file(file_path, cli.format.as_deref(), cli.special, cli.xslt) {
+        match process_file(
+            file_path,
+            cli.format.as_deref(),
+            cli.special,
+            cli.xslt,
+            cli.expand,
+        ) {
             Ok(output) => print!("{output}"),
             Err(e) => {
                 eprintln!("Error processing file '{file_path}': {e}");
