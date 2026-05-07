@@ -47,7 +47,7 @@ class TestRunner:
     
     def find_test_files(self) -> List[Path]:
         """Find all XML and HTML files in the sample directory"""
-        extensions = ['*.xml', '*.html', '*.htm', '*.xsl']
+        extensions = ['*.xml', '*.html', '*.htm', '*.xsl', '*.sch']
         files = []
         
         for ext in extensions:
@@ -134,6 +134,10 @@ class TestRunner:
             # Add --xslt flag for .xsl files
             if file_path.suffix == ".xsl":
                 cmd.append("--xslt")
+
+            # Add --schematron flag for .sch files
+            if file_path.suffix == ".sch":
+                cmd.append("--schematron")
             
             cmd.append(str(file_path))
             

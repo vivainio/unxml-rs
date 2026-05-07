@@ -1,0 +1,16 @@
+schema
+  title = Sample rules
+  ns cbc = urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2
+  ns cac = urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2
+  phase check
+    active core
+  documentCurrencyCode := /*/cbc:DocumentCurrencyCode
+  pattern core
+    rule cac:AccountingCustomerParty/cac:Party
+      assert SAMPLE-R001 [fatal] cbc:EndpointID
+        = Buyer electronic address MUST be provided.
+      assert SAMPLE-R002 [warning] count(cac:Contact) &lt;= 1
+        = No more than one contact may be provided.
+    rule cbc:Amount
+      report SAMPLE-R010 not(@currencyID)
+        = Amount has no currencyID attribute.
