@@ -940,6 +940,32 @@ impl XmlElement {
                     format!(" ({})", flags.join(", "))
                 };
                 result.push_str(&format!("{indent_str}schema{tns}{flag_suffix}\n"));
+
+                // Emit xmlns:* declarations as 'ns prefix = uri' lines so the
+                // prefix bindings used elsewhere (ref cbc:Foo, type udt:Bar) are
+                // documented. Skip the XSD vocabulary itself (xmlns:xs / xmlns:xsd)
+                // which is implied by every XSD.
+                let inner_indent = "  ".repeat(indent + 1);
+                let mut xmlns_decls: Vec<(String, &String)> = Vec::new();
+                for (k, v) in &self.attributes {
+                    if let Some(prefix) = k.strip_prefix("xmlns:") {
+                        if prefix == "xs" || prefix == "xsd" {
+                            continue;
+                        }
+                        xmlns_decls.push((prefix.to_string(), v));
+                    } else if k == "xmlns" {
+                        xmlns_decls.push((String::new(), v));
+                    }
+                }
+                xmlns_decls.sort_by(|a, b| a.0.cmp(&b.0));
+                for (prefix, uri) in xmlns_decls {
+                    if prefix.is_empty() {
+                        result.push_str(&format!("{inner_indent}xmlns = {uri}\n"));
+                    } else {
+                        result.push_str(&format!("{inner_indent}ns {prefix} = {uri}\n"));
+                    }
+                }
+
                 for child in &self.children {
                     result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
                 }
