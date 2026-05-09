@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://example.com/orders"
+           xmlns="http://example.com/orders"
+           elementFormDefault="qualified">
+
+  <xs:annotation>
+    <xs:documentation>
+      Sample order schema demonstrating common XSD constructs.
+    </xs:documentation>
+  </xs:annotation>
+
+  <xs:include schemaLocation="common.xsd"/>
+  <xs:import namespace="http://example.com/customer" schemaLocation="customer.xsd"/>
+
+  <xs:element name="Order" type="OrderType"/>
+  <xs:element name="AbstractItem" type="LineItemType" abstract="true"/>
+  <xs:element name="DiscountedItem" type="DiscountedLineItemType" substitutionGroup="AbstractItem"/>
+  <xs:element name="OptionalNote" type="xs:string" nillable="true" minOccurs="0"/>
+  <xs:element name="DefaultedFlag" type="xs:boolean" default="false"/>
+
+  <xs:complexType name="OrderType">
+    <xs:annotation>
+      <xs:documentation>An order with header and line items.</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="OrderId" type="xs:string"/>
+      <xs:element name="OrderDate" type="xs:date"/>
+      <xs:element name="Customer" type="CustomerType"/>
+      <xs:element name="Comment" type="xs:string" minOccurs="0"/>
+      <xs:element name="LineItem" type="LineItemType" minOccurs="1" maxOccurs="unbounded"/>
+      <xs:element name="Tag" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+      <xs:any namespace="##other" minOccurs="0" maxOccurs="unbounded" processContents="lax"/>
+    </xs:sequence>
+    <xs:attribute name="currency" type="CurrencyCode" use="required"/>
+    <xs:attribute name="priority" type="xs:int" default="0"/>
+    <xs:attribute name="version" type="xs:string" fixed="1.0"/>
+    <xs:anyAttribute namespace="##other"/>
+  </xs:complexType>
+
+  <xs:complexType name="CustomerType">
+    <xs:sequence>
+      <xs:element name="Name" type="xs:string"/>
+      <xs:choice>
+        <xs:element name="Email" type="xs:string"/>
+        <xs:element name="Phone" type="xs:string"/>
+      </xs:choice>
+      <xs:group ref="AddressGroup" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attributeGroup ref="AuditAttrs"/>
+  </xs:complexType>
+
+  <xs:complexType name="LineItemType">
+    <xs:sequence>
+      <xs:element name="Sku" type="xs:string"/>
+      <xs:element name="Quantity" type="PositiveQuantity"/>
+      <xs:element name="UnitPrice" type="xs:decimal"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="MixedNoteType" mixed="true">
+    <xs:sequence>
+      <xs:element name="Author" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="AbstractBase" abstract="true">
+    <xs:sequence>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="DiscountedLineItemType">
+    <xs:complexContent>
+      <xs:extension base="LineItemType">
+        <xs:sequence>
+          <xs:element name="DiscountPct" type="xs:decimal"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:simpleType name="CurrencyCode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="USD"/>
+      <xs:enumeration value="EUR"/>
+      <xs:enumeration value="GBP"/>
+      <xs:pattern value="[A-Z]{3}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PositiveQuantity">
+    <xs:restriction base="xs:int">
+      <xs:minInclusive value="1"/>
+      <xs:maxInclusive value="9999"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="StringList">
+    <xs:list itemType="xs:string"/>
+  </xs:simpleType>
+
+  <xs:simpleType name="StringOrInt">
+    <xs:union memberTypes="xs:string xs:int"/>
+  </xs:simpleType>
+
+  <xs:group name="AddressGroup">
+    <xs:sequence>
+      <xs:element name="Street" type="xs:string"/>
+      <xs:element name="City" type="xs:string"/>
+      <xs:element name="Country" type="xs:string"/>
+    </xs:sequence>
+  </xs:group>
+
+  <xs:attributeGroup name="AuditAttrs">
+    <xs:attribute name="createdBy" type="xs:string" use="required"/>
+    <xs:attribute name="createdAt" type="xs:dateTime"/>
+  </xs:attributeGroup>
+
+</xs:schema>

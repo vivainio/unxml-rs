@@ -1,0 +1,69 @@
+schema http://example.com/orders (elementFormDefault=qualified)
+  // Sample order schema demonstrating common XSD constructs.
+  include common.xsd
+  import http://example.com/customer from customer.xsd
+  element Order : OrderType
+  abstract element AbstractItem : LineItemType
+  element DiscountedItem : DiscountedLineItemType substitutes AbstractItem
+  element OptionalNote : xs:string ? nillable
+  element DefaultedFlag : xs:boolean = false
+  complexType OrderType
+    // An order with header and line items.
+    sequence
+      element OrderId : xs:string
+      element OrderDate : xs:date
+      element Customer : CustomerType
+      element Comment : xs:string ?
+      element LineItem : LineItemType +
+      element Tag : xs:string *
+      any ##other * (lax)
+    @currency : CurrencyCode (required)
+    @priority : xs:int = 0
+    @version : xs:string == 1.0
+    @any ##other
+  complexType CustomerType
+    sequence
+      element Name : xs:string
+      choice
+        element Email : xs:string
+        element Phone : xs:string
+      group ref AddressGroup ?
+    attributeGroup ref AuditAttrs
+  complexType LineItemType
+    sequence
+      element Sku : xs:string
+      element Quantity : PositiveQuantity
+      element UnitPrice : xs:decimal
+  complexType MixedNoteType mixed
+    sequence
+      element Author : xs:string
+  abstract complexType AbstractBase
+    sequence
+      any ##other ? (lax)
+  complexType DiscountedLineItemType
+    complexContent
+      extension LineItemType
+        sequence
+          element DiscountPct : xs:decimal
+  simpleType CurrencyCode
+    restriction xs:string
+      enumeration USD
+      enumeration EUR
+      enumeration GBP
+      pattern [A-Z]{3}
+  simpleType PositiveQuantity
+    restriction xs:int
+      minInclusive 1
+      maxInclusive 9999
+  simpleType StringList
+    list xs:string
+  simpleType StringOrInt
+    union xs:string xs:int
+  group AddressGroup
+    sequence
+      element Street : xs:string
+      element City : xs:string
+      element Country : xs:string
+  attributeGroup AuditAttrs
+    @createdBy : xs:string (required)
+    @createdAt : xs:dateTime

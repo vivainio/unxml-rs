@@ -34,6 +34,10 @@ struct Cli {
     #[arg(long)]
     schematron: bool,
 
+    /// Enable XML Schema (XSD) specific formatting transformations
+    #[arg(long)]
+    xsd: bool,
+
     /// Expand xsl:apply-templates by inlining matching templates from imports
     #[arg(long)]
     expand: bool,
@@ -48,6 +52,7 @@ struct FormatOpts {
     special: bool,
     xslt: bool,
     schematron: bool,
+    xsd: bool,
 }
 
 impl FormatOpts {
@@ -55,6 +60,7 @@ impl FormatOpts {
         special: false,
         xslt: true,
         schematron: false,
+        xsd: false,
     };
 }
 
@@ -90,6 +96,13 @@ impl XmlElement {
             && let Some(transformed) = self
                 .format_schematron_element(indent, &indent_str, registry)
                 .or_else(|| self.format_xslt_element(indent, &indent_str, registry))
+        {
+            return transformed;
+        }
+
+        // XSD-specific transformations
+        if opts.xsd
+            && let Some(transformed) = self.format_xsd_element(indent, &indent_str, registry)
         {
             return transformed;
         }
@@ -882,6 +895,345 @@ impl XmlElement {
             _ => None,
         }
     }
+
+    fn format_xsd_element(
+        &self,
+        indent: usize,
+        indent_str: &str,
+        registry: Option<&TemplateRegistry>,
+    ) -> Option<String> {
+        let local = self
+            .name
+            .strip_prefix("xs:")
+            .or_else(|| self.name.strip_prefix("xsd:"))
+            .unwrap_or(&self.name);
+        let opts = &FormatOpts {
+            xsd: true,
+            ..FormatOpts::default()
+        };
+        let occurs = format_occurs(&self.attributes);
+        let mut result = String::new();
+
+        match local {
+            "schema" => {
+                let tns = self
+                    .attributes
+                    .get("targetNamespace")
+                    .map(|s| format!(" {s}"))
+                    .unwrap_or_default();
+                let mut flags: Vec<String> = Vec::new();
+                if self
+                    .attributes
+                    .get("elementFormDefault")
+                    .map(|s| s.as_str())
+                    == Some("qualified")
+                {
+                    flags.push("elementFormDefault=qualified".into());
+                }
+                if self
+                    .attributes
+                    .get("attributeFormDefault")
+                    .map(|s| s.as_str())
+                    == Some("qualified")
+                {
+                    flags.push("attributeFormDefault=qualified".into());
+                }
+                let flag_suffix = if flags.is_empty() {
+                    String::new()
+                } else {
+                    format!(" ({})", flags.join(", "))
+                };
+                result.push_str(&format!("{indent_str}schema{tns}{flag_suffix}\n"));
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "import" => {
+                let ns = self.attributes.get("namespace");
+                let loc = self.attributes.get("schemaLocation");
+                match (ns, loc) {
+                    (Some(n), Some(l)) => {
+                        result.push_str(&format!("{indent_str}import {n} from {l}\n"))
+                    }
+                    (Some(n), None) => result.push_str(&format!("{indent_str}import {n}\n")),
+                    (None, Some(l)) => result.push_str(&format!("{indent_str}import {l}\n")),
+                    (None, None) => result.push_str(&format!("{indent_str}import\n")),
+                }
+                Some(result)
+            }
+            "include" | "redefine" => {
+                if let Some(loc) = self.attributes.get("schemaLocation") {
+                    result.push_str(&format!("{indent_str}{local} {loc}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}{local}\n"));
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "element" => {
+                let prefix = if is_true(self.attributes.get("abstract")) {
+                    "abstract "
+                } else {
+                    ""
+                };
+                let mut tail = String::new();
+                if is_true(self.attributes.get("nillable")) {
+                    tail.push_str(" nillable");
+                }
+                if let Some(sg) = self.attributes.get("substitutionGroup") {
+                    tail.push_str(&format!(" substitutes {sg}"));
+                }
+                if let Some(b) = self.attributes.get("block") {
+                    tail.push_str(&format!(" block {b}"));
+                }
+                if let Some(f) = self.attributes.get("final") {
+                    tail.push_str(&format!(" final {f}"));
+                }
+                if let Some(d) = self.attributes.get("default") {
+                    tail.push_str(&format!(" = {d}"));
+                } else if let Some(f) = self.attributes.get("fixed") {
+                    tail.push_str(&format!(" == {f}"));
+                }
+                if let Some(r) = self.attributes.get("ref") {
+                    result.push_str(&format!("{indent_str}{prefix}ref {r}{occurs}{tail}\n"));
+                } else if let Some(n) = self.attributes.get("name") {
+                    if let Some(t) = self.attributes.get("type") {
+                        result.push_str(&format!(
+                            "{indent_str}{prefix}element {n} : {t}{occurs}{tail}\n"
+                        ));
+                    } else {
+                        result
+                            .push_str(&format!("{indent_str}{prefix}element {n}{occurs}{tail}\n"));
+                    }
+                } else {
+                    return None;
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "attribute" => {
+                let suffix = match (
+                    self.attributes.get("use").map(|s| s.as_str()),
+                    self.attributes.get("default"),
+                    self.attributes.get("fixed"),
+                ) {
+                    (Some("required"), _, _) => " (required)".to_string(),
+                    (Some("prohibited"), _, _) => " (prohibited)".to_string(),
+                    (_, Some(d), _) => format!(" = {d}"),
+                    (_, _, Some(f)) => format!(" == {f}"),
+                    _ => String::new(),
+                };
+                if let Some(r) = self.attributes.get("ref") {
+                    result.push_str(&format!("{indent_str}@ref {r}{suffix}\n"));
+                } else if let Some(n) = self.attributes.get("name") {
+                    if let Some(t) = self.attributes.get("type") {
+                        result.push_str(&format!("{indent_str}@{n} : {t}{suffix}\n"));
+                    } else {
+                        result.push_str(&format!("{indent_str}@{n}{suffix}\n"));
+                    }
+                } else {
+                    return None;
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "complexType" | "simpleType" => {
+                let prefix = if is_true(self.attributes.get("abstract")) {
+                    "abstract "
+                } else {
+                    ""
+                };
+                let mut tail = String::new();
+                if is_true(self.attributes.get("mixed")) {
+                    tail.push_str(" mixed");
+                }
+                if let Some(b) = self.attributes.get("block") {
+                    tail.push_str(&format!(" block {b}"));
+                }
+                if let Some(f) = self.attributes.get("final") {
+                    tail.push_str(&format!(" final {f}"));
+                }
+                if let Some(n) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}{prefix}{local} {n}{tail}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}{prefix}{local}{tail}\n"));
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "sequence" | "choice" | "all" => {
+                result.push_str(&format!("{indent_str}{local}{occurs}\n"));
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "restriction" | "extension" => {
+                if let Some(b) = self.attributes.get("base") {
+                    result.push_str(&format!("{indent_str}{local} {b}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}{local}\n"));
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "complexContent" | "simpleContent" => {
+                result.push_str(&format!("{indent_str}{local}\n"));
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "enumeration" | "pattern" | "minLength" | "maxLength" | "length" | "minInclusive"
+            | "maxInclusive" | "minExclusive" | "maxExclusive" | "totalDigits"
+            | "fractionDigits" | "whiteSpace" => {
+                if let Some(v) = self.attributes.get("value") {
+                    result.push_str(&format!("{indent_str}{local} {v}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}{local}\n"));
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "annotation" => {
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent, opts, registry));
+                }
+                Some(result)
+            }
+            "documentation" | "appinfo" => {
+                let text = self.text_content.trim();
+                if !text.is_empty() {
+                    let clean = text.split_whitespace().collect::<Vec<_>>().join(" ");
+                    result.push_str(&format!("{indent_str}// {clean}\n"));
+                }
+                Some(result)
+            }
+            "group" | "attributeGroup" => {
+                if let Some(r) = self.attributes.get("ref") {
+                    result.push_str(&format!("{indent_str}{local} ref {r}{occurs}\n"));
+                } else if let Some(n) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}{local} {n}\n"));
+                } else {
+                    return None;
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "union" => {
+                if let Some(m) = self.attributes.get("memberTypes") {
+                    result.push_str(&format!("{indent_str}union {m}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}union\n"));
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "list" => {
+                if let Some(t) = self.attributes.get("itemType") {
+                    result.push_str(&format!("{indent_str}list {t}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}list\n"));
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "any" => {
+                let ns = self
+                    .attributes
+                    .get("namespace")
+                    .map(|s| format!(" {s}"))
+                    .unwrap_or_default();
+                let pc = match self.attributes.get("processContents").map(|s| s.as_str()) {
+                    Some("skip") => " (skip)",
+                    Some("lax") => " (lax)",
+                    _ => "",
+                };
+                result.push_str(&format!("{indent_str}any{ns}{occurs}{pc}\n"));
+                Some(result)
+            }
+            "anyAttribute" => {
+                let ns = self
+                    .attributes
+                    .get("namespace")
+                    .map(|s| format!(" {s}"))
+                    .unwrap_or_default();
+                let pc = match self.attributes.get("processContents").map(|s| s.as_str()) {
+                    Some("skip") => " (skip)",
+                    Some("lax") => " (lax)",
+                    _ => "",
+                };
+                result.push_str(&format!("{indent_str}@any{ns}{pc}\n"));
+                Some(result)
+            }
+            "key" | "keyref" | "unique" => {
+                if let Some(n) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}{local} {n}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}{local}\n"));
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "selector" | "field" => {
+                if let Some(x) = self.attributes.get("xpath") {
+                    result.push_str(&format!("{indent_str}{local} {x}\n"));
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "notation" => {
+                if let Some(n) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}notation {n}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}notation\n"));
+                }
+                Some(result)
+            }
+            _ => None,
+        }
+    }
+}
+
+fn is_true(value: Option<&String>) -> bool {
+    matches!(value.map(|s| s.as_str()), Some("true") | Some("1"))
+}
+
+fn format_occurs(attrs: &HashMap<String, String>) -> String {
+    let min = attrs.get("minOccurs").map(|s| s.as_str());
+    let max = attrs.get("maxOccurs").map(|s| s.as_str());
+    match (min, max) {
+        (None, None) => String::new(),
+        (Some("1"), Some("1")) => String::new(),
+        (Some("0"), Some("1")) | (Some("0"), None) => " ?".to_string(),
+        (Some("0"), Some("unbounded")) => " *".to_string(),
+        (Some("1"), Some("unbounded")) | (None, Some("unbounded")) => " +".to_string(),
+        (Some(m), Some(n)) => format!(" [{m}..{n}]"),
+        (Some(m), None) => format!(" [{m}..1]"),
+        (None, Some(n)) => format!(" [1..{n}]"),
+    }
 }
 
 /// Registry of templates collected from XSLT files for expansion
@@ -1294,6 +1646,7 @@ fn main() -> Result<()> {
         special: cli.special,
         xslt: cli.xslt,
         schematron: cli.schematron,
+        xsd: cli.xsd,
     };
 
     // Handle stdin input
