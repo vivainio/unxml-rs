@@ -7,63 +7,48 @@ schema http://example.com/orders (elementFormDefault=qualified)
   element DiscountedItem : DiscountedLineItemType substitutes AbstractItem
   element OptionalNote : xs:string ? nillable
   element DefaultedFlag : xs:boolean = false
-  complexType OrderType
+  type OrderType
     // An order with header and line items.
-    sequence
-      element OrderId : xs:string
-      element OrderDate : xs:date
-      element Customer : CustomerType
-      element Comment : xs:string ?
-      element LineItem : LineItemType +
-      element Tag : xs:string *
-      any ##other * (lax)
+    OrderId : xs:string
+    OrderDate : xs:date
+    Customer : CustomerType
+    Comment : xs:string ?
+    LineItem : LineItemType +
+    Tag : xs:string *
+    any ##other * (lax)
     @currency : CurrencyCode (required)
     @priority : xs:int = 0
     @version : xs:string == 1.0
     @any ##other
-  complexType CustomerType
-    sequence
-      element Name : xs:string
-      choice
-        element Email : xs:string
-        element Phone : xs:string
-      group ref AddressGroup ?
+  type CustomerType
+    Name : xs:string
+    choice
+      Email : xs:string
+      Phone : xs:string
+    group ref AddressGroup ?
     attributeGroup ref AuditAttrs
-  complexType LineItemType
-    sequence
-      element Sku : xs:string
-      element Quantity : PositiveQuantity
-      element UnitPrice : xs:decimal
-  complexType MixedNoteType mixed
-    sequence
-      element Author : xs:string
-  abstract complexType AbstractBase
-    sequence
-      any ##other ? (lax)
-  complexType DiscountedLineItemType
-    complexContent
-      extension LineItemType
-        sequence
-          element DiscountPct : xs:decimal
-  simpleType CurrencyCode
-    restriction xs:string
-      enumeration USD
-      enumeration EUR
-      enumeration GBP
-      pattern [A-Z]{3}
-  simpleType PositiveQuantity
-    restriction xs:int
-      minInclusive 1
-      maxInclusive 9999
-  simpleType StringList
-    list xs:string
-  simpleType StringOrInt
-    union xs:string xs:int
+  type LineItemType
+    Sku : xs:string
+    Quantity : PositiveQuantity
+    UnitPrice : xs:decimal
+  type MixedNoteType mixed
+    Author : xs:string
+  abstract type AbstractBase
+    any ##other ? (lax)
+  type DiscountedLineItemType extends LineItemType
+    DiscountPct : xs:decimal
+  type CurrencyCode : xs:string
+    | USD
+    | EUR
+    | GBP
+    pattern [A-Z]{3}
+  type PositiveQuantity : xs:int [1..9999]
+  type StringList : list xs:string
+  type StringOrInt : union xs:string xs:int
   group AddressGroup
-    sequence
-      element Street : xs:string
-      element City : xs:string
-      element Country : xs:string
+    Street : xs:string
+    City : xs:string
+    Country : xs:string
   attributeGroup AuditAttrs
     @createdBy : xs:string (required)
     @createdAt : xs:dateTime

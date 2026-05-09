@@ -902,11 +902,7 @@ impl XmlElement {
         indent_str: &str,
         registry: Option<&TemplateRegistry>,
     ) -> Option<String> {
-        let local = self
-            .name
-            .strip_prefix("xs:")
-            .or_else(|| self.name.strip_prefix("xsd:"))
-            .unwrap_or(&self.name);
+        let local = xsd_local(&self.name);
         let opts = &FormatOpts {
             xsd: true,
             ..FormatOpts::default()
@@ -999,18 +995,32 @@ impl XmlElement {
                 }
                 if let Some(r) = self.attributes.get("ref") {
                     result.push_str(&format!("{indent_str}{prefix}ref {r}{occurs}{tail}\n"));
-                } else if let Some(n) = self.attributes.get("name") {
-                    if let Some(t) = self.attributes.get("type") {
-                        result.push_str(&format!(
-                            "{indent_str}{prefix}element {n} : {t}{occurs}{tail}\n"
-                        ));
-                    } else {
-                        result
-                            .push_str(&format!("{indent_str}{prefix}element {n}{occurs}{tail}\n"));
-                    }
-                } else {
-                    return None;
+                    return Some(result);
                 }
+                let n = self.attributes.get("name")?;
+                if let Some(t) = self.attributes.get("type") {
+                    result.push_str(&format!(
+                        "{indent_str}{prefix}element {n} : {t}{occurs}{tail}\n"
+                    ));
+                    return Some(result);
+                }
+                // Anonymous nested type — try to inline a simpleType.
+                let content: Vec<&XmlElement> = self
+                    .children
+                    .iter()
+                    .filter(|c| xsd_local(&c.name) != "annotation")
+                    .collect();
+                if content.len() == 1
+                    && xsd_local(&content[0].name) == "simpleType"
+                    && let Some((suffix, body)) = try_inline_simple_type(content[0], indent)
+                {
+                    result.push_str(&format!(
+                        "{indent_str}{prefix}element {n}{suffix}{occurs}{tail}\n"
+                    ));
+                    result.push_str(&body);
+                    return Some(result);
+                }
+                result.push_str(&format!("{indent_str}{prefix}element {n}{occurs}{tail}\n"));
                 for child in &self.children {
                     result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
                 }
@@ -1044,7 +1054,7 @@ impl XmlElement {
                 }
                 Some(result)
             }
-            "complexType" | "simpleType" => {
+            "complexType" => {
                 let prefix = if is_true(self.attributes.get("abstract")) {
                     "abstract "
                 } else {
@@ -1060,20 +1070,104 @@ impl XmlElement {
                 if let Some(f) = self.attributes.get("final") {
                     tail.push_str(&format!(" final {f}"));
                 }
-                if let Some(n) = self.attributes.get("name") {
-                    result.push_str(&format!("{indent_str}{prefix}{local} {n}{tail}\n"));
-                } else {
-                    result.push_str(&format!("{indent_str}{prefix}{local}{tail}\n"));
+
+                // Detect "type X extends Y" / "type X restricts Y" pattern:
+                // a single complexContent/simpleContent wrapping a single extension/restriction.
+                let structural: Vec<&XmlElement> = self
+                    .children
+                    .iter()
+                    .filter(|c| xsd_local(&c.name) != "annotation")
+                    .collect();
+                let mut header_extension: Option<(&str, &str, &XmlElement)> = None;
+                if structural.len() == 1 {
+                    let content = structural[0];
+                    let cl = xsd_local(&content.name);
+                    if cl == "complexContent" || cl == "simpleContent" {
+                        let inner: Vec<&XmlElement> = content
+                            .children
+                            .iter()
+                            .filter(|c| xsd_local(&c.name) != "annotation")
+                            .collect();
+                        if inner.len() == 1 {
+                            let der = inner[0];
+                            let dl = xsd_local(&der.name);
+                            if (dl == "extension" || dl == "restriction")
+                                && let Some(base) = der.attributes.get("base")
+                            {
+                                let kw = if dl == "extension" {
+                                    "extends"
+                                } else {
+                                    "restricts"
+                                };
+                                header_extension = Some((kw, base, der));
+                            }
+                        }
+                    }
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+
+                let name_part = self
+                    .attributes
+                    .get("name")
+                    .map(|n| format!(" {n}"))
+                    .unwrap_or_default();
+
+                if let Some((kw, base, der)) = header_extension {
+                    result.push_str(&format!(
+                        "{indent_str}{prefix}type{name_part} {kw} {base}{tail}\n"
+                    ));
+                    let inner_indent = "  ".repeat(indent + 1);
+                    for child in &der.children {
+                        emit_complextype_child(
+                            child,
+                            indent + 1,
+                            &inner_indent,
+                            opts,
+                            registry,
+                            &mut result,
+                        );
+                    }
+                } else {
+                    result.push_str(&format!("{indent_str}{prefix}type{name_part}{tail}\n"));
+                    let inner_indent = "  ".repeat(indent + 1);
+                    for child in &self.children {
+                        emit_complextype_child(
+                            child,
+                            indent + 1,
+                            &inner_indent,
+                            opts,
+                            registry,
+                            &mut result,
+                        );
+                    }
+                }
+                Some(result)
+            }
+            "simpleType" => {
+                let name_part = self
+                    .attributes
+                    .get("name")
+                    .map(|n| format!(" {n}"))
+                    .unwrap_or_default();
+                if let Some((suffix, body)) = try_inline_simple_type(self, indent) {
+                    result.push_str(&format!("{indent_str}type{name_part}{suffix}\n"));
+                    result.push_str(&body);
+                } else {
+                    result.push_str(&format!("{indent_str}type{name_part}\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                    }
                 }
                 Some(result)
             }
             "sequence" | "choice" | "all" => {
                 result.push_str(&format!("{indent_str}{local}{occurs}\n"));
+                let inner_indent = "  ".repeat(indent + 1);
                 for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                    if let Some(s) = child.format_xsd_member(indent + 1, &inner_indent, registry) {
+                        result.push_str(&s);
+                    } else {
+                        result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                    }
                 }
                 Some(result)
             }
@@ -1095,9 +1189,19 @@ impl XmlElement {
                 }
                 Some(result)
             }
-            "enumeration" | "pattern" | "minLength" | "maxLength" | "length" | "minInclusive"
-            | "maxInclusive" | "minExclusive" | "maxExclusive" | "totalDigits"
-            | "fractionDigits" | "whiteSpace" => {
+            "enumeration" => {
+                if let Some(v) = self.attributes.get("value") {
+                    result.push_str(&format!("{indent_str}| {v}\n"));
+                } else {
+                    result.push_str(&format!("{indent_str}|\n"));
+                }
+                for child in &self.children {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+                Some(result)
+            }
+            "pattern" | "minLength" | "maxLength" | "length" | "minInclusive" | "maxInclusive"
+            | "minExclusive" | "maxExclusive" | "totalDigits" | "fractionDigits" | "whiteSpace" => {
                 if let Some(v) = self.attributes.get("value") {
                     result.push_str(&format!("{indent_str}{local} {v}\n"));
                 } else {
@@ -1130,8 +1234,16 @@ impl XmlElement {
                 } else {
                     return None;
                 }
+                let inner_indent = "  ".repeat(indent + 1);
                 for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                    emit_complextype_child(
+                        child,
+                        indent + 1,
+                        &inner_indent,
+                        opts,
+                        registry,
+                        &mut result,
+                    );
                 }
                 Some(result)
             }
@@ -1215,10 +1327,198 @@ impl XmlElement {
             _ => None,
         }
     }
+
+    /// Format this element as a member of a content model (sequence/choice/all,
+    /// or the implicit body of a complexType). Drops the leading `element`
+    /// keyword on element declarations since the context makes it obvious.
+    /// Returns None if the caller should fall back to format_yaml_like.
+    fn format_xsd_member(
+        &self,
+        indent: usize,
+        indent_str: &str,
+        registry: Option<&TemplateRegistry>,
+    ) -> Option<String> {
+        if xsd_local(&self.name) != "element" {
+            return None;
+        }
+        let opts = &FormatOpts {
+            xsd: true,
+            ..FormatOpts::default()
+        };
+        let occurs = format_occurs(&self.attributes);
+        let prefix = if is_true(self.attributes.get("abstract")) {
+            "abstract "
+        } else {
+            ""
+        };
+        let mut tail = String::new();
+        if is_true(self.attributes.get("nillable")) {
+            tail.push_str(" nillable");
+        }
+        if let Some(sg) = self.attributes.get("substitutionGroup") {
+            tail.push_str(&format!(" substitutes {sg}"));
+        }
+        if let Some(b) = self.attributes.get("block") {
+            tail.push_str(&format!(" block {b}"));
+        }
+        if let Some(f) = self.attributes.get("final") {
+            tail.push_str(&format!(" final {f}"));
+        }
+        if let Some(d) = self.attributes.get("default") {
+            tail.push_str(&format!(" = {d}"));
+        } else if let Some(f) = self.attributes.get("fixed") {
+            tail.push_str(&format!(" == {f}"));
+        }
+        let mut result = String::new();
+
+        if let Some(r) = self.attributes.get("ref") {
+            result.push_str(&format!("{indent_str}{prefix}ref {r}{occurs}{tail}\n"));
+            return Some(result);
+        }
+        let n = self.attributes.get("name")?;
+
+        // If there's an explicit type, emit one-liner.
+        if let Some(t) = self.attributes.get("type") {
+            result.push_str(&format!("{indent_str}{prefix}{n} : {t}{occurs}{tail}\n"));
+            return Some(result);
+        }
+
+        // Anonymous nested type — try to inline a simpleType.
+        let content: Vec<&XmlElement> = self
+            .children
+            .iter()
+            .filter(|c| xsd_local(&c.name) != "annotation")
+            .collect();
+        if content.len() == 1
+            && xsd_local(&content[0].name) == "simpleType"
+            && let Some((suffix, body)) = try_inline_simple_type(content[0], indent)
+        {
+            result.push_str(&format!("{indent_str}{prefix}{n}{suffix}{occurs}{tail}\n"));
+            result.push_str(&body);
+            return Some(result);
+        }
+
+        // Fall back: emit name and recurse for nested type/complex content.
+        result.push_str(&format!("{indent_str}{prefix}{n}{occurs}{tail}\n"));
+        for child in &self.children {
+            result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+        }
+        Some(result)
+    }
 }
 
 fn is_true(value: Option<&String>) -> bool {
     matches!(value.map(|s| s.as_str()), Some("true") | Some("1"))
+}
+
+fn xsd_local(name: &str) -> &str {
+    name.strip_prefix("xs:")
+        .or_else(|| name.strip_prefix("xsd:"))
+        .unwrap_or(name)
+}
+
+/// Inside a complexType (or extension/restriction body), emit a child:
+///   - a transparent xs:sequence (no occurs constraints) is folded; its members are
+///     emitted at this level via format_xsd_member (which drops the 'element' keyword)
+///   - everything else is emitted via standard format_yaml_like
+fn emit_complextype_child(
+    child: &XmlElement,
+    indent: usize,
+    indent_str: &str,
+    opts: &FormatOpts,
+    registry: Option<&TemplateRegistry>,
+    out: &mut String,
+) {
+    let cl = xsd_local(&child.name);
+    let is_transparent = cl == "sequence"
+        && child.attributes.get("minOccurs").is_none()
+        && child.attributes.get("maxOccurs").is_none();
+    if is_transparent {
+        for grandchild in &child.children {
+            if let Some(s) = grandchild.format_xsd_member(indent, indent_str, registry) {
+                out.push_str(&s);
+            } else {
+                out.push_str(&grandchild.format_yaml_like(indent, opts, registry));
+            }
+        }
+    } else if let Some(s) = child.format_xsd_member(indent, indent_str, registry) {
+        out.push_str(&s);
+    } else {
+        out.push_str(&child.format_yaml_like(indent, opts, registry));
+    }
+}
+
+/// Try to render a <simpleType> compactly. Returns (header_suffix, body) where
+/// header_suffix is appended after `type [name]` (e.g. " : list xs:int"), and
+/// body is the indented block below (e.g. enum lines).
+fn try_inline_simple_type(elem: &XmlElement, indent: usize) -> Option<(String, String)> {
+    let content: Vec<&XmlElement> = elem
+        .children
+        .iter()
+        .filter(|c| xsd_local(&c.name) != "annotation")
+        .collect();
+    if content.len() != 1 {
+        return None;
+    }
+    let child = content[0];
+    let inner_indent = "  ".repeat(indent + 1);
+
+    match xsd_local(&child.name) {
+        "list" => child
+            .attributes
+            .get("itemType")
+            .map(|t| (format!(" : list {t}"), String::new())),
+        "union" => child
+            .attributes
+            .get("memberTypes")
+            .map(|m| (format!(" : union {m}"), String::new())),
+        "restriction" => {
+            let base = child.attributes.get("base")?;
+            let mut enums: Vec<&String> = Vec::new();
+            let mut patterns: Vec<&String> = Vec::new();
+            let mut min_inc: Option<&String> = None;
+            let mut max_inc: Option<&String> = None;
+            let mut other = false;
+            for facet in &child.children {
+                let fl = xsd_local(&facet.name);
+                let value = facet.attributes.get("value");
+                match (fl, value) {
+                    ("enumeration", Some(v)) => enums.push(v),
+                    ("pattern", Some(v)) => patterns.push(v),
+                    ("minInclusive", Some(v)) => min_inc = Some(v),
+                    ("maxInclusive", Some(v)) => max_inc = Some(v),
+                    ("annotation", _) => {}
+                    _ => other = true,
+                }
+            }
+            if other {
+                return None;
+            }
+
+            // Range only (no enums, no patterns)
+            if enums.is_empty()
+                && patterns.is_empty()
+                && let (Some(m), Some(n)) = (min_inc, max_inc)
+            {
+                return Some((format!(" : {base} [{m}..{n}]"), String::new()));
+            }
+
+            // Enumerations (and optional patterns), no range facets
+            if !enums.is_empty() && min_inc.is_none() && max_inc.is_none() {
+                let mut body = String::new();
+                for v in &enums {
+                    body.push_str(&format!("{inner_indent}| {v}\n"));
+                }
+                for p in &patterns {
+                    body.push_str(&format!("{inner_indent}pattern {p}\n"));
+                }
+                return Some((format!(" : {base}"), body));
+            }
+
+            None
+        }
+        _ => None,
+    }
 }
 
 fn format_occurs(attrs: &HashMap<String, String>) -> String {
