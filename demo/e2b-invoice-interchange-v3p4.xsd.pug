@@ -1,0 +1,20 @@
+schema http://www.e2b.no/XMLSchema (elementFormDefault=qualified)
+  include e2b_Interchange_Header_v1p02.xsd
+  include e2b_Message_Header_v1p02.xsd
+  include e2b_Invoice_v3p4.xsd
+  element Interchange : InterchangeType
+  type InterchangeType
+    choice +
+      Envelope : EnvelopeType ?
+      InterchangeHeader : InterchangeHeaderType ?
+      MessageHeader : MessageHeaderType ?
+      Invoice : InvoiceType
+  type EnvelopeType
+    // SubType - Envelope. Contains information about sender and receiver
+    InterchangeId : xsd:string
+    From : xsd:string
+    To : xsd:string
+    Date : xsd:date
+    Time : xsd:time ?
+    NumberOfMessages : xsd:integer ?
+    TestIndicator : xsd:integer ?

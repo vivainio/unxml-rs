@@ -1,0 +1,1134 @@
+schema (elementFormDefault=qualified)
+  element Finvoice
+    type
+      MessageTransmissionDetails : MessageTransmissionDetailsType ?
+      SellerPartyDetails : SellerPartyDetailsType
+      SellerOrganisationUnitNumber : genericStringType0_35 ?
+      SellerSiteCode : genericStringType0_35 ?
+      SellerContactPersonName : genericStringType0_70 ?
+      SellerContactPersonFunction : genericStringType0_35 [0..2]
+      SellerContactPersonDepartment : genericStringType0_35 [0..2]
+      SellerCommunicationDetails : SellerCommunicationDetailsType ?
+      SellerInformationDetails : SellerInformationDetailsType ?
+      InvoiceSenderPartyDetails : InvoiceSenderPartyDetailsType ?
+      InvoiceRecipientPartyDetails : InvoiceRecipientPartyDetailsType ?
+      InvoiceRecipientOrganisationUnitNumber : genericStringType0_35 ?
+      InvoiceRecipientSiteCode : genericStringType0_35 ?
+      InvoiceRecipientContactPersonName : genericStringType0_70 ?
+      InvoiceRecipientContactPersonFunction : genericStringType0_35 [0..2]
+      InvoiceRecipientContactPersonDepartment : genericStringType0_35 [0..2]
+      InvoiceRecipientLanguageCode : LanguageCodeType ?
+      InvoiceRecipientCommunicationDetails : InvoiceRecipientCommunicationDetailsType ?
+      BuyerPartyDetails : BuyerPartyDetailsType
+      BuyerOrganisationUnitNumber : genericStringType0_35 ?
+      BuyerSiteCode : genericStringType0_35 ?
+      BuyerContactPersonName : genericStringType0_70 ?
+      BuyerContactPersonFunction : genericStringType0_35 [0..2]
+      BuyerContactPersonDepartment : genericStringType0_35 [0..2]
+      BuyerCommunicationDetails : BuyerCommunicationDetailsType ?
+      DeliveryPartyDetails : DeliveryPartyDetailsType ?
+      DeliveryOrganisationUnitNumber : genericStringType0_35 ?
+      DeliverySiteCode : genericStringType0_35 ?
+      DeliveryContactPersonName : genericStringType0_70 ?
+      DeliveryContactPersonFunction : genericStringType0_35 [0..2]
+      DeliveryContactPersonDepartment : genericStringType0_35 [0..2]
+      DeliveryCommunicationDetails : DeliveryCommunicationDetailsType ?
+      DeliveryDetails : DeliveryDetailsType ?
+      AnyPartyDetails : AnyPartyDetailsType *
+      InvoiceDetails : InvoiceDetailsType
+      PaymentCardInfo : PaymentCardInfoType ?
+      DirectDebitInfo : DirectDebitInfoType ?
+      PaymentStatusDetails : PaymentStatusDetailsType ?
+      PartialPaymentDetails : PartialPaymentDetailsType *
+      FactoringAgreementDetails : FactoringAgreementDetailsType ?
+      VirtualBankBarcode : genericStringType0_512 ?
+      InvoiceRow : InvoiceRowType +
+      SpecificationDetails : SpecificationDetailsType ?
+      EpiDetails : EpiDetailsType
+      InvoiceUrlNameText : genericStringType0_512 *
+      InvoiceUrlText : genericStringType0_512 *
+      StorageUrlText : genericStringType0_512 ?
+      LayOutIdentifier : genericStringType0_35 ?
+      InvoiceSegmentIdentifier : genericStringType0_35 ?
+      ControlChecksum : genericStringType0_512 ?
+      MessageChecksum : genericStringType0_512 ?
+      ControlStampText : genericStringType0_512 ?
+      AcceptanceStampText : genericStringType0_512 ?
+      OriginalInvoiceFormat : genericStringType0_35 ?
+      AttachmentMessageDetails : AttachmentMessageDetailsType ?
+      @Version (required)
+        type : xs:NMTOKEN
+          | 1.3
+          | 2.0
+          | 2.01
+          | 3.0
+  type MessageTransmissionDetailsType
+    MessageSenderDetails
+      type
+        FromIdentifier : ElectronicAddrIdType
+        FromIntermediator : genericStringType2_35
+    MessageReceiverDetails
+      type
+        ToIdentifier : ElectronicAddrIdType
+        ToIntermediator : genericStringType2_35
+    MessageDetails
+      type
+        MessageIdentifier : genericStringType2_48
+        MessageTimeStamp : xs:dateTime
+        RefToMessageIdentifier : genericStringType0_48 ?
+        ImplementationCode : genericStringType0_4 ?
+        SpecificationIdentifier : genericStringType1_35 ?
+  type AnyPartyDetailsType
+    AnyPartyText : anypartytexttype0_35
+    AnyPartyIdentifier : PartyLegalRegIdType ?
+    AnyPartyOrganisationName : genericStringType2_35 [1..2]
+    AnyPartyOrganisationDepartment : genericStringType0_35 [0..2]
+    AnyPartyOrganisationTaxCode : genericStringType0_35 ?
+    AnyPartyCode : PartyIdentifierType ?
+    AnyPartyContactPersonName : genericStringType0_70 ?
+    AnyPartyContactPersonFunction : genericStringType0_35 [0..2]
+    AnyPartyContactPersonDepartment : genericStringType0_35 [0..2]
+    AnyPartyCommunicationDetails : AnyPartyCommunicationDetailsType ?
+    AnyPartyPostalAddressDetails ?
+      type
+        AnyPartyStreetName : genericStringType2_35 [1..3]
+        AnyPartyTownName : genericStringType2_35
+        AnyPartyPostCodeIdentifier : genericStringType2_35
+        AnyPartyCountrySubdivision : genericStringType2_35 ?
+        CountryCode : CountryCodeType ?
+        CountryName : genericStringType0_35 ?
+        AnyPartyPostOfficeBoxIdentifier : genericStringType0_35 ?
+    AnyPartyOrganisationUnitNumber : genericStringType0_35 ?
+    AnyPartySiteCode : genericStringType0_35 ?
+  type FactoringAgreementDetailsType
+    FactoringAgreementIdentifier : genericStringType0_35
+    TransmissionListIdentifier : genericStringType0_70 ?
+    EndorsementClauseCode : genericStringType0_35 ?
+    FactoringTypeCode : genericStringType0_35 ?
+    FactoringFreeText : genericStringType0_70 *
+    FactoringPartyIdentifier : PartyLegalRegIdType ?
+    FactoringPartyName : genericStringType0_35 ?
+    FactoringPartyPostalAddressDetails ?
+      type
+        FactoringPartyStreetName : genericStringType2_35 [1..3]
+        FactoringPartyTownName : genericStringType2_35
+        FactoringPartyPostCodeIdentifier : genericStringType2_35
+        FactoringPartyCountrySubdivision : genericStringType2_35 ?
+        CountryCode : CountryCodeType ?
+        CountryName : genericStringType0_35 ?
+        FactoringPartyPostOfficeBoxIdentifier : genericStringType0_35 ?
+  type BuyerCommunicationDetailsType
+    BuyerPhoneNumberIdentifier : genericStringType0_35 ?
+    BuyerEmailaddressIdentifier : genericStringType0_70 ?
+  type BuyerPartyDetailsType
+    BuyerPartyIdentifier : PartyLegalRegIdType ?
+    BuyerOrganisationName : genericStringType2_70 +
+    BuyerOrganisationTradingName : genericStringType2_70 ?
+    BuyerOrganisationDepartment : genericStringType0_35 [0..2]
+    BuyerOrganisationTaxCode : genericStringType0_35 ?
+    BuyerCode : PartyIdentifierType ?
+    BuyerPostalAddressDetails : BuyerPostalAddressDetailsType ?
+  type BuyerPostalAddressDetailsType
+    BuyerStreetName : genericStringType2_35 [1..3]
+    BuyerTownName : genericStringType2_35
+    BuyerPostCodeIdentifier : genericStringType2_35
+    BuyerCountrySubdivision : genericStringType2_35 ?
+    CountryCode : CountryCodeType ?
+    CountryName : genericStringType0_35 ?
+    BuyerPostOfficeBoxIdentifier : genericStringType0_35 ?
+  type DeliveryCommunicationDetailsType
+    DeliveryPhoneNumberIdentifier : genericStringType0_35 ?
+    DeliveryEmailaddressIdentifier : genericStringType0_70 ?
+  type DeliveryDetailsType
+    DeliveryDate : date ?
+    DeliveryPeriodDetails : DeliveryPeriodDetailsType ?
+    ShipmentPartyDetails ?
+      type
+        ShipmentPartyIdentifier : PartyLegalRegIdType ?
+        ShipmentOrganisationName : genericStringType2_35 +
+        ShipmentOrganisationDepartment : genericStringType0_35 [0..2]
+        ShipmentOrganisationTaxCode : genericStringType0_35 ?
+        ShipmentCode : PartyIdentifierType ?
+        ShipmentPostalAddressDetails ?
+          type
+            ShipmentStreetName : genericStringType2_35 [1..3]
+            ShipmentTownName : genericStringType2_35
+            ShipmentPostCodeIdentifier : genericStringType2_35
+            ShipmentCountrySubdivision : genericStringType2_35 ?
+            CountryCode : CountryCodeType ?
+            CountryName : genericStringType0_35 ?
+            ShipmentPostOfficeBoxIdentifier : genericStringType0_35 ?
+        ShipmentSiteCode : genericStringType0_35 ?
+    DeliveryMethodText : genericStringType0_512 ?
+    DeliveryTermsText : genericStringType0_512 ?
+    DeliveryTermsCode : genericStringType1_4 ?
+    TerminalAddressText : genericStringType0_512 ?
+    WaybillIdentifier : genericStringType0_70 ?
+    WaybillTypeCode : genericStringType0_35 ?
+    ClearanceIdentifier : genericStringType0_70 ?
+    DeliveryNoteIdentifier : genericStringType0_70 ?
+    DelivererIdentifier : genericStringType0_35 ?
+    DelivererName : genericStringType0_35 [0..3]
+    DelivererCountrySubdivision : genericStringType2_35 ?
+    DelivererCountryCode : CountryCodeType ?
+    DelivererCountryName : genericStringType0_35 ?
+    ModeOfTransportIdentifier : genericStringType0_70 ?
+    CarrierName : genericStringType0_35 ?
+    VesselName : genericStringType0_35 ?
+    LocationIdentifier : genericStringType0_70 ?
+    TransportInformationDate : date ?
+    CountryOfOrigin : genericStringType0_35 ?
+    CountryOfDestinationName : genericStringType0_35 ?
+    DestinationCountryCode : CountryCodeType ?
+    PlaceOfDischarge : genericStringType0_35 [0..3]
+    FinalDestinationName : DestinationNameType [0..3]
+    ManufacturerIdentifier : genericStringType0_35 ?
+    ManufacturerName : genericStringType0_35 [0..3]
+    ManufacturerCountrySubdivision : genericStringType2_35 ?
+    ManufacturerCountryCode : CountryCodeType ?
+    ManufacturerCountryName : genericStringType0_35 ?
+    ManufacturerOrderIdentifier : genericStringType0_70 ?
+    PackageDetails ?
+      type
+        PackageLength : QuantityType0_14 ?
+        PackageWidth : QuantityType0_14 ?
+        PackageHeight : QuantityType0_14 ?
+        PackageWeight : QuantityType0_14 ?
+        PackageNetWeight : QuantityType0_14 ?
+        PackageVolume : QuantityType0_14 ?
+        TransportCarriageQuantity : QuantityType0_14 ?
+  type DeliveryPartyDetailsType
+    DeliveryPartyIdentifier : PartyLegalRegIdType ?
+    DeliveryOrganisationName : genericStringType2_35 +
+    DeliveryOrganisationDepartment : genericStringType0_35 [0..2]
+    DeliveryOrganisationTaxCode : genericStringType0_35 ?
+    DeliveryCode : PartyIdentifierType ?
+    DeliveryPostalAddressDetails : DeliveryPostalAddressDetailsType
+  type DeliveryPeriodDetailsType
+    StartDate : date
+    EndDate : date
+  type DeliveryPostalAddressDetailsType
+    DeliveryStreetName : genericStringType2_35 [1..3]
+    DeliveryTownName : genericStringType2_35
+    DeliveryPostCodeIdentifier : genericStringType2_35
+    DeliveryCountrySubdivision : genericStringType2_35 ?
+    CountryCode : CountryCodeType ?
+    CountryName : genericStringType0_35 ?
+    DeliveryPostofficeBoxIdentifier : genericStringType0_35 ?
+  type EpiAccountIDType extends genericNMtokenType1_34
+    @IdentificationSchemeName (required)
+      type : xs:NMTOKEN
+        | IBAN
+        | BBAN
+  type EpiBfiIdentifierType extends genericNMtokenType8_11
+    @IdentificationSchemeName (required)
+      type : xs:NMTOKEN
+        | BIC
+  type EpiDetailsType
+    EpiIdentificationDetails : EpiIdentificationDetailsType
+    EpiPartyDetails : EpiPartyDetailsType
+    EpiPaymentInstructionDetails : EpiPaymentInstructionDetailsType
+  type EpiIdentificationDetailsType
+    EpiDate : date
+    EpiReference : genericNMtokenType0_35
+    EpiUrl : genericNMtokenType0_512 ?
+    EpiEmail : genericStringType0_70 ?
+    EpiOrderInfo : genericTokenType0_70 [0..7]
+  type EpiPartyDetailsType
+    EpiBfiPartyDetails : EpiBfiPartyDetailsType
+    EpiBeneficiaryPartyDetails : EpiBeneficiaryPartyDetailsType
+  type EpiBfiPartyDetailsType
+    EpiBfiIdentifier : EpiBfiIdentifierType ?
+    EpiBfiName : genericStringType1_35 ?
+  type EpiBeneficiaryPartyDetailsType
+    EpiNameAddressDetails : genericTokenType2_35 ?
+    EpiBei : genericNMtokenType8_11 ?
+    EpiAccountID : EpiAccountIDType
+  type EpiPaymentInstructionDetailsType
+    EpiPaymentInstructionId : genericStringType0_35 ?
+    EpiTransactionTypeCode : genericTokenType3 ?
+    EpiInstructionCode : genericNMtokenType0_35 ?
+    EpiRemittanceInfoIdentifier : EpiRemittanceInfoIdentifierType ?
+    EpiInstructedAmount : epiAmount
+    EpiCharge : EpiChargeType
+    EpiDateOptionDate : date
+    EpiPaymentMeansCode : untdid4461 ?
+    EpiPaymentMeansText : genericStringType1_70 ?
+  type EpiRemittanceInfoIdentifierType extends EpiRemittanceInfoIdentifierPattern
+    @IdentificationSchemeName
+      type : xs:NMTOKEN
+        | SPY
+        | ISO
+  type EpiRemittanceInfoIdentifierPattern
+    restriction xs:NMTOKEN
+      pattern ([0-9]{2,20})|(RF[0-9][0-9][0-9A-Za-z]{1,21})
+  type EpiChargeType extends xs:token
+    @ChargeOption (required)
+      type : xs:NMTOKEN
+        | SHA
+        | OUR
+        | BEN
+        | SLEV
+  type InvoiceDetailsType
+    InvoiceTypeCode : InvoiceTypeCodeTypeFI
+    InvoiceTypeCodeUN : untdid1001 ?
+    InvoiceTypeText : genericStringType1_35
+    InvoiceClassification : InvoiceClassificationType ?
+    OriginCode : OriginCodeType
+    OriginText : genericStringType0_35 ?
+    InvoicedObjectID : InvoicedObjectIDType ?
+    InvoiceNumber : genericStringType1_20
+    InvoiceDate : date
+    OriginalInvoiceNumber : genericStringType1_20 ?
+    OriginalInvoiceDate : date ?
+    OriginalInvoiceReference : OriginalInvoiceReferenceType *
+    InvoicingPeriodStartDate : date ?
+    InvoicingPeriodEndDate : date ?
+    SellerReferenceIdentifier : genericStringType0_70 ?
+    SellerReferenceIdentifierUrlText : genericStringType0_512 ?
+    BuyersSellerIdentifier : PartyIdentifierType ?
+    SellersBuyerIdentifier : PartyIdentifierType ?
+    OrderIdentifier : genericStringType0_70 ?
+    OrderIdentifierUrlText : genericStringType0_512 ?
+    OrderDate : date ?
+    OrdererName : genericStringType0_35 ?
+    SalesPersonName : genericStringType0_35 ?
+    OrderConfirmationIdentifier : genericStringType0_70 ?
+    OrderConfirmationDate : date ?
+    AgreementIdentifier : genericStringType0_70 ?
+    AgreementIdentifierUrlText : genericStringType0_512 ?
+    AgreementTypeText : genericStringType0_35 ?
+    AgreementTypeCode : genericStringType0_35 ?
+    AgreementDate : date ?
+    NotificationIdentifier : genericStringType0_70 ?
+    NotificationDate : date ?
+    RegistrationNumberIdentifier : genericStringType0_70 ?
+    ControllerIdentifier : genericStringType0_70 ?
+    ControllerName : genericStringType0_35 ?
+    ControlDate : date ?
+    BuyerReferenceIdentifier : genericStringType0_70 ?
+    ProjectReferenceIdentifier : genericStringType0_70 ?
+    DefinitionDetails *
+      type
+        DefinitionHeaderText
+          type extends genericStringType0_70
+            @DefinitionCode : genericTokenType1_20
+        DefinitionValue : QuantityType0_70 ?
+    RowsTotalVatExcludedAmount : amount ?
+    DiscountsTotalVatExcludedAmount : amount ?
+    ChargesTotalVatExcludedAmount : amount ?
+    InvoiceTotalVatExcludedAmount : amount ?
+    InvoiceTotalVatAmount : amount ?
+    InvoiceTotalVatAccountingAmount : amount ?
+    InvoiceTotalVatIncludedAmount : amount
+    InvoiceTotalRoundoffAmount : amount ?
+    InvoicePaidAmount : amount ?
+    ExchangeRate : exchangeRate ?
+    OtherCurrencyAmountVatExcludedAmount : amount ?
+    OtherCurrencyAmountVatIncludedAmount : amount ?
+    CreditLimitAmount : amount ?
+    CreditInterestPercent : percentage ?
+    OperationLimitAmount : amount ?
+    MonthlyAmount : amount ?
+    ShortProposedAccountIdentifier : genericNMtokenType0_4 ?
+    NormalProposedAccountIdentifier : genericNMtokenType0_4 ?
+    ProposedAccountText : genericStringType0_35 ?
+    AccountDimensionText : genericStringType0_35 ?
+    SellerAccountText : genericStringType0_35 ?
+    VatPoint : VatPointType ?
+    VatSpecificationDetails : VatSpecificationDetailsType *
+    InvoiceFreeText : genericStringType0_512 *
+    InvoiceVatFreeText : genericStringType0_70 ?
+    PaymentTermsDetails : PaymentTermsDetailsType *
+    DiscountDetails : DiscountDetailsType *
+    ChargeDetails : InvoiceChargeDetailsType *
+    TenderReference : genericStringType1_70 ?
+  type OriginalInvoiceReferenceType
+    InvoiceNumber : genericStringType1_20 ?
+    InvoiceDate : date ?
+  type PaymentCardInfoType
+    PrimaryAccountNumber : genericStringType1_19
+    CardHolderName : genericStringType1_70 ?
+  type DirectDebitInfoType
+    MandateReference : genericStringType1_35 ?
+    CreditorIdentifier : genericStringType1_35 ?
+    DebitedAccountID : EpiAccountIDType ?
+  type InvoiceRecipientCommunicationDetailsType
+    InvoiceRecipientPhoneNumberIdentifier : genericStringType0_35 ?
+    InvoiceRecipientEmailaddressIdentifier : genericStringType0_70 ?
+  type InvoiceRecipientDetailsType
+    InvoiceRecipientAddress : genericStringType1_35
+    InvoiceRecipientIntermediatorAddress : genericNMtokenType8_11
+  type InvoiceRecipientPartyDetailsType
+    InvoiceRecipientPartyIdentifier : PartyLegalRegIdType ?
+    InvoiceRecipientOrganisationName : genericStringType2_35 +
+    InvoiceRecipientDepartment : genericStringType0_35 [0..2]
+    InvoiceRecipientOrganisationTaxCode : genericNMtokenType0_35 ?
+    InvoiceRecipientCode : PartyIdentifierType ?
+    InvoiceRecipientPostalAddressDetails : InvoiceRecipientPostalAddressDetailsType ?
+  type InvoiceRecipientPostalAddressDetailsType
+    InvoiceRecipientStreetName : genericStringType2_35 [1..3]
+    InvoiceRecipientTownName : genericStringType2_35
+    InvoiceRecipientPostCodeIdentifier : genericStringType2_35
+    InvoiceRecipientCountrySubdivision : genericStringType2_35 ?
+    CountryCode : CountryCodeType ?
+    CountryName : genericStringType0_35 ?
+    InvoiceRecipientPostOfficeBoxIdentifier : genericStringType0_35 ?
+  group InvoiceRowGroup
+    RowSubIdentifier : genericStringType0_35 ?
+    InvoicedObjectID : InvoicedObjectIDType ?
+    ArticleIdentifier : genericStringType0_70 ?
+    ArticleGroupIdentifier : ArticleGroupIdentifierType *
+    ArticleName : genericStringType0_100 ?
+    ArticleDescription : genericStringType0_512 ?
+    ArticleInfoUrlText : genericStringType0_512 ?
+    BuyerArticleIdentifier : genericStringType0_70 ?
+    EanCode : EanCodeType ?
+    RowRegistrationNumberIdentifier : genericStringType0_70 ?
+    SerialNumberIdentifier : genericStringType0_70 ?
+    RowActionCode : genericTokenType0_35 ?
+    RowDefinitionDetails : RowDefinitionDetailsType *
+    OfferedQuantity : QuantityType0_14 *
+    DeliveredQuantity : QuantityType0_14 *
+    OrderedQuantity : QuantityType0_14 ?
+    ConfirmedQuantity : QuantityType0_14 ?
+    PostDeliveredQuantity : QuantityType0_14 ?
+    InvoicedQuantity : QuantityType0_14 *
+    CreditRequestedQuantity : QuantityType0_14 ?
+    ReturnedQuantity : QuantityType0_14 ?
+    StartDate : date ?
+    EndDate : date ?
+    UnitPriceAmount : unitAmountUN ?
+    UnitPriceDiscountAmount : unitAmountUN ?
+    UnitPriceNetAmount : unitAmountUN ?
+    UnitPriceVatIncludedAmount : unitAmountUN ?
+    UnitPriceBaseQuantity : QuantityType0_14 ?
+    RowIdentifier : genericStringType0_35 ?
+    RowIdentifierUrlText : genericStringType0_512 ?
+    RowOrderPositionIdentifier : genericStringType0_35 ?
+    RowIdentifierDate : date ?
+    RowPositionIdentifier : genericStringType0_35 ?
+    OriginalInvoiceNumber : genericStringType1_20 ?
+    OriginalInvoiceDate : date ?
+    OriginalInvoiceReference : OriginalInvoiceReferenceType *
+    RowOrdererName : genericStringType0_35 ?
+    RowSalesPersonName : genericStringType0_35 ?
+    RowOrderConfirmationIdentifier : genericStringType0_70 ?
+    RowOrderConfirmationDate : date ?
+    RowDeliveryIdentifier : genericStringType0_35 ?
+    RowDeliveryIdentifierUrlText : genericStringType0_512 ?
+    RowDeliveryDate : date ?
+    RowQuotationIdentifier : genericStringType0_35 ?
+    RowQuotationIdentifierUrlText : genericStringType0_512 ?
+    RowAgreementIdentifier : genericStringType0_70 ?
+    RowAgreementIdentifierUrlText : genericStringType0_512 ?
+    RowRequestOfQuotationIdentifier : genericStringType0_35 ?
+    RowRequestOfQuotationIdentifierUrlText : genericStringType0_512 ?
+    RowPriceListIdentifier : genericStringType0_35 ?
+    RowPriceListIdentifierUrlText : genericStringType0_512 ?
+    RowBuyerReferenceIdentifier : genericStringType0_70 ?
+    RowProjectReferenceIdentifier : genericStringType0_70 ?
+    RowOverDuePaymentDetails : RowOverDuePaymentDetailsType ?
+    RowAnyPartyDetails : RowAnyPartyDetailsType *
+    RowDeliveryDetails : RowDeliveryDetailsType ?
+    RowShortProposedAccountIdentifier : genericNMtokenType0_4 ?
+    RowNormalProposedAccountIdentifier : genericNMtokenType0_4 ?
+    RowProposedAccountText : genericStringType0_35 ?
+    RowAccountDimensionText : genericStringType0_35 ?
+    RowSellerAccountText : genericStringType0_35 ?
+    RowFreeText : genericStringType0_512 *
+    RowUsedQuantity : QuantityType0_14 ?
+    RowPreviousMeterReadingDate : date ?
+    RowLatestMeterReadingDate : date ?
+    RowCalculatedQuantity : QuantityType0_14 ?
+    RowAveragePriceAmount : amount ?
+    RowDiscountPercent : percentage ?
+    RowDiscountAmount : amount ?
+    RowDiscountBaseAmount : amount ?
+    RowDiscountTypeCode : untdid5189 ?
+    RowDiscountTypeText : genericStringType0_35 ?
+    RowProgressiveDiscountDetails : RowProgressiveDiscountDetailsType *
+    RowChargeDetails : RowChargeDetailsType *
+    RowVatRatePercent : percentage ?
+    RowVatCode : untdid5305 ?
+    RowVatAmount : amount ?
+    RowVatExcludedAmount : amount ?
+    RowAmount : amount ?
+    RowTransactionDetails : TransactionDetailsType ?
+  type SubInvoiceRowType
+    SubIdentifier : genericStringType0_35 ?
+    SubRowPositionIdentifier : genericStringType0_35 ?
+    SubInvoicedObjectID : InvoicedObjectIDType ?
+    SubArticleIdentifier : genericStringType0_70 ?
+    SubArticleGroupIdentifier : ArticleGroupIdentifierType *
+    SubArticleName : genericStringType0_100 ?
+    SubArticleDescription : genericStringType0_512 ?
+    SubArticleInfoUrlText : genericStringType0_512 ?
+    SubBuyerArticleIdentifier : genericStringType0_70 ?
+    SubEanCode : EanCodeType ?
+    SubRowRegistrationNumberIdentifier : genericStringType0_70 ?
+    SubSerialNumberIdentifier : genericStringType0_70 ?
+    SubRowActionCode : genericTokenType0_35 ?
+    SubRowDefinitionDetails *
+      type
+        SubRowDefinitionHeaderText
+          type extends genericStringType0_70
+            @DefinitionCode : genericTokenType1_20
+        SubRowDefinitionValue : QuantityType0_70 ?
+    SubOfferedQuantity : QuantityType0_14 *
+    SubDeliveredQuantity : QuantityType0_14 *
+    SubOrderedQuantity : QuantityType0_14 ?
+    SubConfirmedQuantity : QuantityType0_14 ?
+    SubPostDeliveredQuantity : QuantityType0_14 ?
+    SubInvoicedQuantity : QuantityType0_14 *
+    SubCreditRequestedQuantity : QuantityType0_14 ?
+    SubReturnedQuantity : QuantityType0_14 ?
+    SubStartDate : date ?
+    SubEndDate : date ?
+    SubUnitPriceAmount : unitAmount ?
+    SubUnitPriceDiscountAmount : unitAmount ?
+    SubUnitPriceNetAmount : unitAmount ?
+    SubUnitPriceVatIncludedAmount : unitAmount ?
+    SubUnitPriceBaseQuantity : QuantityType0_14 ?
+    SubRowIdentifier : genericStringType0_35 ?
+    SubRowIdentifierUrlText : genericStringType0_512 ?
+    SubRowIdentifierDate : date ?
+    SubRowOrdererName : genericStringType0_35 ?
+    SubRowSalesPersonName : genericStringType0_35 ?
+    SubRowOrderConfirmationIdentifier : genericStringType0_70 ?
+    SubRowOrderConfirmationDate : date ?
+    SubOriginalInvoiceNumber : genericStringType1_20 ?
+    SubOriginalInvoiceDate : date ?
+    SubOriginalInvoiceReference : OriginalInvoiceReferenceType *
+    SubRowDeliveryIdentifier : genericStringType0_35 ?
+    SubRowDeliveryIdentifierUrlText : genericStringType0_512 ?
+    SubRowDeliveryDate : date ?
+    SubRowQuotationIdentifier : genericStringType0_35 ?
+    SubRowQuotationIdentifierUrlText : genericStringType0_512 ?
+    SubRowAgreementIdentifier : genericStringType0_70 ?
+    SubRowAgreementIdentifierUrlText : genericStringType0_512 ?
+    SubRowRequestOfQuotationIdentifier : genericStringType0_35 ?
+    SubRowRequestOfQuotationIdentifierUrlText : genericStringType0_512 ?
+    SubRowPriceListIdentifier : genericStringType0_35 ?
+    SubRowPriceListIdentifierUrlText : genericStringType0_512 ?
+    SubRowBuyerReferenceIdentifier : genericStringType0_70 ?
+    SubRowProjectReferenceIdentifier : genericStringType0_70 ?
+    SubRowOverDuePaymentDetails ?
+      type
+        SubRowOriginalInvoiceIdentifier : genericStringType0_35 ?
+        SubRowOriginalInvoiceDate : date ?
+        SubRowOriginalDueDate : date ?
+        SubRowOriginalInvoiceTotalAmount : amount ?
+        SubRowOriginalEpiRemittanceInfoIdentifier : genericStringType0_35 ?
+        SubRowPaidVatExcludedAmount : amount ?
+        SubRowPaidVatIncludedAmount : amount ?
+        SubRowPaidDate : date ?
+        SubRowUnPaidVatExcludedAmount : amount ?
+        SubRowUnPaidVatIncludedAmount : amount ?
+        SubRowCollectionDate : date ?
+        SubRowCollectionQuantity : QuantityType0_14 ?
+        SubRowCollectionChargeAmount : amount ?
+        SubRowInterestRate : percentage ?
+        SubRowInterestStartDate : date ?
+        SubRowInterestEndDate : date ?
+        SubRowInterestPeriodText : genericStringType0_35 ?
+        SubRowInterestDateNumber : genericNMtokenType0_14 ?
+        SubRowInterestChargeAmount : amount ?
+        SubRowInterestChargeVatAmount : amount ?
+    SubRowAnyPartyDetails *
+      type
+        SubRowAnyPartyText : anypartytexttype0_35
+        SubRowAnyPartyIdentifier : PartyLegalRegIdType ?
+        SubRowAnyPartyOrganisationName : genericStringType2_35 [1..2]
+        SubRowAnyPartyOrganisationDepartment : genericStringType0_35 [0..2]
+        SubRowAnyPartyOrganisationTaxCode : genericStringType0_35 ?
+        SubRowAnyPartyCode : PartyIdentifierType ?
+        SubRowAnyPartyPostalAddressDetails ?
+          type
+            SubRowAnyPartyStreetName : genericStringType2_35 [1..3]
+            SubRowAnyPartyTownName : genericStringType2_35
+            SubRowAnyPartyPostCodeIdentifier : genericStringType2_35
+            SubRowAnyPartyCountrySubdivision : genericStringType2_35 ?
+            CountryCode : CountryCodeType ?
+            CountryName : genericStringType0_35 ?
+            SubRowAnyPartyPostOfficeBoxIdentifier : genericStringType0_35 ?
+        SubRowAnyPartyOrganisationUnitNumber : genericStringType0_35 ?
+        SubRowAnyPartySiteCode : genericStringType0_35 ?
+    SubRowDeliveryDetails : SubRowDeliveryDetailsType ?
+    SubRowShortProposedAccountIdentifier : genericStringType0_4 ?
+    SubRowNormalProposedAccountIdentifier : genericStringType0_4 ?
+    SubRowProposedAccountText : genericStringType0_35 ?
+    SubRowAccountDimensionText : genericStringType0_35 ?
+    SubRowSellerAccountText : genericStringType0_35 ?
+    SubRowFreeText : genericStringType0_512 *
+    SubRowUsedQuantity : QuantityType0_14 ?
+    SubRowPreviousMeterReadingDate : date ?
+    SubRowLatestMeterReadingDate : date ?
+    SubRowCalculatedQuantity : QuantityType0_14 ?
+    SubRowAveragePriceAmount : amount ?
+    SubRowDiscountPercent : percentage ?
+    SubRowDiscountAmount : amount ?
+    SubRowDiscountBaseAmount : amount ?
+    SubRowDiscountTypeCode : untdid5189 ?
+    SubRowDiscountTypeText : genericStringType0_35 ?
+    SubRowProgressiveDiscountDetails *
+      type
+        SubRowDiscountPercent : percentage ?
+        SubRowDiscountAmount : amount ?
+        SubRowDiscountBaseAmount : amount ?
+        SubRowDiscountTypeCode : untdid5189 ?
+        SubRowDiscountTypeText : genericStringType0_35 ?
+    SubRowChargeDetails : RowChargeDetailsType *
+    SubRowVatRatePercent : percentage ?
+    SubRowVatCode : untdid5305 ?
+    SubRowVatAmount : amount ?
+    SubRowVatExcludedAmount : amount ?
+    SubRowAmount : amount ?
+    SubRowTransactionDetails : TransactionDetailsType ?
+  type SubRowDeliveryDetailsType
+    SubRowTerminalAddressText : genericStringType0_70 ?
+    SubRowWaybillIdentifier : genericStringType0_70 ?
+    SubRowWaybillTypeCode : genericNMtokenType0_35 ?
+    SubRowClearanceIdentifier : genericStringType0_70 ?
+    SubRowDeliveryNoteIdentifier : genericStringType0_70 ?
+    SubRowDelivererIdentifier : genericStringType0_35 ?
+    SubRowDelivererName : genericStringType0_35 [0..3]
+    SubRowDelivererCountrySubdivision : genericStringType2_35 ?
+    SubRowDelivererCountryCode : CountryCodeType ?
+    SubRowDelivererCountryName : genericStringType0_35 ?
+    SubRowPlaceOfDischarge : genericStringType0_35 ?
+    SubRowFinalDestinationName : genericStringType0_35 [0..3]
+    SubRowCustomsInfo : CustomsInfoType ?
+    SubRowManufacturerArticleIdentifier : genericStringType0_70 ?
+    SubRowManufacturerIdentifier : genericStringType0_35 ?
+    SubRowManufacturerName : genericStringType0_35 [0..3]
+    SubRowManufacturerCountrySubdivision : genericStringType2_35 ?
+    SubRowManufacturerCountryCode : CountryCodeType ?
+    SubRowManufacturerCountryName : genericStringType0_35 ?
+    SubRowManufacturerOrderIdentifier : genericStringType0_70 ?
+    SubRowPackageDetails ?
+      type
+        SubRowPackageLength : QuantityType0_14 ?
+        SubRowPackageWidth : QuantityType0_14 ?
+        SubRowPackageHeight : QuantityType0_14 ?
+        SubRowPackageWeight : QuantityType0_14 ?
+        SubRowPackageNetWeight : QuantityType0_14 ?
+        SubRowPackageVolume : QuantityType0_14 ?
+        SubRowTransportCarriageQuantity : QuantityType0_14 ?
+  type InvoiceRowType
+    choice
+      group ref InvoiceRowGroup
+      SubInvoiceRow : SubInvoiceRowType *
+  type RowDefinitionDetailsType
+    RowDefinitionHeaderText
+      type extends genericStringType0_70
+        @DefinitionCode : genericTokenType1_20
+    RowDefinitionValue : QuantityType0_70 ?
+  type RowOverDuePaymentDetailsType
+    RowOriginalInvoiceIdentifier : genericStringType0_35 ?
+    RowOriginalInvoiceDate : date ?
+    RowOriginalDueDate : date ?
+    RowOriginalInvoiceTotalAmount : amount ?
+    RowOriginalEpiRemittanceInfoIdentifier : genericStringType0_35 ?
+    RowPaidVatExcludedAmount : amount ?
+    RowPaidVatIncludedAmount : amount ?
+    RowPaidDate : date ?
+    RowUnPaidVatExcludedAmount : amount ?
+    RowUnPaidVatIncludedAmount : amount ?
+    RowCollectionDate : date ?
+    RowCollectionQuantity : QuantityType0_14 ?
+    RowCollectionChargeAmount : amount ?
+    RowInterestRate : percentage ?
+    RowInterestStartDate : date ?
+    RowInterestEndDate : date ?
+    RowInterestPeriodText : genericStringType0_35 ?
+    RowInterestDateNumber : genericNMtokenType0_14 ?
+    RowInterestChargeAmount : amount ?
+    RowInterestChargeVatAmount : amount ?
+  type InvoiceSenderPartyDetailsType
+    InvoiceSenderPartyIdentifier : PartyLegalRegIdType ?
+    InvoiceSenderOrganisationName : genericStringType2_35 +
+    InvoiceSenderOrganisationTaxCode : genericNMtokenType0_35 ?
+    InvoiceSenderCode : PartyIdentifierType ?
+  type RowAnyPartyDetailsType
+    RowAnyPartyText : anypartytexttype0_35
+    RowAnyPartyIdentifier : PartyLegalRegIdType ?
+    RowAnyPartyOrganisationName : genericStringType2_35 [1..2]
+    RowAnyPartyOrganisationDepartment : genericStringType0_35 [0..2]
+    RowAnyPartyOrganisationTaxCode : genericStringType0_35 ?
+    RowAnyPartyCode : PartyIdentifierType ?
+    RowAnyPartyPostalAddressDetails ?
+      type
+        RowAnyPartyStreetName : genericStringType2_35 [1..3]
+        RowAnyPartyTownName : genericStringType2_35
+        RowAnyPartyPostCodeIdentifier : genericStringType2_35
+        RowAnyPartyCountrySubdivision : genericStringType2_35 ?
+        CountryCode : CountryCodeType ?
+        CountryName : genericStringType0_35 ?
+        RowAnyPartyPostOfficeBoxIdentifier : genericStringType0_35 ?
+    RowAnyPartyOrganisationUnitNumber : genericStringType0_35 ?
+    RowAnyPartySiteCode : genericStringType0_35 ?
+  type RowProgressiveDiscountDetailsType
+    RowDiscountPercent : percentage ?
+    RowDiscountAmount : amount ?
+    RowDiscountBaseAmount : amount ?
+    RowDiscountTypeCode : untdid5189 ?
+    RowDiscountTypeText : genericStringType0_35 ?
+  type InvoiceTypeCodePatternFI
+    restriction xs:NMTOKEN
+      pattern (REQ|QUO|ORD|ORC|INV|DEV|TES|INF|PRI|DEN|SEI|REC|RES|SDD)[0-9]{2}
+  type InvoiceTypeCodeTypeFI extends InvoiceTypeCodePatternFI
+    @CodeListAgencyIdentifier
+      type : xs:NMTOKEN
+        | SPY
+  type InvoiceClassificationType
+    ClassificationCode : genericStringType1_10 ?
+    ClassificationText : genericStringType1_70 ?
+  type OriginCodeType : xs:NMTOKEN
+    | Original
+    | Copy
+    | Cancel
+  type PartialPaymentDetailsType
+    PaidAmount : amount
+    PaidVatExcludedAmount : amount ?
+    UnPaidAmount : amount
+    UnPaidVatExcludedAmount : amount ?
+    InterestPercent : percentage ?
+    ProsessingCostsAmount : amount ?
+    PartialPaymentVatIncludedAmount : amount +
+    PartialPaymentVatExcludedAmount : amount +
+    PartialPaymentDueDate : date +
+    PartialPaymentReferenceIdentifier : genericStringType2_35 +
+  type PaymentOverDueFineDetailsType
+    PaymentOverDueFineFreeText : genericStringType0_70 [0..3]
+    PaymentOverDueFinePercent : percentage ?
+    PaymentOverDueFixedAmount : amount ?
+  type PaymentStatusCodeType : xs:NMTOKEN
+    | PAID
+    | NOTPAID
+    | PARTLYPAID
+  type PaymentStatusDetailsType
+    PaymentStatusCode : PaymentStatusCodeType ?
+    PaymentMethodText : genericStringType0_35 ?
+  type PaymentTermsDetailsType
+    PaymentTermsFreeText : genericStringType0_70 [0..2]
+    FreeText : HeaderValueType [0..2]
+    InvoiceDueDate : date ?
+    CashDiscountDate : date ?
+    CashDiscountBaseAmount : amount ?
+    CashDiscountPercent : percentage ?
+    CashDiscountAmount : amount ?
+    CashDiscountExcludingVatAmount : amount ?
+    CashDiscountVatDetails *
+      type
+        CashDiscountVatPercent : percentage
+        CashDiscountVatAmount : amount
+    ReducedInvoiceVatIncludedAmount : amount ?
+    PaymentOverDueFineDetails : PaymentOverDueFineDetailsType ?
+  type HeaderValueType
+    Header : genericStringType1_35 ?
+    Value : genericStringType1_70 [0..2]
+  type RowDeliveryDetailsType
+    RowTerminalAddressText : genericStringType0_70 ?
+    RowWaybillIdentifier : genericStringType0_70 ?
+    RowWaybillTypeCode : genericStringType0_35 ?
+    RowClearanceIdentifier : genericStringType0_70 ?
+    RowDeliveryNoteIdentifier : genericStringType0_70 ?
+    RowDelivererIdentifier : genericStringType0_35 ?
+    RowDelivererName : genericStringType0_35 [0..3]
+    RowDelivererCountrySubdivision : genericStringType2_35 ?
+    RowDelivererCountryCode : CountryCodeType ?
+    RowDelivererCountryName : genericStringType0_35 ?
+    RowModeOfTransportIdentifier : genericStringType0_70 ?
+    RowCarrierName : genericStringType0_35 ?
+    RowVesselName : genericStringType0_35 ?
+    RowLocationIdentifier : genericStringType0_70 ?
+    RowTransportInformationDate : date ?
+    RowCountryOfOrigin : genericStringType0_35 ?
+    RowCountryOfDestinationName : genericStringType0_35 ?
+    RowDestinationCountryCode : CountryCodeType ?
+    RowPlaceOfDischarge : genericStringType0_35 ?
+    RowFinalDestinationName : genericStringType0_35 [0..3]
+    RowCustomsInfo : CustomsInfoType ?
+    RowManufacturerArticleIdentifier : genericStringType0_70 ?
+    RowManufacturerIdentifier : genericStringType0_35 ?
+    RowManufacturerName : genericStringType0_35 [0..3]
+    RowManufacturerCountrySubdivision : genericStringType2_35 ?
+    RowManufacturerCountryCode : CountryCodeType ?
+    RowManufacturerCountryName : genericStringType0_35 ?
+    RowManufacturerOrderIdentifier : genericStringType0_70 ?
+    RowPackageDetails ?
+      type
+        RowPackageLength : QuantityType0_14 ?
+        RowPackageWidth : QuantityType0_14 ?
+        RowPackageHeight : QuantityType0_14 ?
+        RowPackageWeight : QuantityType0_14 ?
+        RowPackageNetWeight : QuantityType0_14 ?
+        RowPackageVolume : QuantityType0_14 ?
+        RowTransportCarriageQuantity : QuantityType0_14 ?
+  type SellerAccountDetailsType
+    SellerAccountID : SellerAccountIDType
+    SellerBic : SellerBicType
+    SellerAccountName : genericStringType1_70 ?
+  type SellerAccountIDType extends genericNMtokenType2_35
+    @IdentificationSchemeName (required)
+      type : xs:NMTOKEN
+        | IBAN
+        | BBAN
+  type SellerBicType extends genericNMtokenType8_11
+    @IdentificationSchemeName (required)
+      type : xs:NMTOKEN
+        | BIC
+  type SellerCommunicationDetailsType
+    SellerPhoneNumberIdentifier : genericStringType0_35 ?
+    SellerEmailaddressIdentifier : genericStringType0_70 ?
+  type SellerInformationDetailsType
+    SellerOfficialPostalAddressDetails ?
+      type
+        SellerOfficialStreetName : genericStringType2_35
+        SellerOfficialTownName : genericStringType2_35
+        SellerOfficialPostCodeIdentifier : genericStringType2_35
+        SellerOfficialCountrySubdivision : genericStringType2_35 ?
+        CountryCode : CountryCodeType ?
+        CountryName : genericStringType0_35 ?
+    SellerHomeTownName : genericStringType0_35 ?
+    SellerVatRegistrationText : genericStringType0_35 ?
+    SellerVatRegistrationDate : date ?
+    SellerTaxRegistrationText : genericStringType0_35 ?
+    SellerAdditionalLegalInfo : genericStringType0_512 ?
+    SellerPhoneNumber : genericStringType0_35 ?
+    SellerFaxNumber : genericStringType0_35 ?
+    SellerCommonEmailaddressIdentifier : genericStringType0_70 ?
+    SellerWebaddressIdentifier : genericStringType0_70 ?
+    SellerFreeText : genericStringType0_512 ?
+    SellerAccountDetails : SellerAccountDetailsType *
+    InvoiceRecipientDetails : InvoiceRecipientDetailsType *
+  type SellerPartyDetailsType
+    SellerPartyIdentifier : PartyLegalRegIdType ?
+    SellerPartyIdentifierUrlText : genericStringType0_512 ?
+    SellerOrganisationName : genericStringType2_70 +
+    SellerOrganisationTradingName : genericStringType2_70 ?
+    SellerOrganisationDepartment : genericStringType0_35 [0..2]
+    SellerOrganisationTaxCode : genericStringType0_35 ?
+    SellerOrganisationTaxCodeUrlText : genericStringType0_512 ?
+    SellerCode : PartyIdentifierType *
+    SellerPostalAddressDetails : SellerPostalAddressDetailsType ?
+  type SellerPostalAddressDetailsType
+    SellerStreetName : genericStringType2_35 [1..3]
+    SellerTownName : genericStringType2_35
+    SellerPostCodeIdentifier : genericStringType2_35
+    SellerCountrySubdivision : genericStringType2_35 ?
+    CountryCode : CountryCodeType ?
+    CountryName : genericStringType0_35 ?
+    SellerPostOfficeBoxIdentifier : genericStringType0_35 ?
+  type AnyPartyCommunicationDetailsType
+    AnyPartyPhoneNumberIdentifier : genericStringType0_35 ?
+    AnyPartyEmailAddressIdentifier : genericStringType0_70 ?
+  type SpecificationDetailsType
+    SpecificationFreeText : genericStringType0_80 *
+    ExternalSpecificationDetails : ExternalSpecificationDetailsType ?
+  type ExternalSpecificationDetailsType
+    any ##any *
+  type VatSpecificationDetailsType
+    VatBaseAmount : amount ?
+    VatRatePercent : percentage ?
+    VatCode : untdid5305 ?
+    VatRateAmount : amount ?
+    VatFreeText : genericStringType0_70 [0..3]
+    VatExemptionReasonCode : VatExReasonCodeType ?
+  type VatExReasonCodeType
+    restriction capAZ09
+      minLength 1
+      maxLength 3
+  type VatPointType
+    choice
+      VatPointDate : date
+      VatPointDateCode : untdid2005
+  type PartyIdentifierType extends genericStringType0_70
+    @IdentifierType : genericTokenType1_20
+    @SchemeID : iso6523cid
+  type PartyLegalRegIdType extends genericStringType0_35
+    @SchemeID : iso6523cid
+  type VatCategoryCodeType
+    restriction untdid5305
+  type DiscountDetailsType
+    FreeText : genericStringType1_70 ?
+    ReasonCode : untdid5189 ?
+    Percent : percentage ?
+    Amount : amount ?
+    BaseAmount : amount ?
+    VatCategoryCode : VatCategoryCodeType ?
+    VatRatePercent : percentage ?
+  type InvoiceChargeDetailsType
+    ReasonText : genericStringType1_70 ?
+    ReasonCode : untdid7161 ?
+    Percent : percentage ?
+    Amount : amount ?
+    BaseAmount : amount ?
+    VatCategoryCode : VatCategoryCodeType ?
+    VatRatePercent : percentage ?
+  type RowChargeDetailsType
+    ReasonText : genericStringType1_70 ?
+    ReasonCode : untdid7161 ?
+    Percent : percentage ?
+    Amount : amount ?
+    BaseAmount : amount ?
+  type CustomsInfoType
+    CNCode : genericStringType1_8 ?
+    CNName : genericStringType1_35 ?
+    CNOriginCountrySubdivision : genericStringType2_35 ?
+    CNOriginCountryCode : CountryCodeType ?
+    CNOriginCountryName : genericStringType1_35 ?
+  type TransactionDetailsType
+    OtherCurrencyAmount : amount ?
+    ExchangeRate : exchangeRate ?
+    ExchangeDate : date ?
+  type AttachmentMessageDetailsType
+    AttachmentMessageIdentifier : AttachmentsIdentifierType
+  type QuantityType extends xs:string
+    @QuantityUnitCode : genericTokenType0_14
+    @QuantityUnitCodeUN : unitCodeUN
+  type QuantityType0_14 restricts QuantityType
+    minLength 0
+    maxLength 14
+  type QuantityType0_70 restricts QuantityType
+    minLength 0
+    maxLength 70
+  type AnyPartyTextType extends xs:string
+    @AnyPartyCode : genericTokenType0_35 (required)
+  type anypartytexttype0_35 restricts AnyPartyTextType
+    minLength 0
+    maxLength 35
+  type AttachmentsIdentifierType
+    restriction xs:string
+      minLength 15
+      maxLength 61
+      pattern .{2,48}::attachments
+  type genericTokenType3
+    restriction xs:token
+      length 3
+  type genericTokenType0_14
+    restriction xs:token
+      minLength 0
+      maxLength 14
+  type genericTokenType1_20
+    restriction xs:token
+      minLength 1
+      maxLength 20
+  type genericTokenType0_35
+    restriction xs:token
+      minLength 0
+      maxLength 35
+  type genericTokenType2_35
+    restriction xs:token
+      minLength 2
+      maxLength 35
+  type genericTokenType0_70
+    restriction xs:token
+      minLength 0
+      maxLength 70
+  type genericNMtokenType0_4
+    restriction xs:token
+      minLength 0
+      maxLength 4
+      pattern \c*
+  type genericNMtokenType8_11
+    restriction xs:token
+      minLength 8
+      maxLength 11
+      pattern \c*
+  type genericNMtokenType0_14
+    restriction xs:token
+      minLength 0
+      maxLength 14
+      pattern \c*
+  type genericNMtokenType1_34
+    restriction xs:token
+      minLength 1
+      maxLength 34
+      pattern \c*
+  type genericNMtokenType0_35
+    restriction xs:token
+      minLength 0
+      maxLength 35
+      pattern \c*
+  type genericNMtokenType2_35
+    restriction xs:token
+      minLength 2
+      maxLength 35
+      pattern \c*
+  type genericNMtokenType0_512
+    restriction xs:token
+      minLength 0
+      maxLength 512
+      pattern \c*
+  type genericStringType0_4
+    restriction xs:string
+      minLength 0
+      maxLength 4
+  type genericStringType1_4
+    restriction xs:string
+      minLength 1
+      maxLength 4
+  type genericStringType1_8
+    restriction xs:string
+      minLength 1
+      maxLength 8
+  type genericStringType0_10
+    restriction xs:string
+      minLength 0
+      maxLength 10
+  type genericStringType1_10
+    restriction xs:string
+      minLength 1
+      maxLength 10
+  type genericStringType0_14
+    restriction xs:string
+      minLength 0
+      maxLength 14
+  type genericStringType1_13
+    restriction xs:string
+      minLength 1
+      maxLength 13
+  type genericStringType1_19
+    restriction xs:string
+      minLength 1
+      maxLength 19
+  type genericStringType1_20
+    restriction xs:string
+      minLength 1
+      maxLength 20
+  type genericStringType0_35
+    restriction xs:string
+      minLength 0
+      maxLength 35
+  type genericStringType1_35
+    restriction xs:string
+      minLength 1
+      maxLength 35
+  type genericStringType2_35
+    restriction xs:string
+      minLength 2
+      maxLength 35
+  type genericStringType0_48
+    restriction xs:string
+      minLength 0
+      maxLength 48
+  type genericStringType2_48
+    restriction xs:string
+      minLength 2
+      maxLength 48
+  type genericStringType0_70
+    restriction xs:string
+      minLength 0
+      maxLength 70
+  type genericStringType1_70
+    restriction xs:string
+      minLength 1
+      maxLength 70
+  type genericStringType2_70
+    restriction xs:string
+      minLength 2
+      maxLength 70
+  type genericStringType0_80
+    restriction xs:string
+      minLength 0
+      maxLength 80
+  type genericStringType0_100
+    restriction xs:string
+      minLength 0
+      maxLength 100
+  type genericStringType0_512
+    restriction xs:string
+      minLength 0
+      maxLength 512
+  type percentage
+    restriction xs:string
+      pattern [1-9]?[0-9]{1,2}(,[0-9]{1,3})?
+  type exchangeRate
+    restriction xs:string
+      pattern [0-9]{1,15}(,[0-9]{1,6})?
+  type date extends dateType
+    @Format (required)
+      type : xs:NMTOKEN
+        | CCYYMMDD
+  type dateType
+    restriction xs:integer
+      pattern [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]
+  type amount extends monetaryAmount
+    @AmountCurrencyIdentifier (required)
+      type
+        restriction xs:NMTOKEN
+          length 3
+  type monetaryAmount
+    restriction xs:token
+      pattern -?[0-9]{1,15}(,[0-9]{2,5})?
+  type epiAmount extends epiMonetaryAmount
+    @AmountCurrencyIdentifier (required)
+      type
+        restriction xs:NMTOKEN
+          length 3
+  type epiMonetaryAmount
+    restriction xs:token
+      pattern -?[0-9]{1,15},[0-9]{2}
+  type unitAmount extends unitAmountType
+    @AmountCurrencyIdentifier (required)
+      type
+        restriction xs:NMTOKEN
+          length 3
+    @UnitPriceUnitCode : genericStringType0_14
+  type unitAmountUN extends unitAmount
+    @QuantityUnitCodeUN : unitCodeUN
+  type unitAmountType
+    restriction xs:token
+      pattern -?[0-9]{1,15}(,[0-9]{2,5})?
+  type CountryCodeType
+    restriction xs:NMTOKEN
+      length 2
+  type LanguageCodeType
+    restriction xs:NMTOKEN
+      length 2
+  type iso6523cid
+    restriction xs:NMTOKEN
+      pattern [0-9]{4}
+  type EanCodeType extends genericStringType0_35
+    @SchemeID : iso6523cid
+  type DestinationNameType extends genericStringType0_35
+    @SchemeID : iso6523cid
+  type ArticleGroupIdentifierType extends genericStringType0_70
+    @SchemeID : untdid7143
+    @SchemeVersion : genericStringType1_35
+  type InvoicedObjectIDType extends genericStringType1_70
+    @SchemeID : untdid1153
+  type capAZ09
+    restriction xs:NMTOKEN
+      pattern [A-Z0-9]*
+  type untdid1_3_AZ09
+    restriction capAZ09
+      minLength 1
+      maxLength 3
+  type untdid1001
+    restriction untdid1_3_AZ09
+  type untdid1153
+    restriction untdid1_3_AZ09
+  type untdid2005
+    restriction untdid1_3_AZ09
+  type untdid4461
+    restriction untdid1_3_AZ09
+  type untdid5189
+    restriction untdid1_3_AZ09
+  type untdid5305
+    restriction untdid1_3_AZ09
+  type untdid7143
+    restriction untdid1_3_AZ09
+  type untdid7161
+    restriction untdid1_3_AZ09
+  type ElectronicAddrSchemeIdType
+    restriction xs:NMTOKEN
+      minLength 1
+      maxLength 10
+  type ElectronicAddrIdType extends genericStringType2_35
+    @SchemeID : ElectronicAddrSchemeIdType
+  type unitCodeUN
+    restriction xs:NMTOKEN
+      pattern [A-Z0-9]{2,3}

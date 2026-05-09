@@ -1,0 +1,3034 @@
+schema urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2 (elementFormDefault=qualified)
+  import urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2 from UBL-CommonBasicComponents-2.1.xsd
+  element AcceptanceTransportEvent : TransportEventType
+  element AccessoryRelatedItem : RelatedItemType
+  element AccountingContact : ContactType
+  element AccountingCustomerParty : CustomerPartyType
+  element AccountingSupplierParty : SupplierPartyType
+  element ActivityDataLine : ActivityDataLineType
+  element ActivityFinalLocation : LocationType
+  element ActivityOriginLocation : LocationType
+  element ActivityPeriod : PeriodType
+  element ActivityProperty : ActivityPropertyType
+  element ActualArrivalTransportEvent : TransportEventType
+  element ActualDepartureTransportEvent : TransportEventType
+  element ActualPackage : PackageType
+  element ActualPickupTransportEvent : TransportEventType
+  element ActualWaypointTransportEvent : TransportEventType
+  element AdditionalCommodityClassification : CommodityClassificationType
+  element AdditionalDocumentReference : DocumentReferenceType
+  element AdditionalDocumentResponse : DocumentResponseType
+  element AdditionalInformationParty : PartyType
+  element AdditionalItemIdentification : ItemIdentificationType
+  element AdditionalItemProperty : ItemPropertyType
+  element AdditionalQualifyingParty : QualifyingPartyType
+  element AdditionalTemperature : TemperatureType
+  element AdditionalTransportationService : TransportationServiceType
+  element Address : AddressType
+  element AddressLine : AddressLineType
+  element AgentParty : PartyType
+  element AirTransport : AirTransportType
+  element AllowanceCharge : AllowanceChargeType
+  element AllowedSubcontractTerms : SubcontractTermsType
+  element AlternativeConditionPrice : PriceType
+  element AlternativeDeliveryLocation : LocationType
+  element AlternativeLineItem : LineItemType
+  element AnticipatedMonetaryTotal : MonetaryTotalType
+  element AppealInformationParty : PartyType
+  element AppealReceiverParty : PartyType
+  element AppealTerms : AppealTermsType
+  element ApplicableAddress : AddressType
+  element ApplicablePeriod : PeriodType
+  element ApplicableRegulation : RegulationType
+  element ApplicableTaxCategory : TaxCategoryType
+  element ApplicableTerritoryAddress : AddressType
+  element ApplicableTransportMeans : TransportMeansType
+  element AtLocation : LocationType
+  element AttachedTransportEquipment : TransportEquipmentType
+  element Attachment : AttachmentType
+  element AuctionTerms : AuctionTermsType
+  element AvailabilityTransportEvent : TransportEventType
+  element AwardedTenderedProject : TenderedProjectType
+  element AwardingCriterion : AwardingCriterionType
+  element AwardingCriterionResponse : AwardingCriterionResponseType
+  element AwardingTerms : AwardingTermsType
+  element BeneficiaryParty : PartyType
+  element BillOfLadingHolderParty : PartyType
+  element BillToParty : PartyType
+  element BillingReference : BillingReferenceType
+  element BillingReferenceLine : BillingReferenceLineType
+  element BonusPaymentTerms : PaymentTermsType
+  element Branch : BranchType
+  element BudgetAccount : BudgetAccountType
+  element BudgetAccountLine : BudgetAccountLineType
+  element BusinessClassificationScheme : ClassificationSchemeType
+  element BuyerContact : ContactType
+  element BuyerCustomerParty : CustomerPartyType
+  element BuyerProposedSubstituteLineItem : LineItemType
+  element BuyersItemIdentification : ItemIdentificationType
+  element CallDuty : DutyType
+  element CallForTendersDocumentReference : DocumentReferenceType
+  element CallForTendersLineReference : LineReferenceType
+  element Capability : CapabilityType
+  element CardAccount : CardAccountType
+  element CarrierParty : PartyType
+  element CatalogueDocumentReference : DocumentReferenceType
+  element CatalogueItemIdentification : ItemIdentificationType
+  element CatalogueItemSpecificationUpdateLine : CatalogueItemSpecificationUpdateLineType
+  element CatalogueLine : CatalogueLineType
+  element CatalogueLineReference : LineReferenceType
+  element CataloguePricingUpdateLine : CataloguePricingUpdateLineType
+  element CatalogueReference : CatalogueReferenceType
+  element CatalogueRequestLine : CatalogueRequestLineType
+  element CategorizesClassificationCategory : ClassificationCategoryType
+  element Certificate : CertificateType
+  element CertificateOfOriginApplication : CertificateOfOriginApplicationType
+  element ChildConsignment : ConsignmentType
+  element ClassificationCategory : ClassificationCategoryType
+  element ClassificationScheme : ClassificationSchemeType
+  element ClassifiedTaxCategory : TaxCategoryType
+  element Clause : ClauseType
+  element CollectPaymentTerms : PaymentTermsType
+  element CollectedPayment : PaymentType
+  element CommissionPaymentTerms : PaymentTermsType
+  element CommodityClassification : CommodityClassificationType
+  element Communication : CommunicationType
+  element ComplementaryRelatedItem : RelatedItemType
+  element CompletedTask : CompletedTaskType
+  element ComponentRelatedItem : RelatedItemType
+  element Condition : ConditionType
+  element ConsigneeParty : PartyType
+  element Consignment : ConsignmentType
+  element ConsignorParty : PartyType
+  element ConsolidatedShipment : ShipmentType
+  element ConstitutionPeriod : PeriodType
+  element Consumption : ConsumptionType
+  element ConsumptionAverage : ConsumptionAverageType
+  element ConsumptionCorrection : ConsumptionCorrectionType
+  element ConsumptionHistory : ConsumptionHistoryType
+  element ConsumptionLine : ConsumptionLineType
+  element ConsumptionPoint : ConsumptionPointType
+  element ConsumptionReport : ConsumptionReportType
+  element ConsumptionReportReference : ConsumptionReportReferenceType
+  element Contact : ContactType
+  element ContactParty : PartyType
+  element ContainedGoodsItem : GoodsItemType
+  element ContainedInTransportEquipment : TransportEquipmentType
+  element ContainedPackage : PackageType
+  element ContainingPackage : PackageType
+  element ContainingTransportEquipment : TransportEquipmentType
+  element Contract : ContractType
+  element ContractAcceptancePeriod : PeriodType
+  element ContractDocumentReference : DocumentReferenceType
+  element ContractExecutionRequirement : ContractExecutionRequirementType
+  element ContractExtension : ContractExtensionType
+  element ContractFormalizationPeriod : PeriodType
+  element ContractResponsibleParty : PartyType
+  element ContractingActivity : ContractingActivityType
+  element ContractingParty : ContractingPartyType
+  element ContractingPartyType : ContractingPartyTypeType
+  element ContractorCustomerParty : CustomerPartyType
+  element ContractualDelivery : DeliveryType
+  element ContractualDocumentReference : DocumentReferenceType
+  element CorporateRegistrationScheme : CorporateRegistrationSchemeType
+  element Country : CountryType
+  element CreditAccount : CreditAccountType
+  element CreditNoteDocumentReference : DocumentReferenceType
+  element CreditNoteLine : CreditNoteLineType
+  element CrewMemberPerson : PersonType
+  element CurrentStatus : StatusType
+  element CustomerParty : CustomerPartyType
+  element CustomsAgentParty : PartyType
+  element CustomsDeclaration : CustomsDeclarationType
+  element DebitNoteDocumentReference : DocumentReferenceType
+  element DebitNoteLine : DebitNoteLineType
+  element Declaration : DeclarationType
+  element DefaultLanguage : LanguageType
+  element DeletedCatalogueReference : CatalogueReferenceType
+  element Delivery : DeliveryType
+  element DeliveryAddress : AddressType
+  element DeliveryContact : ContactType
+  element DeliveryCustomerParty : CustomerPartyType
+  element DeliveryLocation : LocationType
+  element DeliveryParty : PartyType
+  element DeliveryPeriod : PeriodType
+  element DeliveryTerms : DeliveryTermsType
+  element DeliveryTransportEvent : TransportEventType
+  element DeliveryUnit : DeliveryUnitType
+  element DependentLineReference : LineReferenceType
+  element DependentPriceReference : DependentPriceReferenceType
+  element Despatch : DespatchType
+  element DespatchAddress : AddressType
+  element DespatchContact : ContactType
+  element DespatchDocumentReference : DocumentReferenceType
+  element DespatchLine : DespatchLineType
+  element DespatchLineReference : LineReferenceType
+  element DespatchLocation : LocationType
+  element DespatchParty : PartyType
+  element DespatchSupplierParty : SupplierPartyType
+  element DestinationCountry : CountryType
+  element DetentionTransportEvent : TransportEventType
+  element DigitalSignatureAttachment : AttachmentType
+  element Dimension : DimensionType
+  element DisbursementPaymentTerms : PaymentTermsType
+  element DischargeTransportEvent : TransportEventType
+  element DiscrepancyResponse : ResponseType
+  element DocumentAvailabilityPeriod : PeriodType
+  element DocumentDistribution : DocumentDistributionType
+  element DocumentProviderParty : PartyType
+  element DocumentReference : DocumentReferenceType
+  element DocumentResponse : DocumentResponseType
+  element DocumentTenderRequirement : TenderRequirementType
+  element DriverPerson : PersonType
+  element DropoffTransportEvent : TransportEventType
+  element DurationPeriod : PeriodType
+  element Duty : DutyType
+  element EconomicOperatorRole : EconomicOperatorRoleType
+  element EconomicOperatorShortList : EconomicOperatorShortListType
+  element EffectivePeriod : PeriodType
+  element EmbassyEndorsement : EndorsementType
+  element EmergencyTemperature : TemperatureType
+  element EmissionCalculationMethod : EmissionCalculationMethodType
+  element EmploymentLegislationDocumentReference : DocumentReferenceType
+  element Endorsement : EndorsementType
+  element EndorserParty : EndorserPartyType
+  element EnergyTaxReport : EnergyTaxReportType
+  element EnergyWaterConsumptionCorrection : ConsumptionCorrectionType
+  element EnergyWaterSupply : EnergyWaterSupplyType
+  element EnvironmentalEmission : EnvironmentalEmissionType
+  element EnvironmentalLegislationDocumentReference : DocumentReferenceType
+  element EstimatedArrivalTransportEvent : TransportEventType
+  element EstimatedDeliveryPeriod : PeriodType
+  element EstimatedDepartureTransportEvent : TransportEventType
+  element EstimatedDespatchPeriod : PeriodType
+  element EstimatedDurationPeriod : PeriodType
+  element EstimatedTransitPeriod : PeriodType
+  element EvaluationCriterion : EvaluationCriterionType
+  element Event : EventType
+  element EventComment : EventCommentType
+  element EventLineItem : EventLineItemType
+  element EventTactic : EventTacticType
+  element EventTacticEnumeration : EventTacticEnumerationType
+  element Evidence : EvidenceType
+  element EvidenceDocumentReference : DocumentReferenceType
+  element EvidenceIssuingParty : PartyType
+  element EvidenceSupplied : EvidenceSuppliedType
+  element ExaminationTransportEvent : TransportEventType
+  element ExceptionCriteriaLine : ExceptionCriteriaLineType
+  element ExceptionNotificationLine : ExceptionNotificationLineType
+  element ExceptionObservationPeriod : PeriodType
+  element ExchangeRate : ExchangeRateType
+  element ExportCountry : CountryType
+  element ExportationTransportEvent : TransportEventType
+  element ExporterParty : PartyType
+  element ExternalReference : ExternalReferenceType
+  element ExtraAllowanceCharge : AllowanceChargeType
+  element FinalDeliveryParty : PartyType
+  element FinalDeliveryTransportationService : TransportationServiceType
+  element FinalDestinationCountry : CountryType
+  element FinalFinancialGuarantee : FinancialGuaranteeType
+  element FinancialAccount : FinancialAccountType
+  element FinancialCapability : CapabilityType
+  element FinancialEvaluationCriterion : EvaluationCriterionType
+  element FinancialGuarantee : FinancialGuaranteeType
+  element FinancialInstitution : FinancialInstitutionType
+  element FinancialInstitutionBranch : BranchType
+  element FinancingFinancialAccount : FinancialAccountType
+  element FinancingParty : PartyType
+  element FirstArrivalPortLocation : LocationType
+  element FiscalLegislationDocumentReference : DocumentReferenceType
+  element FlashpointTemperature : TemperatureType
+  element FloorSpaceMeasurementDimension : DimensionType
+  element ForecastException : ForecastExceptionType
+  element ForecastExceptionCriterionLine : ForecastExceptionCriterionLineType
+  element ForecastLine : ForecastLineType
+  element ForecastPeriod : PeriodType
+  element ForecastRevisionLine : ForecastRevisionLineType
+  element ForeignExchangeContract : ContractType
+  element FrameworkAgreement : FrameworkAgreementType
+  element FreightAllowanceCharge : AllowanceChargeType
+  element FreightChargeLocation : LocationType
+  element FreightForwarderParty : PartyType
+  element FrequencyPeriod : PeriodType
+  element FromLocation : LocationType
+  element GoodsItem : GoodsItemType
+  element GoodsItemContainer : GoodsItemContainerType
+  element GuaranteeDocumentReference : DocumentReferenceType
+  element GuarantorParty : PartyType
+  element GuidanceDocumentReference : DocumentReferenceType
+  element HandlingTransportEvent : TransportEventType
+  element HandlingUnitDespatchLine : DespatchLineType
+  element HaulageTradingTerms : TradingTermsType
+  element HazardousGoodsTransit : HazardousGoodsTransitType
+  element HazardousItem : HazardousItemType
+  element HazardousItemNotificationParty : PartyType
+  element HeadOfficeParty : PartyType
+  element IdentityDocumentReference : DocumentReferenceType
+  element ImmobilizedSecurity : ImmobilizedSecurityType
+  element ImporterParty : PartyType
+  element InformationContentProviderParty : PartyType
+  element InstructionForReturnsLine : InstructionForReturnsLineType
+  element InsuranceEndorsement : EndorsementType
+  element InsuranceParty : PartyType
+  element InterestedParty : PartyType
+  element InterestedProcurementProjectLot : ProcurementProjectLotType
+  element InventoryLocation : LocationType
+  element InventoryPeriod : PeriodType
+  element InventoryReportLine : InventoryReportLineType
+  element InventoryReportingParty : PartyType
+  element InvitationSubmissionPeriod : PeriodType
+  element InvoiceDocumentReference : DocumentReferenceType
+  element InvoiceLine : InvoiceLineType
+  element InvoicePeriod : PeriodType
+  element IssuerEndorsement : EndorsementType
+  element IssuerParty : PartyType
+  element IssuingCountry : CountryType
+  element Item : ItemType
+  element ItemComparison : ItemComparisonType
+  element ItemIdentification : ItemIdentificationType
+  element ItemInformationRequestLine : ItemInformationRequestLineType
+  element ItemInstance : ItemInstanceType
+  element ItemLocationQuantity : ItemLocationQuantityType
+  element ItemManagementProfile : ItemManagementProfileType
+  element ItemPriceExtension : PriceExtensionType
+  element ItemProperty : ItemPropertyType
+  element ItemPropertyGroup : ItemPropertyGroupType
+  element ItemPropertyRange : ItemPropertyRangeType
+  element ItemSpecificationDocumentReference : DocumentReferenceType
+  element JurisdictionRegionAddress : AddressType
+  element KeywordItemProperty : ItemPropertyType
+  element Language : LanguageType
+  element LastExitPortLocation : LocationType
+  element LegalDocumentReference : DocumentReferenceType
+  element LegalMonetaryTotal : MonetaryTotalType
+  element LineItem : LineItemType
+  element LineReference : LineReferenceType
+  element LineResponse : LineResponseType
+  element LineValidityPeriod : PeriodType
+  element LoadingLocation : LocationType
+  element LoadingPortLocation : LocationType
+  element LoadingProofParty : PartyType
+  element LoadingTransportEvent : TransportEventType
+  element Location : LocationType
+  element LocationAddress : AddressType
+  element LocationCoordinate : LocationCoordinateType
+  element LogisticsOperatorParty : PartyType
+  element LotIdentification : LotIdentificationType
+  element MainCarriageShipmentStage : ShipmentStageType
+  element MainCommodityClassification : CommodityClassificationType
+  element MainOnAccountPayment : OnAccountPaymentType
+  element MainPeriod : PeriodType
+  element MainQualifyingParty : QualifyingPartyType
+  element MainTransportationService : TransportationServiceType
+  element MandateDocumentReference : DocumentReferenceType
+  element ManufacturerParty : PartyType
+  element ManufacturersItemIdentification : ItemIdentificationType
+  element MaritimeTransport : MaritimeTransportType
+  element MasterPerson : PersonType
+  element MaximumDeliveryUnit : DeliveryUnitType
+  element MaximumTemperature : TemperatureType
+  element MeasurementDimension : DimensionType
+  element MeasurementFromLocation : LocationType
+  element MeasurementToLocation : LocationType
+  element MediationParty : PartyType
+  element Meter : MeterType
+  element MeterProperty : MeterPropertyType
+  element MeterReading : MeterReadingType
+  element MinimumDeliveryUnit : DeliveryUnitType
+  element MinimumTemperature : TemperatureType
+  element MinutesDocumentReference : DocumentReferenceType
+  element MiscellaneousEvent : MiscellaneousEventType
+  element MonetaryTotal : MonetaryTotalType
+  element MortgageHolderParty : PartyType
+  element NominationPeriod : PeriodType
+  element NotaryParty : PartyType
+  element NoticeDocumentReference : DocumentReferenceType
+  element NotificationLocation : LocationType
+  element NotificationPeriod : PeriodType
+  element NotificationRequirement : NotificationRequirementType
+  element NotifyParty : PartyType
+  element OccurenceLocation : LocationType
+  element OfferedItemLocationQuantity : ItemLocationQuantityType
+  element OnAccountPayment : OnAccountPaymentType
+  element OnCarriageShipmentStage : ShipmentStageType
+  element OpenTenderEvent : EventType
+  element OperatingParty : PartyType
+  element OptionValidityPeriod : PeriodType
+  element OptionalTakeoverTransportEvent : TransportEventType
+  element OrderDocumentReference : DocumentReferenceType
+  element OrderLine : OrderLineType
+  element OrderLineReference : OrderLineReferenceType
+  element OrderReference : OrderReferenceType
+  element OrderedShipment : OrderedShipmentType
+  element OriginAddress : AddressType
+  element OriginCountry : CountryType
+  element OriginalDepartureCountry : CountryType
+  element OriginalDespatchParty : PartyType
+  element OriginalDespatchTransportationService : TransportationServiceType
+  element OriginalDocumentReference : DocumentReferenceType
+  element OriginalItemLocationQuantity : ItemLocationQuantityType
+  element OriginatorCustomerParty : CustomerPartyType
+  element OriginatorDocumentReference : DocumentReferenceType
+  element OriginatorParty : PartyType
+  element OtherCommunication : CommunicationType
+  element OwnerParty : PartyType
+  element Package : PackageType
+  element PackagedTransportHandlingUnit : TransportHandlingUnitType
+  element PalletSpaceMeasurementDimension : DimensionType
+  element ParentDocumentLineReference : LineReferenceType
+  element ParentDocumentReference : DocumentReferenceType
+  element ParticipatingLocationsLocation : LocationType
+  element ParticipationRequestReceptionPeriod : PeriodType
+  element Party : PartyType
+  element PartyIdentification : PartyIdentificationType
+  element PartyLegalEntity : PartyLegalEntityType
+  element PartyName : PartyNameType
+  element PartyTaxScheme : PartyTaxSchemeType
+  element PassengerPerson : PersonType
+  element PayeeFinancialAccount : FinancialAccountType
+  element PayeeParty : PartyType
+  element PayerFinancialAccount : FinancialAccountType
+  element PayerParty : PartyType
+  element Payment : PaymentType
+  element PaymentAlternativeExchangeRate : ExchangeRateType
+  element PaymentExchangeRate : ExchangeRateType
+  element PaymentMandate : PaymentMandateType
+  element PaymentMeans : PaymentMeansType
+  element PaymentReversalPeriod : PeriodType
+  element PaymentTerms : PaymentTermsType
+  element PenaltyClause : ClauseType
+  element PenaltyPaymentTerms : PaymentTermsType
+  element PenaltyPeriod : PeriodType
+  element PerformanceDataLine : PerformanceDataLineType
+  element PerformingCarrierParty : PartyType
+  element Period : PeriodType
+  element Person : PersonType
+  element PhysicalAttribute : PhysicalAttributeType
+  element PhysicalLocation : LocationType
+  element Pickup : PickupType
+  element PickupLocation : LocationType
+  element PickupParty : PartyType
+  element PickupTransportEvent : TransportEventType
+  element PlannedArrivalTransportEvent : TransportEventType
+  element PlannedDeliveryTransportEvent : TransportEventType
+  element PlannedDepartureTransportEvent : TransportEventType
+  element PlannedPeriod : PeriodType
+  element PlannedPickupTransportEvent : TransportEventType
+  element PlannedWaypointTransportEvent : TransportEventType
+  element PositioningTransportEvent : TransportEventType
+  element PostalAddress : AddressType
+  element PowerOfAttorney : PowerOfAttorneyType
+  element PreCarriageShipmentStage : ShipmentStageType
+  element PreSelectedParty : PartyType
+  element PrepaidPayment : PaymentType
+  element PrepaidPaymentTerms : PaymentTermsType
+  element PreparationParty : PartyType
+  element PresentationPeriod : PeriodType
+  element PreviousDocumentReference : DocumentReferenceType
+  element PreviousPriceList : PriceListType
+  element Price : PriceType
+  element PriceExtension : PriceExtensionType
+  element PriceList : PriceListType
+  element PricingExchangeRate : ExchangeRateType
+  element PricingReference : PricingReferenceType
+  element ProcessJustification : ProcessJustificationType
+  element ProcurementLegislationDocumentReference : DocumentReferenceType
+  element ProcurementProject : ProcurementProjectType
+  element ProcurementProjectLot : ProcurementProjectLotType
+  element ProjectReference : ProjectReferenceType
+  element PromisedDeliveryPeriod : PeriodType
+  element PromotionalEvent : PromotionalEventType
+  element PromotionalEventLineItem : PromotionalEventLineItemType
+  element PromotionalSpecification : PromotionalSpecificationType
+  element ProviderParty : PartyType
+  element QualificationResolution : QualificationResolutionType
+  element QualifyingParty : QualifyingPartyType
+  element QuarantineTransportEvent : TransportEventType
+  element QuotationDocumentReference : DocumentReferenceType
+  element QuotationLine : QuotationLineType
+  element QuotationLineReference : LineReferenceType
+  element QuotedMonetaryTotal : MonetaryTotalType
+  element RailTransport : RailTransportType
+  element RangeDimension : DimensionType
+  element RealizedLocation : LocationType
+  element ReceiptDocumentReference : DocumentReferenceType
+  element ReceiptLine : ReceiptLineType
+  element ReceiptLineReference : LineReferenceType
+  element ReceiptTransportEvent : TransportEventType
+  element ReceivedHandlingUnitReceiptLine : ReceiptLineType
+  element ReceiverParty : PartyType
+  element RecipientCustomerParty : CustomerPartyType
+  element RecipientParty : PartyType
+  element ReferencedConsignment : ConsignmentType
+  element ReferencedContract : ContractType
+  element ReferencedGoodsItem : GoodsItemType
+  element ReferencedPackage : PackageType
+  element ReferencedShipment : ShipmentType
+  element ReferencedTransportEquipment : TransportEquipmentType
+  element RegistrationAddress : AddressType
+  element RegistryCertificateDocumentReference : DocumentReferenceType
+  element RegistryPortLocation : LocationType
+  element Regulation : RegulationType
+  element RelatedCatalogueReference : CatalogueReferenceType
+  element RelatedItem : RelatedItemType
+  element ReminderDocumentReference : DocumentReferenceType
+  element ReminderLine : ReminderLineType
+  element ReminderPeriod : PeriodType
+  element RemittanceAdviceLine : RemittanceAdviceLineType
+  element Renewal : RenewalType
+  element ReplacedNoticeDocumentReference : DocumentReferenceType
+  element ReplacedRelatedItem : RelatedItemType
+  element ReplacementRelatedItem : RelatedItemType
+  element ReportedShipment : ShipmentType
+  element ReportingPerson : PersonType
+  element RequestForQuotationDocumentReference : DocumentReferenceType
+  element RequestForQuotationLine : RequestForQuotationLineType
+  element RequestForTenderLine : RequestForTenderLineType
+  element RequestLineReference : LineReferenceType
+  element RequestedArrivalTransportEvent : TransportEventType
+  element RequestedCatalogueReference : CatalogueReferenceType
+  element RequestedClassificationScheme : ClassificationSchemeType
+  element RequestedDeliveryPeriod : PeriodType
+  element RequestedDeliveryTransportEvent : TransportEventType
+  element RequestedDepartureTransportEvent : TransportEventType
+  element RequestedDespatchPeriod : PeriodType
+  element RequestedDocumentReference : DocumentReferenceType
+  element RequestedLanguage : LanguageType
+  element RequestedMonetaryTotal : MonetaryTotalType
+  element RequestedPickupTransportEvent : TransportEventType
+  element RequestedStatusLocation : LocationType
+  element RequestedStatusPeriod : PeriodType
+  element RequestedTenderTotal : RequestedTenderTotalType
+  element RequestedValidityPeriod : PeriodType
+  element RequestedWaypointTransportEvent : TransportEventType
+  element RequiredBusinessClassificationScheme : ClassificationSchemeType
+  element RequiredClassificationScheme : ClassificationSchemeType
+  element RequiredFinancialGuarantee : FinancialGuaranteeType
+  element RequiredItemLocationQuantity : ItemLocationQuantityType
+  element RequiredRelatedItem : RelatedItemType
+  element ResidenceAddress : AddressType
+  element ResolutionDocumentReference : DocumentReferenceType
+  element Response : ResponseType
+  element ResponsibleTransportServiceProviderParty : PartyType
+  element ResultOfVerification : ResultOfVerificationType
+  element RetailPlannedImpact : RetailPlannedImpactType
+  element RetailerCustomerParty : CustomerPartyType
+  element ReturnAddress : AddressType
+  element RoadTransport : RoadTransportType
+  element SalesItem : SalesItemType
+  element ScheduledServiceFrequency : ServiceFrequencyType
+  element SecondaryHazard : SecondaryHazardType
+  element SecurityOfficerPerson : PersonType
+  element SelfBilledCreditNoteDocumentReference : DocumentReferenceType
+  element SelfBilledInvoiceDocumentReference : DocumentReferenceType
+  element SellerContact : ContactType
+  element SellerProposedSubstituteLineItem : LineItemType
+  element SellerSubstitutedLineItem : LineItemType
+  element SellerSupplierParty : SupplierPartyType
+  element SellersItemIdentification : ItemIdentificationType
+  element SenderParty : PartyType
+  element ServiceAllowanceCharge : AllowanceChargeType
+  element ServiceChargePaymentTerms : PaymentTermsType
+  element ServiceEndTimePeriod : PeriodType
+  element ServiceFrequency : ServiceFrequencyType
+  element ServiceProviderParty : ServiceProviderPartyType
+  element ServiceStartTimePeriod : PeriodType
+  element SettlementPeriod : PeriodType
+  element ShareholderParty : ShareholderPartyType
+  element Shipment : ShipmentType
+  element ShipmentDocumentReference : DocumentReferenceType
+  element ShipmentStage : ShipmentStageType
+  element ShipsSurgeonPerson : PersonType
+  element SignatoryContact : ContactType
+  element SignatoryParty : PartyType
+  element Signature : SignatureType
+  element SourceCatalogueReference : CatalogueReferenceType
+  element SourceIssuerParty : PartyType
+  element SpecificTendererRequirement : TendererRequirementType
+  element StandardItemIdentification : ItemIdentificationType
+  element StatementDocumentReference : DocumentReferenceType
+  element StatementLine : StatementLineType
+  element StatementPeriod : PeriodType
+  element Status : StatusType
+  element StatusLocation : LocationType
+  element StatusPeriod : PeriodType
+  element StockAvailabilityReportLine : StockAvailabilityReportLineType
+  element StorageLocation : LocationType
+  element StorageTransportEvent : TransportEventType
+  element Stowage : StowageType
+  element SubCreditNoteLine : CreditNoteLineType
+  element SubDebitNoteLine : DebitNoteLineType
+  element SubInvoiceLine : InvoiceLineType
+  element SubLineItem : LineItemType
+  element SubRequestForTenderLine : RequestForTenderLineType
+  element SubTenderLine : TenderLineType
+  element SubcontractTerms : SubcontractTermsType
+  element SubcontractorParty : PartyType
+  element SubordinateAwardingCriterion : AwardingCriterionType
+  element SubordinateAwardingCriterionResponse : AwardingCriterionResponseType
+  element SubscriberConsumption : SubscriberConsumptionType
+  element SubscriberParty : PartyType
+  element SubsequentProcessTenderRequirement : TenderRequirementType
+  element SubsidiaryLocation : LocationType
+  element SubstituteCarrierParty : PartyType
+  element SuggestedEvidence : EvidenceType
+  element SupplierConsumption : SupplierConsumptionType
+  element SupplierParty : SupplierPartyType
+  element SupplyChainActivityDataLine : ActivityDataLineType
+  element SupplyItem : ItemType
+  element SupportedCommodityClassification : CommodityClassificationType
+  element SupportedTransportEquipment : TransportEquipmentType
+  element SupportingDocumentReference : DocumentReferenceType
+  element TakeoverTransportEvent : TransportEventType
+  element TaxCategory : TaxCategoryType
+  element TaxExchangeRate : ExchangeRateType
+  element TaxExclusivePrice : PriceType
+  element TaxInclusivePrice : PriceType
+  element TaxRepresentativeParty : PartyType
+  element TaxScheme : TaxSchemeType
+  element TaxSubtotal : TaxSubtotalType
+  element TaxTotal : TaxTotalType
+  element TechnicalCapability : CapabilityType
+  element TechnicalCommitteePerson : PersonType
+  element TechnicalDocumentReference : DocumentReferenceType
+  element TechnicalEvaluationCriterion : EvaluationCriterionType
+  element TelecommunicationsService : TelecommunicationsServiceType
+  element TelecommunicationsSupply : TelecommunicationsSupplyType
+  element TelecommunicationsSupplyLine : TelecommunicationsSupplyLineType
+  element Temperature : TemperatureType
+  element TemplateDocumentReference : DocumentReferenceType
+  element TenderDocumentReference : DocumentReferenceType
+  element TenderEvaluationParty : PartyType
+  element TenderLine : TenderLineType
+  element TenderPreparation : TenderPreparationType
+  element TenderRecipientParty : PartyType
+  element TenderRequirement : TenderRequirementType
+  element TenderResult : TenderResultType
+  element TenderSubmissionDeadlinePeriod : PeriodType
+  element TenderValidityPeriod : PeriodType
+  element TenderedProject : TenderedProjectType
+  element TendererParty : PartyType
+  element TendererPartyQualification : TendererPartyQualificationType
+  element TendererQualificationDocumentReference : DocumentReferenceType
+  element TendererQualificationRequest : TendererQualificationRequestType
+  element TendererRequirement : TendererRequirementType
+  element TenderingProcess : TenderingProcessType
+  element TenderingTerms : TenderingTermsType
+  element TerminalOperatorParty : PartyType
+  element TimeDuty : DutyType
+  element ToLocation : LocationType
+  element TotalCapacityDimension : DimensionType
+  element TradeFinancing : TradeFinancingType
+  element TradingTerms : TradingTermsType
+  element TransactionConditions : TransactionConditionsType
+  element TransitCountry : CountryType
+  element TransitPeriod : PeriodType
+  element TransportAdvisorParty : PartyType
+  element TransportContract : ContractType
+  element TransportEquipment : TransportEquipmentType
+  element TransportEquipmentSeal : TransportEquipmentSealType
+  element TransportEvent : TransportEventType
+  element TransportExecutionPlanDocumentReference : DocumentReferenceType
+  element TransportExecutionPlanRequestDocumentReference : DocumentReferenceType
+  element TransportExecutionTerms : TransportExecutionTermsType
+  element TransportHandlingUnit : TransportHandlingUnitType
+  element TransportMeans : TransportMeansType
+  element TransportProgressStatusRequestDocumentReference : DocumentReferenceType
+  element TransportSchedule : TransportScheduleType
+  element TransportServiceDescriptionDocumentReference : DocumentReferenceType
+  element TransportServiceDescriptionRequestDocumentReference : DocumentReferenceType
+  element TransportServiceProviderParty : PartyType
+  element TransportServiceProviderResponseDeadlinePeriod : PeriodType
+  element TransportServiceProviderResponseRequiredPeriod : PeriodType
+  element TransportUserParty : PartyType
+  element TransportUserResponseRequiredPeriod : PeriodType
+  element TransportationSegment : TransportationSegmentType
+  element TransportationService : TransportationServiceType
+  element TransportationStatusRequestDocumentReference : DocumentReferenceType
+  element TransshipPortLocation : LocationType
+  element UnloadingLocation : LocationType
+  element UnloadingPortLocation : LocationType
+  element UnstructuredPrice : UnstructuredPriceType
+  element UnsupportedCommodityClassification : CommodityClassificationType
+  element UnsupportedTransportEquipment : TransportEquipmentType
+  element UpdatedDeliveryTransportEvent : TransportEventType
+  element UpdatedPickupTransportEvent : TransportEventType
+  element UsabilityPeriod : PeriodType
+  element UtilityConsumptionPoint : ConsumptionPointType
+  element UtilityCustomerParty : PartyType
+  element UtilityItem : UtilityItemType
+  element UtilityMeter : MeterType
+  element UtilitySupplierParty : PartyType
+  element ValidityPeriod : PeriodType
+  element WarehousingTransportEvent : TransportEventType
+  element WarrantyParty : PartyType
+  element WarrantyValidityPeriod : PeriodType
+  element WebSiteAccess : WebSiteAccessType
+  element WinningParty : WinningPartyType
+  element WithholdingTaxTotal : TaxTotalType
+  element WitnessParty : PartyType
+  element WorkOrderDocumentReference : DocumentReferenceType
+  element WorkPhaseReference : WorkPhaseReferenceType
+  type ActivityDataLineType
+    ref cbc:ID
+    ref cbc:SupplyChainActivityTypeCode
+    ref cac:BuyerCustomerParty ?
+    ref cac:SellerSupplierParty ?
+    ref cac:ActivityPeriod ?
+    ref cac:ActivityOriginLocation
+    ref cac:ActivityFinalLocation ?
+    ref cac:SalesItem +
+  type ActivityPropertyType
+    ref cbc:Name
+    ref cbc:Value
+  type AddressType
+    ref cbc:ID ?
+    ref cbc:AddressTypeCode ?
+    ref cbc:AddressFormatCode ?
+    ref cbc:Postbox ?
+    ref cbc:Floor ?
+    ref cbc:Room ?
+    ref cbc:StreetName ?
+    ref cbc:AdditionalStreetName ?
+    ref cbc:BlockName ?
+    ref cbc:BuildingName ?
+    ref cbc:BuildingNumber ?
+    ref cbc:InhouseMail ?
+    ref cbc:Department ?
+    ref cbc:MarkAttention ?
+    ref cbc:MarkCare ?
+    ref cbc:PlotIdentification ?
+    ref cbc:CitySubdivisionName ?
+    ref cbc:CityName ?
+    ref cbc:PostalZone ?
+    ref cbc:CountrySubentity ?
+    ref cbc:CountrySubentityCode ?
+    ref cbc:Region ?
+    ref cbc:District ?
+    ref cbc:TimezoneOffset ?
+    ref cac:AddressLine *
+    ref cac:Country ?
+    ref cac:LocationCoordinate *
+  type AddressLineType
+    ref cbc:Line
+  type AirTransportType
+    ref cbc:AircraftID
+  type AllowanceChargeType
+    ref cbc:ID ?
+    ref cbc:ChargeIndicator
+    ref cbc:AllowanceChargeReasonCode ?
+    ref cbc:AllowanceChargeReason *
+    ref cbc:MultiplierFactorNumeric ?
+    ref cbc:PrepaidIndicator ?
+    ref cbc:SequenceNumeric ?
+    ref cbc:Amount
+    ref cbc:BaseAmount ?
+    ref cbc:AccountingCostCode ?
+    ref cbc:AccountingCost ?
+    ref cbc:PerUnitAmount ?
+    ref cac:TaxCategory *
+    ref cac:TaxTotal ?
+    ref cac:PaymentMeans *
+  type AppealTermsType
+    ref cbc:Description *
+    ref cac:PresentationPeriod ?
+    ref cac:AppealInformationParty ?
+    ref cac:AppealReceiverParty ?
+    ref cac:MediationParty ?
+  type AttachmentType
+    ref cbc:EmbeddedDocumentBinaryObject ?
+    ref cac:ExternalReference ?
+  type AuctionTermsType
+    ref cbc:AuctionConstraintIndicator ?
+    ref cbc:JustificationDescription *
+    ref cbc:Description *
+    ref cbc:ProcessDescription *
+    ref cbc:ConditionsDescription *
+    ref cbc:ElectronicDeviceDescription *
+    ref cbc:AuctionURI ?
+  type AwardingCriterionType
+    ref cbc:ID ?
+    ref cbc:AwardingCriterionTypeCode ?
+    ref cbc:Description *
+    ref cbc:WeightNumeric ?
+    ref cbc:Weight *
+    ref cbc:CalculationExpression *
+    ref cbc:CalculationExpressionCode ?
+    ref cbc:MinimumQuantity ?
+    ref cbc:MaximumQuantity ?
+    ref cbc:MinimumAmount ?
+    ref cbc:MaximumAmount ?
+    ref cbc:MinimumImprovementBid *
+    ref cac:SubordinateAwardingCriterion *
+  type AwardingCriterionResponseType
+    ref cbc:ID ?
+    ref cbc:AwardingCriterionID ?
+    ref cbc:AwardingCriterionDescription *
+    ref cbc:Description *
+    ref cbc:Quantity ?
+    ref cbc:Amount ?
+    ref cac:SubordinateAwardingCriterionResponse *
+  type AwardingTermsType
+    ref cbc:WeightingAlgorithmCode ?
+    ref cbc:Description *
+    ref cbc:TechnicalCommitteeDescription *
+    ref cbc:LowTendersDescription *
+    ref cbc:PrizeIndicator ?
+    ref cbc:PrizeDescription *
+    ref cbc:PaymentDescription *
+    ref cbc:FollowupContractIndicator ?
+    ref cbc:BindingOnBuyerIndicator ?
+    ref cac:AwardingCriterion *
+    ref cac:TechnicalCommitteePerson *
+  type BillingReferenceType
+    ref cac:InvoiceDocumentReference ?
+    ref cac:SelfBilledInvoiceDocumentReference ?
+    ref cac:CreditNoteDocumentReference ?
+    ref cac:SelfBilledCreditNoteDocumentReference ?
+    ref cac:DebitNoteDocumentReference ?
+    ref cac:ReminderDocumentReference ?
+    ref cac:AdditionalDocumentReference ?
+    ref cac:BillingReferenceLine *
+  type BillingReferenceLineType
+    ref cbc:ID
+    ref cbc:Amount ?
+    ref cac:AllowanceCharge *
+  type BranchType
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref cac:FinancialInstitution ?
+    ref cac:Address ?
+  type BudgetAccountType
+    ref cbc:ID ?
+    ref cbc:BudgetYearNumeric ?
+    ref cac:RequiredClassificationScheme ?
+  type BudgetAccountLineType
+    ref cbc:ID ?
+    ref cbc:TotalAmount ?
+    ref cac:BudgetAccount *
+  type CapabilityType
+    ref cbc:CapabilityTypeCode ?
+    ref cbc:Description *
+    ref cbc:ValueAmount ?
+    ref cbc:ValueQuantity ?
+    ref cac:EvidenceSupplied *
+    ref cac:ValidityPeriod ?
+  type CardAccountType
+    ref cbc:PrimaryAccountNumberID
+    ref cbc:NetworkID
+    ref cbc:CardTypeCode ?
+    ref cbc:ValidityStartDate ?
+    ref cbc:ExpiryDate ?
+    ref cbc:IssuerID ?
+    ref cbc:IssueNumberID ?
+    ref cbc:CV2ID ?
+    ref cbc:CardChipCode ?
+    ref cbc:ChipApplicationID ?
+    ref cbc:HolderName ?
+  type CatalogueItemSpecificationUpdateLineType
+    ref cbc:ID
+    ref cac:ContractorCustomerParty ?
+    ref cac:SellerSupplierParty ?
+    ref cac:Item
+  type CatalogueLineType
+    ref cbc:ID
+    ref cbc:ActionCode ?
+    ref cbc:LifeCycleStatusCode ?
+    ref cbc:ContractSubdivision ?
+    ref cbc:Note *
+    ref cbc:OrderableIndicator ?
+    ref cbc:OrderableUnit ?
+    ref cbc:ContentUnitQuantity ?
+    ref cbc:OrderQuantityIncrementNumeric ?
+    ref cbc:MinimumOrderQuantity ?
+    ref cbc:MaximumOrderQuantity ?
+    ref cbc:WarrantyInformation *
+    ref cbc:PackLevelCode ?
+    ref cac:ContractorCustomerParty ?
+    ref cac:SellerSupplierParty ?
+    ref cac:WarrantyParty ?
+    ref cac:WarrantyValidityPeriod ?
+    ref cac:LineValidityPeriod ?
+    ref cac:ItemComparison *
+    ref cac:ComponentRelatedItem *
+    ref cac:AccessoryRelatedItem *
+    ref cac:RequiredRelatedItem *
+    ref cac:ReplacementRelatedItem *
+    ref cac:ComplementaryRelatedItem *
+    ref cac:ReplacedRelatedItem *
+    ref cac:RequiredItemLocationQuantity *
+    ref cac:DocumentReference *
+    ref cac:Item
+    ref cac:KeywordItemProperty *
+    ref cac:CallForTendersLineReference ?
+    ref cac:CallForTendersDocumentReference ?
+  type CataloguePricingUpdateLineType
+    ref cbc:ID
+    ref cac:ContractorCustomerParty ?
+    ref cac:SellerSupplierParty ?
+    ref cac:RequiredItemLocationQuantity *
+  type CatalogueReferenceType
+    ref cbc:ID
+    ref cbc:UUID ?
+    ref cbc:IssueDate ?
+    ref cbc:IssueTime ?
+    ref cbc:RevisionDate ?
+    ref cbc:RevisionTime ?
+    ref cbc:Note *
+    ref cbc:Description *
+    ref cbc:VersionID ?
+    ref cbc:PreviousVersionID ?
+  type CatalogueRequestLineType
+    ref cbc:ID
+    ref cbc:ContractSubdivision ?
+    ref cbc:Note *
+    ref cac:LineValidityPeriod ?
+    ref cac:RequiredItemLocationQuantity *
+    ref cac:Item
+  type CertificateType
+    ref cbc:ID
+    ref cbc:CertificateTypeCode
+    ref cbc:CertificateType
+    ref cbc:Remarks *
+    ref cac:IssuerParty
+    ref cac:DocumentReference *
+    ref cac:Signature *
+  type CertificateOfOriginApplicationType
+    ref cbc:ReferenceID
+    ref cbc:CertificateType
+    ref cbc:ApplicationStatusCode ?
+    ref cbc:OriginalJobID
+    ref cbc:PreviousJobID ?
+    ref cbc:Remarks *
+    ref cac:Shipment
+    ref cac:EndorserParty +
+    ref cac:PreparationParty
+    ref cac:IssuerParty
+    ref cac:ExporterParty ?
+    ref cac:ImporterParty ?
+    ref cac:IssuingCountry
+    ref cac:DocumentDistribution *
+    ref cac:SupportingDocumentReference *
+    ref cac:Signature *
+  type ClassificationCategoryType
+    ref cbc:Name ?
+    ref cbc:CodeValue ?
+    ref cbc:Description *
+    ref cac:CategorizesClassificationCategory *
+  type ClassificationSchemeType
+    ref cbc:ID
+    ref cbc:UUID ?
+    ref cbc:LastRevisionDate ?
+    ref cbc:LastRevisionTime ?
+    ref cbc:Note *
+    ref cbc:Name ?
+    ref cbc:Description *
+    ref cbc:AgencyID ?
+    ref cbc:AgencyName ?
+    ref cbc:VersionID ?
+    ref cbc:URI ?
+    ref cbc:SchemeURI ?
+    ref cbc:LanguageID ?
+    ref cac:ClassificationCategory +
+  type ClauseType
+    ref cbc:ID ?
+    ref cbc:Content *
+  type CommodityClassificationType
+    ref cbc:NatureCode ?
+    ref cbc:CargoTypeCode ?
+    ref cbc:CommodityCode ?
+    ref cbc:ItemClassificationCode ?
+  type CommunicationType
+    ref cbc:ChannelCode ?
+    ref cbc:Channel ?
+    ref cbc:Value ?
+  type CompletedTaskType
+    ref cbc:AnnualAverageAmount ?
+    ref cbc:TotalTaskAmount ?
+    ref cbc:PartyCapacityAmount ?
+    ref cbc:Description *
+    ref cac:EvidenceSupplied *
+    ref cac:Period ?
+    ref cac:RecipientCustomerParty ?
+  type ConditionType
+    ref cbc:AttributeID
+    ref cbc:Measure ?
+    ref cbc:Description *
+    ref cbc:MinimumMeasure ?
+    ref cbc:MaximumMeasure ?
+  type ConsignmentType
+    ref cbc:ID
+    ref cbc:CarrierAssignedID ?
+    ref cbc:ConsigneeAssignedID ?
+    ref cbc:ConsignorAssignedID ?
+    ref cbc:FreightForwarderAssignedID ?
+    ref cbc:BrokerAssignedID ?
+    ref cbc:ContractedCarrierAssignedID ?
+    ref cbc:PerformingCarrierAssignedID ?
+    ref cbc:SummaryDescription *
+    ref cbc:TotalInvoiceAmount ?
+    ref cbc:DeclaredCustomsValueAmount ?
+    ref cbc:TariffDescription *
+    ref cbc:TariffCode ?
+    ref cbc:InsurancePremiumAmount ?
+    ref cbc:GrossWeightMeasure ?
+    ref cbc:NetWeightMeasure ?
+    ref cbc:NetNetWeightMeasure ?
+    ref cbc:ChargeableWeightMeasure ?
+    ref cbc:GrossVolumeMeasure ?
+    ref cbc:NetVolumeMeasure ?
+    ref cbc:LoadingLengthMeasure ?
+    ref cbc:Remarks *
+    ref cbc:HazardousRiskIndicator ?
+    ref cbc:AnimalFoodIndicator ?
+    ref cbc:HumanFoodIndicator ?
+    ref cbc:LivestockIndicator ?
+    ref cbc:BulkCargoIndicator ?
+    ref cbc:ContainerizedIndicator ?
+    ref cbc:GeneralCargoIndicator ?
+    ref cbc:SpecialSecurityIndicator ?
+    ref cbc:ThirdPartyPayerIndicator ?
+    ref cbc:CarrierServiceInstructions *
+    ref cbc:CustomsClearanceServiceInstructions *
+    ref cbc:ForwarderServiceInstructions *
+    ref cbc:SpecialServiceInstructions *
+    ref cbc:SequenceID ?
+    ref cbc:ShippingPriorityLevelCode ?
+    ref cbc:HandlingCode ?
+    ref cbc:HandlingInstructions *
+    ref cbc:Information *
+    ref cbc:TotalGoodsItemQuantity ?
+    ref cbc:TotalTransportHandlingUnitQuantity ?
+    ref cbc:InsuranceValueAmount ?
+    ref cbc:DeclaredForCarriageValueAmount ?
+    ref cbc:DeclaredStatisticsValueAmount ?
+    ref cbc:FreeOnBoardValueAmount ?
+    ref cbc:SpecialInstructions *
+    ref cbc:SplitConsignmentIndicator ?
+    ref cbc:DeliveryInstructions *
+    ref cbc:ConsignmentQuantity ?
+    ref cbc:ConsolidatableIndicator ?
+    ref cbc:HaulageInstructions *
+    ref cbc:LoadingSequenceID ?
+    ref cbc:ChildConsignmentQuantity ?
+    ref cbc:TotalPackagesQuantity ?
+    ref cac:ConsolidatedShipment *
+    ref cac:CustomsDeclaration *
+    ref cac:RequestedPickupTransportEvent ?
+    ref cac:RequestedDeliveryTransportEvent ?
+    ref cac:PlannedPickupTransportEvent ?
+    ref cac:PlannedDeliveryTransportEvent ?
+    ref cac:Status *
+    ref cac:ChildConsignment *
+    ref cac:ConsigneeParty ?
+    ref cac:ExporterParty ?
+    ref cac:ConsignorParty ?
+    ref cac:ImporterParty ?
+    ref cac:CarrierParty ?
+    ref cac:FreightForwarderParty ?
+    ref cac:NotifyParty ?
+    ref cac:OriginalDespatchParty ?
+    ref cac:FinalDeliveryParty ?
+    ref cac:PerformingCarrierParty ?
+    ref cac:SubstituteCarrierParty ?
+    ref cac:LogisticsOperatorParty ?
+    ref cac:TransportAdvisorParty ?
+    ref cac:HazardousItemNotificationParty ?
+    ref cac:InsuranceParty ?
+    ref cac:MortgageHolderParty ?
+    ref cac:BillOfLadingHolderParty ?
+    ref cac:OriginalDepartureCountry ?
+    ref cac:FinalDestinationCountry ?
+    ref cac:TransitCountry *
+    ref cac:TransportContract ?
+    ref cac:TransportEvent *
+    ref cac:OriginalDespatchTransportationService ?
+    ref cac:FinalDeliveryTransportationService ?
+    ref cac:DeliveryTerms ?
+    ref cac:PaymentTerms ?
+    ref cac:CollectPaymentTerms ?
+    ref cac:DisbursementPaymentTerms ?
+    ref cac:PrepaidPaymentTerms ?
+    ref cac:FreightAllowanceCharge *
+    ref cac:ExtraAllowanceCharge *
+    ref cac:MainCarriageShipmentStage *
+    ref cac:PreCarriageShipmentStage *
+    ref cac:OnCarriageShipmentStage *
+    ref cac:TransportHandlingUnit *
+    ref cac:FirstArrivalPortLocation ?
+    ref cac:LastExitPortLocation ?
+  type ConsumptionType
+    ref cbc:UtilityStatementTypeCode ?
+    ref cac:MainPeriod ?
+    ref cac:AllowanceCharge *
+    ref cac:TaxTotal *
+    ref cac:EnergyWaterSupply ?
+    ref cac:TelecommunicationsSupply ?
+    ref cac:LegalMonetaryTotal
+  type ConsumptionAverageType
+    ref cbc:AverageAmount ?
+    ref cbc:Description *
+  type ConsumptionCorrectionType
+    ref cbc:CorrectionType ?
+    ref cbc:CorrectionTypeCode ?
+    ref cbc:MeterNumber ?
+    ref cbc:GasPressureQuantity ?
+    ref cbc:ActualTemperatureReductionQuantity ?
+    ref cbc:NormalTemperatureReductionQuantity ?
+    ref cbc:DifferenceTemperatureReductionQuantity ?
+    ref cbc:Description *
+    ref cbc:CorrectionUnitAmount ?
+    ref cbc:ConsumptionEnergyQuantity ?
+    ref cbc:ConsumptionWaterQuantity ?
+    ref cbc:CorrectionAmount ?
+  type ConsumptionHistoryType
+    ref cbc:MeterNumber ?
+    ref cbc:Quantity
+    ref cbc:Amount ?
+    ref cbc:ConsumptionLevelCode ?
+    ref cbc:ConsumptionLevel ?
+    ref cbc:Description *
+    ref cac:Period
+  type ConsumptionLineType
+    ref cbc:ID
+    ref cbc:ParentDocumentLineReferenceID ?
+    ref cbc:InvoicedQuantity
+    ref cbc:LineExtensionAmount
+    ref cac:Period ?
+    ref cac:Delivery *
+    ref cac:AllowanceCharge *
+    ref cac:TaxTotal *
+    ref cac:UtilityItem
+    ref cac:Price ?
+    ref cac:UnstructuredPrice ?
+  type ConsumptionPointType
+    ref cbc:ID
+    ref cbc:Description *
+    ref cbc:SubscriberID ?
+    ref cbc:SubscriberType ?
+    ref cbc:SubscriberTypeCode ?
+    ref cbc:TotalDeliveredQuantity ?
+    ref cac:Address ?
+    ref cac:WebSiteAccess ?
+    ref cac:UtilityMeter *
+  type ConsumptionReportType
+    ref cbc:ID
+    ref cbc:ConsumptionType ?
+    ref cbc:ConsumptionTypeCode ?
+    ref cbc:Description *
+    ref cbc:TotalConsumedQuantity ?
+    ref cbc:BasicConsumedQuantity ?
+    ref cbc:ResidentOccupantsNumeric ?
+    ref cbc:ConsumersEnergyLevelCode ?
+    ref cbc:ConsumersEnergyLevel ?
+    ref cbc:ResidenceType ?
+    ref cbc:ResidenceTypeCode ?
+    ref cbc:HeatingType ?
+    ref cbc:HeatingTypeCode ?
+    ref cac:Period ?
+    ref cac:GuidanceDocumentReference ?
+    ref cac:DocumentReference ?
+    ref cac:ConsumptionReportReference *
+    ref cac:ConsumptionHistory *
+  type ConsumptionReportReferenceType
+    ref cbc:ConsumptionReportID
+    ref cbc:ConsumptionType ?
+    ref cbc:ConsumptionTypeCode ?
+    ref cbc:TotalConsumedQuantity
+    ref cac:Period
+  type ContactType
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref cbc:Telephone ?
+    ref cbc:Telefax ?
+    ref cbc:ElectronicMail ?
+    ref cbc:Note *
+    ref cac:OtherCommunication *
+  type ContractType
+    ref cbc:ID ?
+    ref cbc:IssueDate ?
+    ref cbc:IssueTime ?
+    ref cbc:NominationDate ?
+    ref cbc:NominationTime ?
+    ref cbc:ContractTypeCode ?
+    ref cbc:ContractType ?
+    ref cbc:Note *
+    ref cbc:VersionID ?
+    ref cbc:Description *
+    ref cac:ValidityPeriod ?
+    ref cac:ContractDocumentReference *
+    ref cac:NominationPeriod ?
+    ref cac:ContractualDelivery ?
+  type ContractExecutionRequirementType
+    ref cbc:Name *
+    ref cbc:ExecutionRequirementCode ?
+    ref cbc:Description *
+  type ContractExtensionType
+    ref cbc:OptionsDescription *
+    ref cbc:MinimumNumberNumeric ?
+    ref cbc:MaximumNumberNumeric ?
+    ref cac:OptionValidityPeriod ?
+    ref cac:Renewal *
+  type ContractingActivityType
+    ref cbc:ActivityTypeCode ?
+    ref cbc:ActivityType ?
+  type ContractingPartyType
+    ref cbc:BuyerProfileURI ?
+    ref cac:ContractingPartyType *
+    ref cac:ContractingActivity *
+    ref cac:Party
+  type ContractingPartyTypeType
+    ref cbc:PartyTypeCode ?
+    ref cbc:PartyType ?
+  type CorporateRegistrationSchemeType
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref cbc:CorporateRegistrationTypeCode ?
+    ref cac:JurisdictionRegionAddress *
+  type CountryType
+    ref cbc:IdentificationCode ?
+    ref cbc:Name ?
+  type CreditAccountType
+    ref cbc:AccountID
+  type CreditNoteLineType
+    ref cbc:ID
+    ref cbc:UUID ?
+    ref cbc:Note *
+    ref cbc:CreditedQuantity ?
+    ref cbc:LineExtensionAmount ?
+    ref cbc:TaxPointDate ?
+    ref cbc:AccountingCostCode ?
+    ref cbc:AccountingCost ?
+    ref cbc:PaymentPurposeCode ?
+    ref cbc:FreeOfChargeIndicator ?
+    ref cac:InvoicePeriod *
+    ref cac:OrderLineReference *
+    ref cac:DiscrepancyResponse *
+    ref cac:DespatchLineReference *
+    ref cac:ReceiptLineReference *
+    ref cac:BillingReference *
+    ref cac:DocumentReference *
+    ref cac:PricingReference ?
+    ref cac:OriginatorParty ?
+    ref cac:Delivery *
+    ref cac:PaymentTerms *
+    ref cac:TaxTotal *
+    ref cac:AllowanceCharge *
+    ref cac:Item ?
+    ref cac:Price ?
+    ref cac:DeliveryTerms *
+    ref cac:SubCreditNoteLine *
+    ref cac:ItemPriceExtension ?
+  type CustomerPartyType
+    ref cbc:CustomerAssignedAccountID ?
+    ref cbc:SupplierAssignedAccountID ?
+    ref cbc:AdditionalAccountID *
+    ref cac:Party ?
+    ref cac:DeliveryContact ?
+    ref cac:AccountingContact ?
+    ref cac:BuyerContact ?
+  type CustomsDeclarationType
+    ref cbc:ID
+    ref cac:IssuerParty ?
+  type DebitNoteLineType
+    ref cbc:ID
+    ref cbc:UUID ?
+    ref cbc:Note *
+    ref cbc:DebitedQuantity ?
+    ref cbc:LineExtensionAmount
+    ref cbc:TaxPointDate ?
+    ref cbc:AccountingCostCode ?
+    ref cbc:AccountingCost ?
+    ref cbc:PaymentPurposeCode ?
+    ref cac:DiscrepancyResponse *
+    ref cac:DespatchLineReference *
+    ref cac:ReceiptLineReference *
+    ref cac:BillingReference *
+    ref cac:DocumentReference *
+    ref cac:PricingReference ?
+    ref cac:Delivery *
+    ref cac:TaxTotal *
+    ref cac:AllowanceCharge *
+    ref cac:Item ?
+    ref cac:Price ?
+    ref cac:SubDebitNoteLine *
+  type DeclarationType
+    ref cbc:Name *
+    ref cbc:DeclarationTypeCode ?
+    ref cbc:Description *
+    ref cac:EvidenceSupplied *
+  type DeliveryType
+    ref cbc:ID ?
+    ref cbc:Quantity ?
+    ref cbc:MinimumQuantity ?
+    ref cbc:MaximumQuantity ?
+    ref cbc:ActualDeliveryDate ?
+    ref cbc:ActualDeliveryTime ?
+    ref cbc:LatestDeliveryDate ?
+    ref cbc:LatestDeliveryTime ?
+    ref cbc:ReleaseID ?
+    ref cbc:TrackingID ?
+    ref cac:DeliveryAddress ?
+    ref cac:DeliveryLocation ?
+    ref cac:AlternativeDeliveryLocation ?
+    ref cac:RequestedDeliveryPeriod ?
+    ref cac:PromisedDeliveryPeriod ?
+    ref cac:EstimatedDeliveryPeriod ?
+    ref cac:CarrierParty ?
+    ref cac:DeliveryParty ?
+    ref cac:NotifyParty *
+    ref cac:Despatch ?
+    ref cac:DeliveryTerms *
+    ref cac:MinimumDeliveryUnit ?
+    ref cac:MaximumDeliveryUnit ?
+    ref cac:Shipment ?
+  type DeliveryTermsType
+    ref cbc:ID ?
+    ref cbc:SpecialTerms *
+    ref cbc:LossRiskResponsibilityCode ?
+    ref cbc:LossRisk *
+    ref cbc:Amount ?
+    ref cac:DeliveryLocation ?
+    ref cac:AllowanceCharge ?
+  type DeliveryUnitType
+    ref cbc:BatchQuantity
+    ref cbc:ConsumerUnitQuantity ?
+    ref cbc:HazardousRiskIndicator ?
+  type DependentPriceReferenceType
+    ref cbc:Percent ?
+    ref cac:LocationAddress ?
+    ref cac:DependentLineReference ?
+  type DespatchType
+    ref cbc:ID ?
+    ref cbc:RequestedDespatchDate ?
+    ref cbc:RequestedDespatchTime ?
+    ref cbc:EstimatedDespatchDate ?
+    ref cbc:EstimatedDespatchTime ?
+    ref cbc:ActualDespatchDate ?
+    ref cbc:ActualDespatchTime ?
+    ref cbc:GuaranteedDespatchDate ?
+    ref cbc:GuaranteedDespatchTime ?
+    ref cbc:ReleaseID ?
+    ref cbc:Instructions *
+    ref cac:DespatchAddress ?
+    ref cac:DespatchLocation ?
+    ref cac:DespatchParty ?
+    ref cac:CarrierParty ?
+    ref cac:NotifyParty *
+    ref cac:Contact ?
+    ref cac:EstimatedDespatchPeriod ?
+    ref cac:RequestedDespatchPeriod ?
+  type DespatchLineType
+    ref cbc:ID
+    ref cbc:UUID ?
+    ref cbc:Note *
+    ref cbc:LineStatusCode ?
+    ref cbc:DeliveredQuantity ?
+    ref cbc:BackorderQuantity ?
+    ref cbc:BackorderReason *
+    ref cbc:OutstandingQuantity ?
+    ref cbc:OutstandingReason *
+    ref cbc:OversupplyQuantity ?
+    ref cac:OrderLineReference +
+    ref cac:DocumentReference *
+    ref cac:Item
+    ref cac:Shipment *
+  type DimensionType
+    ref cbc:AttributeID
+    ref cbc:Measure ?
+    ref cbc:Description *
+    ref cbc:MinimumMeasure ?
+    ref cbc:MaximumMeasure ?
+  type DocumentDistributionType
+    ref cbc:PrintQualifier
+    ref cbc:MaximumCopiesNumeric
+    ref cac:Party
+  type DocumentReferenceType
+    ref cbc:ID
+    ref cbc:CopyIndicator ?
+    ref cbc:UUID ?
+    ref cbc:IssueDate ?
+    ref cbc:IssueTime ?
+    ref cbc:DocumentTypeCode ?
+    ref cbc:DocumentType ?
+    ref cbc:XPath *
+    ref cbc:LanguageID ?
+    ref cbc:LocaleCode ?
+    ref cbc:VersionID ?
+    ref cbc:DocumentStatusCode ?
+    ref cbc:DocumentDescription *
+    ref cac:Attachment ?
+    ref cac:ValidityPeriod ?
+    ref cac:IssuerParty ?
+    ref cac:ResultOfVerification ?
+  type DocumentResponseType
+    ref cac:Response
+    ref cac:DocumentReference +
+    ref cac:IssuerParty ?
+    ref cac:RecipientParty ?
+    ref cac:LineResponse *
+  type DutyType
+    ref cbc:Amount
+    ref cbc:Duty ?
+    ref cbc:DutyCode ?
+    ref cac:TaxCategory ?
+  type EconomicOperatorRoleType
+    ref cbc:RoleCode ?
+    ref cbc:RoleDescription *
+  type EconomicOperatorShortListType
+    ref cbc:LimitationDescription *
+    ref cbc:ExpectedQuantity ?
+    ref cbc:MaximumQuantity ?
+    ref cbc:MinimumQuantity ?
+    ref cac:PreSelectedParty *
+  type EmissionCalculationMethodType
+    ref cbc:CalculationMethodCode ?
+    ref cbc:FullnessIndicationCode ?
+    ref cac:MeasurementFromLocation ?
+    ref cac:MeasurementToLocation ?
+  type EndorsementType
+    ref cbc:DocumentID
+    ref cbc:ApprovalStatus
+    ref cbc:Remarks *
+    ref cac:EndorserParty
+    ref cac:Signature *
+  type EndorserPartyType
+    ref cbc:RoleCode
+    ref cbc:SequenceNumeric
+    ref cac:Party
+    ref cac:SignatoryContact
+  type EnergyTaxReportType
+    ref cbc:TaxEnergyAmount ?
+    ref cbc:TaxEnergyOnAccountAmount ?
+    ref cbc:TaxEnergyBalanceAmount ?
+    ref cac:TaxScheme
+  type EnergyWaterSupplyType
+    ref cac:ConsumptionReport *
+    ref cac:EnergyTaxReport *
+    ref cac:ConsumptionAverage *
+    ref cac:EnergyWaterConsumptionCorrection *
+  type EnvironmentalEmissionType
+    ref cbc:EnvironmentalEmissionTypeCode
+    ref cbc:ValueMeasure
+    ref cbc:Description *
+    ref cac:EmissionCalculationMethod *
+  type EvaluationCriterionType
+    ref cbc:EvaluationCriterionTypeCode ?
+    ref cbc:Description *
+    ref cbc:ThresholdAmount ?
+    ref cbc:ThresholdQuantity ?
+    ref cbc:ExpressionCode ?
+    ref cbc:Expression *
+    ref cac:DurationPeriod ?
+    ref cac:SuggestedEvidence *
+  type EventType
+    ref cbc:IdentificationID ?
+    ref cbc:OccurrenceDate ?
+    ref cbc:OccurrenceTime ?
+    ref cbc:TypeCode ?
+    ref cbc:Description *
+    ref cbc:CompletionIndicator ?
+    ref cac:CurrentStatus *
+    ref cac:Contact *
+    ref cac:OccurenceLocation ?
+  type EventCommentType
+    ref cbc:Comment
+    ref cbc:IssueDate ?
+    ref cbc:IssueTime ?
+  type EventLineItemType
+    ref cbc:LineNumberNumeric ?
+    ref cac:ParticipatingLocationsLocation ?
+    ref cac:RetailPlannedImpact *
+    ref cac:SupplyItem
+  type EventTacticType
+    ref cbc:Comment ?
+    ref cbc:Quantity ?
+    ref cac:EventTacticEnumeration
+    ref cac:Period ?
+  type EventTacticEnumerationType
+    ref cbc:ConsumerIncentiveTacticTypeCode ?
+    ref cbc:DisplayTacticTypeCode ?
+    ref cbc:FeatureTacticTypeCode ?
+    ref cbc:TradeItemPackingLabelingTypeCode ?
+  type EvidenceType
+    ref cbc:ID ?
+    ref cbc:EvidenceTypeCode ?
+    ref cbc:Description *
+    ref cbc:CandidateStatement *
+    ref cac:EvidenceIssuingParty ?
+    ref cac:DocumentReference ?
+    ref cac:Language ?
+  type EvidenceSuppliedType
+    ref cbc:ID
+  type ExceptionCriteriaLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:ThresholdValueComparisonCode
+    ref cbc:ThresholdQuantity
+    ref cbc:ExceptionStatusCode ?
+    ref cbc:CollaborationPriorityCode ?
+    ref cbc:ExceptionResolutionCode ?
+    ref cbc:SupplyChainActivityTypeCode ?
+    ref cbc:PerformanceMetricTypeCode ?
+    ref cac:EffectivePeriod ?
+    ref cac:SupplyItem +
+    ref cac:ForecastExceptionCriterionLine ?
+  type ExceptionNotificationLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:Description *
+    ref cbc:ExceptionStatusCode ?
+    ref cbc:CollaborationPriorityCode ?
+    ref cbc:ResolutionCode ?
+    ref cbc:ComparedValueMeasure
+    ref cbc:SourceValueMeasure
+    ref cbc:VarianceQuantity ?
+    ref cbc:SupplyChainActivityTypeCode ?
+    ref cbc:PerformanceMetricTypeCode ?
+    ref cac:ExceptionObservationPeriod ?
+    ref cac:DocumentReference *
+    ref cac:ForecastException ?
+    ref cac:SupplyItem
+  type ExchangeRateType
+    ref cbc:SourceCurrencyCode
+    ref cbc:SourceCurrencyBaseRate ?
+    ref cbc:TargetCurrencyCode
+    ref cbc:TargetCurrencyBaseRate ?
+    ref cbc:ExchangeMarketID ?
+    ref cbc:CalculationRate ?
+    ref cbc:MathematicOperatorCode ?
+    ref cbc:Date ?
+    ref cac:ForeignExchangeContract ?
+  type ExternalReferenceType
+    ref cbc:URI ?
+    ref cbc:DocumentHash ?
+    ref cbc:HashAlgorithmMethod ?
+    ref cbc:ExpiryDate ?
+    ref cbc:ExpiryTime ?
+    ref cbc:MimeCode ?
+    ref cbc:FormatCode ?
+    ref cbc:EncodingCode ?
+    ref cbc:CharacterSetCode ?
+    ref cbc:FileName ?
+    ref cbc:Description *
+  type FinancialAccountType
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref cbc:AliasName ?
+    ref cbc:AccountTypeCode ?
+    ref cbc:AccountFormatCode ?
+    ref cbc:CurrencyCode ?
+    ref cbc:PaymentNote *
+    ref cac:FinancialInstitutionBranch ?
+    ref cac:Country ?
+  type FinancialGuaranteeType
+    ref cbc:GuaranteeTypeCode
+    ref cbc:Description *
+    ref cbc:LiabilityAmount ?
+    ref cbc:AmountRate ?
+    ref cac:ConstitutionPeriod ?
+  type FinancialInstitutionType
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref cac:Address ?
+  type ForecastExceptionType
+    ref cbc:ForecastPurposeCode
+    ref cbc:ForecastTypeCode
+    ref cbc:IssueDate
+    ref cbc:IssueTime ?
+    ref cbc:DataSourceCode
+    ref cbc:ComparisonDataCode ?
+    ref cbc:ComparisonForecastIssueTime ?
+    ref cbc:ComparisonForecastIssueDate ?
+  type ForecastExceptionCriterionLineType
+    ref cbc:ForecastPurposeCode
+    ref cbc:ForecastTypeCode
+    ref cbc:ComparisonDataSourceCode ?
+    ref cbc:DataSourceCode
+    ref cbc:TimeDeltaDaysQuantity ?
+  type ForecastLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:FrozenDocumentIndicator ?
+    ref cbc:ForecastTypeCode
+    ref cac:ForecastPeriod ?
+    ref cac:SalesItem ?
+  type ForecastRevisionLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:Description *
+    ref cbc:RevisedForecastLineID
+    ref cbc:SourceForecastIssueDate
+    ref cbc:SourceForecastIssueTime
+    ref cbc:AdjustmentReasonCode ?
+    ref cac:ForecastPeriod ?
+    ref cac:SalesItem ?
+  type FrameworkAgreementType
+    ref cbc:ExpectedOperatorQuantity ?
+    ref cbc:MaximumOperatorQuantity ?
+    ref cbc:Justification *
+    ref cbc:Frequency *
+    ref cac:DurationPeriod ?
+    ref cac:SubsequentProcessTenderRequirement *
+  type GoodsItemType
+    ref cbc:ID ?
+    ref cbc:SequenceNumberID ?
+    ref cbc:Description *
+    ref cbc:HazardousRiskIndicator ?
+    ref cbc:DeclaredCustomsValueAmount ?
+    ref cbc:DeclaredForCarriageValueAmount ?
+    ref cbc:DeclaredStatisticsValueAmount ?
+    ref cbc:FreeOnBoardValueAmount ?
+    ref cbc:InsuranceValueAmount ?
+    ref cbc:ValueAmount ?
+    ref cbc:GrossWeightMeasure ?
+    ref cbc:NetWeightMeasure ?
+    ref cbc:NetNetWeightMeasure ?
+    ref cbc:ChargeableWeightMeasure ?
+    ref cbc:GrossVolumeMeasure ?
+    ref cbc:NetVolumeMeasure ?
+    ref cbc:Quantity ?
+    ref cbc:PreferenceCriterionCode ?
+    ref cbc:RequiredCustomsID ?
+    ref cbc:CustomsStatusCode ?
+    ref cbc:CustomsTariffQuantity ?
+    ref cbc:CustomsImportClassifiedIndicator ?
+    ref cbc:ChargeableQuantity ?
+    ref cbc:ReturnableQuantity ?
+    ref cbc:TraceID ?
+    ref cac:Item *
+    ref cac:GoodsItemContainer *
+    ref cac:FreightAllowanceCharge *
+    ref cac:InvoiceLine *
+    ref cac:Temperature *
+    ref cac:ContainedGoodsItem *
+    ref cac:OriginAddress ?
+    ref cac:Delivery ?
+    ref cac:Pickup ?
+    ref cac:Despatch ?
+    ref cac:MeasurementDimension *
+    ref cac:ContainingPackage *
+    ref cac:ShipmentDocumentReference ?
+    ref cac:MinimumTemperature ?
+    ref cac:MaximumTemperature ?
+  type GoodsItemContainerType
+    ref cbc:ID
+    ref cbc:Quantity ?
+    ref cac:TransportEquipment *
+  type HazardousGoodsTransitType
+    ref cbc:TransportEmergencyCardCode ?
+    ref cbc:PackingCriteriaCode ?
+    ref cbc:HazardousRegulationCode ?
+    ref cbc:InhalationToxicityZoneCode ?
+    ref cbc:TransportAuthorizationCode ?
+    ref cac:MaximumTemperature ?
+    ref cac:MinimumTemperature ?
+  type HazardousItemType
+    ref cbc:ID ?
+    ref cbc:PlacardNotation ?
+    ref cbc:PlacardEndorsement ?
+    ref cbc:AdditionalInformation *
+    ref cbc:UNDGCode ?
+    ref cbc:EmergencyProceduresCode ?
+    ref cbc:MedicalFirstAidGuideCode ?
+    ref cbc:TechnicalName ?
+    ref cbc:CategoryName ?
+    ref cbc:HazardousCategoryCode ?
+    ref cbc:UpperOrangeHazardPlacardID ?
+    ref cbc:LowerOrangeHazardPlacardID ?
+    ref cbc:MarkingID ?
+    ref cbc:HazardClassID ?
+    ref cbc:NetWeightMeasure ?
+    ref cbc:NetVolumeMeasure ?
+    ref cbc:Quantity ?
+    ref cac:ContactParty ?
+    ref cac:SecondaryHazard *
+    ref cac:HazardousGoodsTransit *
+    ref cac:EmergencyTemperature ?
+    ref cac:FlashpointTemperature ?
+    ref cac:AdditionalTemperature *
+  type ImmobilizedSecurityType
+    ref cbc:ImmobilizationCertificateID ?
+    ref cbc:SecurityID ?
+    ref cbc:IssueDate ?
+    ref cbc:FaceValueAmount ?
+    ref cbc:MarketValueAmount ?
+    ref cbc:SharesNumberQuantity ?
+    ref cac:IssuerParty ?
+  type InstructionForReturnsLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:Quantity
+    ref cac:ManufacturerParty ?
+    ref cac:Item
+  type InventoryReportLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:Quantity
+    ref cbc:InventoryValueAmount ?
+    ref cbc:AvailabilityDate ?
+    ref cbc:AvailabilityStatusCode ?
+    ref cac:Item
+    ref cac:InventoryLocation ?
+  type InvoiceLineType
+    ref cbc:ID
+    ref cbc:UUID ?
+    ref cbc:Note *
+    ref cbc:InvoicedQuantity ?
+    ref cbc:LineExtensionAmount
+    ref cbc:TaxPointDate ?
+    ref cbc:AccountingCostCode ?
+    ref cbc:AccountingCost ?
+    ref cbc:PaymentPurposeCode ?
+    ref cbc:FreeOfChargeIndicator ?
+    ref cac:InvoicePeriod *
+    ref cac:OrderLineReference *
+    ref cac:DespatchLineReference *
+    ref cac:ReceiptLineReference *
+    ref cac:BillingReference *
+    ref cac:DocumentReference *
+    ref cac:PricingReference ?
+    ref cac:OriginatorParty ?
+    ref cac:Delivery *
+    ref cac:PaymentTerms *
+    ref cac:AllowanceCharge *
+    ref cac:TaxTotal *
+    ref cac:WithholdingTaxTotal *
+    ref cac:Item
+    ref cac:Price ?
+    ref cac:DeliveryTerms ?
+    ref cac:SubInvoiceLine *
+    ref cac:ItemPriceExtension ?
+  type ItemType
+    ref cbc:Description *
+    ref cbc:PackQuantity ?
+    ref cbc:PackSizeNumeric ?
+    ref cbc:CatalogueIndicator ?
+    ref cbc:Name ?
+    ref cbc:HazardousRiskIndicator ?
+    ref cbc:AdditionalInformation *
+    ref cbc:Keyword *
+    ref cbc:BrandName *
+    ref cbc:ModelName *
+    ref cac:BuyersItemIdentification ?
+    ref cac:SellersItemIdentification ?
+    ref cac:ManufacturersItemIdentification *
+    ref cac:StandardItemIdentification ?
+    ref cac:CatalogueItemIdentification ?
+    ref cac:AdditionalItemIdentification *
+    ref cac:CatalogueDocumentReference ?
+    ref cac:ItemSpecificationDocumentReference *
+    ref cac:OriginCountry ?
+    ref cac:CommodityClassification *
+    ref cac:TransactionConditions *
+    ref cac:HazardousItem *
+    ref cac:ClassifiedTaxCategory *
+    ref cac:AdditionalItemProperty *
+    ref cac:ManufacturerParty *
+    ref cac:InformationContentProviderParty ?
+    ref cac:OriginAddress *
+    ref cac:ItemInstance *
+    ref cac:Certificate *
+    ref cac:Dimension *
+  type ItemComparisonType
+    ref cbc:PriceAmount ?
+    ref cbc:Quantity ?
+  type ItemIdentificationType
+    ref cbc:ID
+    ref cbc:ExtendedID ?
+    ref cbc:BarcodeSymbologyID ?
+    ref cac:PhysicalAttribute *
+    ref cac:MeasurementDimension *
+    ref cac:IssuerParty ?
+  type ItemInformationRequestLineType
+    ref cbc:TimeFrequencyCode ?
+    ref cbc:SupplyChainActivityTypeCode ?
+    ref cbc:ForecastTypeCode ?
+    ref cbc:PerformanceMetricTypeCode ?
+    ref cac:Period +
+    ref cac:SalesItem +
+  type ItemInstanceType
+    ref cbc:ProductTraceID ?
+    ref cbc:ManufactureDate ?
+    ref cbc:ManufactureTime ?
+    ref cbc:BestBeforeDate ?
+    ref cbc:RegistrationID ?
+    ref cbc:SerialID ?
+    ref cac:AdditionalItemProperty *
+    ref cac:LotIdentification ?
+  type ItemLocationQuantityType
+    ref cbc:LeadTimeMeasure ?
+    ref cbc:MinimumQuantity ?
+    ref cbc:MaximumQuantity ?
+    ref cbc:HazardousRiskIndicator ?
+    ref cbc:TradingRestrictions *
+    ref cac:ApplicableTerritoryAddress *
+    ref cac:Price ?
+    ref cac:DeliveryUnit *
+    ref cac:ApplicableTaxCategory *
+    ref cac:Package ?
+    ref cac:AllowanceCharge *
+    ref cac:DependentPriceReference ?
+  type ItemManagementProfileType
+    ref cbc:FrozenPeriodDaysNumeric ?
+    ref cbc:MinimumInventoryQuantity ?
+    ref cbc:MultipleOrderQuantity ?
+    ref cbc:OrderIntervalDaysNumeric ?
+    ref cbc:ReplenishmentOwnerDescription *
+    ref cbc:TargetServicePercent ?
+    ref cbc:TargetInventoryQuantity ?
+    ref cac:EffectivePeriod
+    ref cac:Item
+    ref cac:ItemLocationQuantity ?
+  type ItemPropertyType
+    ref cbc:ID ?
+    ref cbc:Name
+    ref cbc:NameCode ?
+    ref cbc:TestMethod ?
+    ref cbc:Value ?
+    ref cbc:ValueQuantity ?
+    ref cbc:ValueQualifier *
+    ref cbc:ImportanceCode ?
+    ref cbc:ListValue *
+    ref cac:UsabilityPeriod ?
+    ref cac:ItemPropertyGroup *
+    ref cac:RangeDimension ?
+    ref cac:ItemPropertyRange ?
+  type ItemPropertyGroupType
+    ref cbc:ID
+    ref cbc:Name ?
+    ref cbc:ImportanceCode ?
+  type ItemPropertyRangeType
+    ref cbc:MinimumValue ?
+    ref cbc:MaximumValue ?
+  type LanguageType
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref cbc:LocaleCode ?
+  type LineItemType
+    ref cbc:ID
+    ref cbc:SalesOrderID ?
+    ref cbc:UUID ?
+    ref cbc:Note *
+    ref cbc:LineStatusCode ?
+    ref cbc:Quantity ?
+    ref cbc:LineExtensionAmount ?
+    ref cbc:TotalTaxAmount ?
+    ref cbc:MinimumQuantity ?
+    ref cbc:MaximumQuantity ?
+    ref cbc:MinimumBackorderQuantity ?
+    ref cbc:MaximumBackorderQuantity ?
+    ref cbc:InspectionMethodCode ?
+    ref cbc:PartialDeliveryIndicator ?
+    ref cbc:BackOrderAllowedIndicator ?
+    ref cbc:AccountingCostCode ?
+    ref cbc:AccountingCost ?
+    ref cbc:WarrantyInformation *
+    ref cac:Delivery *
+    ref cac:DeliveryTerms ?
+    ref cac:OriginatorParty ?
+    ref cac:OrderedShipment *
+    ref cac:PricingReference ?
+    ref cac:AllowanceCharge *
+    ref cac:Price ?
+    ref cac:Item
+    ref cac:SubLineItem *
+    ref cac:WarrantyValidityPeriod ?
+    ref cac:WarrantyParty ?
+    ref cac:TaxTotal *
+    ref cac:ItemPriceExtension ?
+    ref cac:LineReference *
+  type LineReferenceType
+    ref cbc:LineID
+    ref cbc:UUID ?
+    ref cbc:LineStatusCode ?
+    ref cac:DocumentReference ?
+  type LineResponseType
+    ref cac:LineReference
+    ref cac:Response +
+  type LocationType
+    ref cbc:ID ?
+    ref cbc:Description *
+    ref cbc:Conditions *
+    ref cbc:CountrySubentity ?
+    ref cbc:CountrySubentityCode ?
+    ref cbc:LocationTypeCode ?
+    ref cbc:InformationURI ?
+    ref cbc:Name ?
+    ref cac:ValidityPeriod *
+    ref cac:Address ?
+    ref cac:SubsidiaryLocation *
+    ref cac:LocationCoordinate *
+  type LocationCoordinateType
+    ref cbc:CoordinateSystemCode ?
+    ref cbc:LatitudeDegreesMeasure ?
+    ref cbc:LatitudeMinutesMeasure ?
+    ref cbc:LatitudeDirectionCode ?
+    ref cbc:LongitudeDegreesMeasure ?
+    ref cbc:LongitudeMinutesMeasure ?
+    ref cbc:LongitudeDirectionCode ?
+    ref cbc:AltitudeMeasure ?
+  type LotIdentificationType
+    ref cbc:LotNumberID ?
+    ref cbc:ExpiryDate ?
+    ref cac:AdditionalItemProperty *
+  type MaritimeTransportType
+    ref cbc:VesselID ?
+    ref cbc:VesselName ?
+    ref cbc:RadioCallSignID ?
+    ref cbc:ShipsRequirements *
+    ref cbc:GrossTonnageMeasure ?
+    ref cbc:NetTonnageMeasure ?
+    ref cac:RegistryCertificateDocumentReference ?
+    ref cac:RegistryPortLocation ?
+  type MeterType
+    ref cbc:MeterNumber ?
+    ref cbc:MeterName ?
+    ref cbc:MeterConstant ?
+    ref cbc:MeterConstantCode ?
+    ref cbc:TotalDeliveredQuantity ?
+    ref cac:MeterReading *
+    ref cac:MeterProperty *
+  type MeterPropertyType
+    ref cbc:Name ?
+    ref cbc:NameCode ?
+    ref cbc:Value ?
+    ref cbc:ValueQuantity ?
+    ref cbc:ValueQualifier *
+  type MeterReadingType
+    ref cbc:ID ?
+    ref cbc:MeterReadingType ?
+    ref cbc:MeterReadingTypeCode ?
+    ref cbc:PreviousMeterReadingDate
+    ref cbc:PreviousMeterQuantity
+    ref cbc:LatestMeterReadingDate
+    ref cbc:LatestMeterQuantity
+    ref cbc:PreviousMeterReadingMethod ?
+    ref cbc:PreviousMeterReadingMethodCode ?
+    ref cbc:LatestMeterReadingMethod ?
+    ref cbc:LatestMeterReadingMethodCode ?
+    ref cbc:MeterReadingComments *
+    ref cbc:DeliveredQuantity
+  type MiscellaneousEventType
+    ref cbc:MiscellaneousEventTypeCode
+    ref cac:EventLineItem +
+  type MonetaryTotalType
+    ref cbc:LineExtensionAmount ?
+    ref cbc:TaxExclusiveAmount ?
+    ref cbc:TaxInclusiveAmount ?
+    ref cbc:AllowanceTotalAmount ?
+    ref cbc:ChargeTotalAmount ?
+    ref cbc:PrepaidAmount ?
+    ref cbc:PayableRoundingAmount ?
+    ref cbc:PayableAmount
+    ref cbc:PayableAlternativeAmount ?
+  type NotificationRequirementType
+    ref cbc:NotificationTypeCode
+    ref cbc:PostEventNotificationDurationMeasure ?
+    ref cbc:PreEventNotificationDurationMeasure ?
+    ref cac:NotifyParty *
+    ref cac:NotificationPeriod *
+    ref cac:NotificationLocation *
+  type OnAccountPaymentType
+    ref cbc:EstimatedConsumedQuantity
+    ref cbc:Note *
+    ref cac:PaymentTerms +
+  type OrderLineType
+    ref cbc:SubstitutionStatusCode ?
+    ref cbc:Note *
+    ref cac:LineItem
+    ref cac:SellerProposedSubstituteLineItem *
+    ref cac:SellerSubstitutedLineItem *
+    ref cac:BuyerProposedSubstituteLineItem *
+    ref cac:CatalogueLineReference ?
+    ref cac:QuotationLineReference ?
+    ref cac:OrderLineReference *
+    ref cac:DocumentReference *
+  type OrderLineReferenceType
+    ref cbc:LineID
+    ref cbc:SalesOrderLineID ?
+    ref cbc:UUID ?
+    ref cbc:LineStatusCode ?
+    ref cac:OrderReference ?
+  type OrderReferenceType
+    ref cbc:ID
+    ref cbc:SalesOrderID ?
+    ref cbc:CopyIndicator ?
+    ref cbc:UUID ?
+    ref cbc:IssueDate ?
+    ref cbc:IssueTime ?
+    ref cbc:CustomerReference ?
+    ref cbc:OrderTypeCode ?
+    ref cac:DocumentReference ?
+  type OrderedShipmentType
+    ref cac:Shipment
+    ref cac:Package *
+  type PackageType
+    ref cbc:ID ?
+    ref cbc:Quantity ?
+    ref cbc:ReturnableMaterialIndicator ?
+    ref cbc:PackageLevelCode ?
+    ref cbc:PackagingTypeCode ?
+    ref cbc:PackingMaterial *
+    ref cbc:TraceID ?
+    ref cac:ContainedPackage *
+    ref cac:ContainingTransportEquipment ?
+    ref cac:GoodsItem *
+    ref cac:MeasurementDimension *
+    ref cac:DeliveryUnit *
+    ref cac:Delivery ?
+    ref cac:Pickup ?
+    ref cac:Despatch ?
+  type PartyType
+    ref cbc:MarkCareIndicator ?
+    ref cbc:MarkAttentionIndicator ?
+    ref cbc:WebsiteURI ?
+    ref cbc:LogoReferenceID ?
+    ref cbc:EndpointID ?
+    ref cbc:IndustryClassificationCode ?
+    ref cac:PartyIdentification *
+    ref cac:PartyName *
+    ref cac:Language ?
+    ref cac:PostalAddress ?
+    ref cac:PhysicalLocation ?
+    ref cac:PartyTaxScheme *
+    ref cac:PartyLegalEntity *
+    ref cac:Contact ?
+    ref cac:Person *
+    ref cac:AgentParty ?
+    ref cac:ServiceProviderParty *
+    ref cac:PowerOfAttorney *
+    ref cac:FinancialAccount ?
+  type PartyIdentificationType
+    ref cbc:ID
+  type PartyLegalEntityType
+    ref cbc:RegistrationName ?
+    ref cbc:CompanyID ?
+    ref cbc:RegistrationDate ?
+    ref cbc:RegistrationExpirationDate ?
+    ref cbc:CompanyLegalFormCode ?
+    ref cbc:CompanyLegalForm ?
+    ref cbc:SoleProprietorshipIndicator ?
+    ref cbc:CompanyLiquidationStatusCode ?
+    ref cbc:CorporateStockAmount ?
+    ref cbc:FullyPaidSharesIndicator ?
+    ref cac:RegistrationAddress ?
+    ref cac:CorporateRegistrationScheme ?
+    ref cac:HeadOfficeParty ?
+    ref cac:ShareholderParty *
+  type PartyNameType
+    ref cbc:Name
+  type PartyTaxSchemeType
+    ref cbc:RegistrationName ?
+    ref cbc:CompanyID ?
+    ref cbc:TaxLevelCode ?
+    ref cbc:ExemptionReasonCode ?
+    ref cbc:ExemptionReason *
+    ref cac:RegistrationAddress ?
+    ref cac:TaxScheme
+  type PaymentType
+    ref cbc:ID ?
+    ref cbc:PaidAmount ?
+    ref cbc:ReceivedDate ?
+    ref cbc:PaidDate ?
+    ref cbc:PaidTime ?
+    ref cbc:InstructionID ?
+  type PaymentMandateType
+    ref cbc:ID ?
+    ref cbc:MandateTypeCode ?
+    ref cbc:MaximumPaymentInstructionsNumeric ?
+    ref cbc:MaximumPaidAmount ?
+    ref cbc:SignatureID ?
+    ref cac:PayerParty ?
+    ref cac:PayerFinancialAccount ?
+    ref cac:ValidityPeriod ?
+    ref cac:PaymentReversalPeriod ?
+    ref cac:Clause *
+  type PaymentMeansType
+    ref cbc:ID ?
+    ref cbc:PaymentMeansCode
+    ref cbc:PaymentDueDate ?
+    ref cbc:PaymentChannelCode ?
+    ref cbc:InstructionID ?
+    ref cbc:InstructionNote *
+    ref cbc:PaymentID *
+    ref cac:CardAccount ?
+    ref cac:PayerFinancialAccount ?
+    ref cac:PayeeFinancialAccount ?
+    ref cac:CreditAccount ?
+    ref cac:PaymentMandate ?
+    ref cac:TradeFinancing ?
+  type PaymentTermsType
+    ref cbc:ID ?
+    ref cbc:PaymentMeansID *
+    ref cbc:PrepaidPaymentReferenceID ?
+    ref cbc:Note *
+    ref cbc:ReferenceEventCode ?
+    ref cbc:SettlementDiscountPercent ?
+    ref cbc:PenaltySurchargePercent ?
+    ref cbc:PaymentPercent ?
+    ref cbc:Amount ?
+    ref cbc:SettlementDiscountAmount ?
+    ref cbc:PenaltyAmount ?
+    ref cbc:PaymentTermsDetailsURI ?
+    ref cbc:PaymentDueDate ?
+    ref cbc:InstallmentDueDate ?
+    ref cbc:InvoicingPartyReference ?
+    ref cac:SettlementPeriod ?
+    ref cac:PenaltyPeriod ?
+    ref cac:ExchangeRate ?
+    ref cac:ValidityPeriod ?
+  type PerformanceDataLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:PerformanceValueQuantity
+    ref cbc:PerformanceMetricTypeCode
+    ref cac:Period ?
+    ref cac:Item ?
+  type PeriodType
+    ref cbc:StartDate ?
+    ref cbc:StartTime ?
+    ref cbc:EndDate ?
+    ref cbc:EndTime ?
+    ref cbc:DurationMeasure ?
+    ref cbc:DescriptionCode *
+    ref cbc:Description *
+  type PersonType
+    ref cbc:ID ?
+    ref cbc:FirstName ?
+    ref cbc:FamilyName ?
+    ref cbc:Title ?
+    ref cbc:MiddleName ?
+    ref cbc:OtherName ?
+    ref cbc:NameSuffix ?
+    ref cbc:JobTitle ?
+    ref cbc:NationalityID ?
+    ref cbc:GenderCode ?
+    ref cbc:BirthDate ?
+    ref cbc:BirthplaceName ?
+    ref cbc:OrganizationDepartment ?
+    ref cac:Contact ?
+    ref cac:FinancialAccount ?
+    ref cac:IdentityDocumentReference *
+    ref cac:ResidenceAddress ?
+  type PhysicalAttributeType
+    ref cbc:AttributeID
+    ref cbc:PositionCode ?
+    ref cbc:DescriptionCode ?
+    ref cbc:Description *
+  type PickupType
+    ref cbc:ID ?
+    ref cbc:ActualPickupDate ?
+    ref cbc:ActualPickupTime ?
+    ref cbc:EarliestPickupDate ?
+    ref cbc:EarliestPickupTime ?
+    ref cbc:LatestPickupDate ?
+    ref cbc:LatestPickupTime ?
+    ref cac:PickupLocation ?
+    ref cac:PickupParty ?
+  type PowerOfAttorneyType
+    ref cbc:ID ?
+    ref cbc:IssueDate ?
+    ref cbc:IssueTime ?
+    ref cbc:Description *
+    ref cac:NotaryParty ?
+    ref cac:AgentParty
+    ref cac:WitnessParty *
+    ref cac:MandateDocumentReference *
+  type PriceType
+    ref cbc:PriceAmount
+    ref cbc:BaseQuantity ?
+    ref cbc:PriceChangeReason *
+    ref cbc:PriceTypeCode ?
+    ref cbc:PriceType ?
+    ref cbc:OrderableUnitFactorRate ?
+    ref cac:ValidityPeriod *
+    ref cac:PriceList ?
+    ref cac:AllowanceCharge *
+    ref cac:PricingExchangeRate ?
+  type PriceExtensionType
+    ref cbc:Amount
+    ref cac:TaxTotal *
+  type PriceListType
+    ref cbc:ID ?
+    ref cbc:StatusCode ?
+    ref cac:ValidityPeriod *
+    ref cac:PreviousPriceList ?
+  type PricingReferenceType
+    ref cac:OriginalItemLocationQuantity ?
+    ref cac:AlternativeConditionPrice *
+  type ProcessJustificationType
+    ref cbc:PreviousCancellationReasonCode ?
+    ref cbc:ProcessReasonCode ?
+    ref cbc:ProcessReason *
+    ref cbc:Description *
+  type ProcurementProjectType
+    ref cbc:ID ?
+    ref cbc:Name +
+    ref cbc:Description *
+    ref cbc:ProcurementTypeCode ?
+    ref cbc:ProcurementSubTypeCode ?
+    ref cbc:QualityControlCode ?
+    ref cbc:RequiredFeeAmount ?
+    ref cbc:FeeDescription *
+    ref cbc:RequestedDeliveryDate ?
+    ref cbc:EstimatedOverallContractQuantity ?
+    ref cbc:Note *
+    ref cac:RequestedTenderTotal ?
+    ref cac:MainCommodityClassification ?
+    ref cac:AdditionalCommodityClassification *
+    ref cac:RealizedLocation *
+    ref cac:PlannedPeriod ?
+    ref cac:ContractExtension ?
+    ref cac:RequestForTenderLine *
+  type ProcurementProjectLotType
+    ref cbc:ID
+    ref cac:TenderingTerms ?
+    ref cac:ProcurementProject ?
+  type ProjectReferenceType
+    ref cbc:ID
+    ref cbc:UUID ?
+    ref cbc:IssueDate ?
+    ref cac:WorkPhaseReference *
+  type PromotionalEventType
+    ref cbc:PromotionalEventTypeCode
+    ref cbc:SubmissionDate ?
+    ref cbc:FirstShipmentAvailibilityDate ?
+    ref cbc:LatestProposalAcceptanceDate ?
+    ref cac:PromotionalSpecification +
+  type PromotionalEventLineItemType
+    ref cbc:Amount
+    ref cac:EventLineItem
+  type PromotionalSpecificationType
+    ref cbc:SpecificationID ?
+    ref cac:PromotionalEventLineItem +
+    ref cac:EventTactic *
+  type QualificationResolutionType
+    ref cbc:AdmissionCode
+    ref cbc:ExclusionReason *
+    ref cbc:Resolution *
+    ref cbc:ResolutionDate
+    ref cbc:ResolutionTime ?
+    ref cac:ProcurementProjectLot ?
+  type QualifyingPartyType
+    ref cbc:ParticipationPercent ?
+    ref cbc:PersonalSituation *
+    ref cbc:OperatingYearsQuantity ?
+    ref cbc:EmployeeQuantity ?
+    ref cbc:BusinessClassificationEvidenceID ?
+    ref cbc:BusinessIdentityEvidenceID ?
+    ref cbc:TendererRoleCode ?
+    ref cac:BusinessClassificationScheme ?
+    ref cac:TechnicalCapability *
+    ref cac:FinancialCapability *
+    ref cac:CompletedTask *
+    ref cac:Declaration *
+    ref cac:Party ?
+    ref cac:EconomicOperatorRole ?
+  type QuotationLineType
+    ref cbc:ID ?
+    ref cbc:Note *
+    ref cbc:Quantity ?
+    ref cbc:LineExtensionAmount ?
+    ref cbc:TotalTaxAmount ?
+    ref cbc:RequestForQuotationLineID ?
+    ref cac:DocumentReference *
+    ref cac:LineItem
+    ref cac:SellerProposedSubstituteLineItem *
+    ref cac:AlternativeLineItem *
+    ref cac:RequestLineReference ?
+  type RailTransportType
+    ref cbc:TrainID
+    ref cbc:RailCarID ?
+  type ReceiptLineType
+    ref cbc:ID
+    ref cbc:UUID ?
+    ref cbc:Note *
+    ref cbc:ReceivedQuantity ?
+    ref cbc:ShortQuantity ?
+    ref cbc:ShortageActionCode ?
+    ref cbc:RejectedQuantity ?
+    ref cbc:RejectReasonCode ?
+    ref cbc:RejectReason *
+    ref cbc:RejectActionCode ?
+    ref cbc:QuantityDiscrepancyCode ?
+    ref cbc:OversupplyQuantity ?
+    ref cbc:ReceivedDate ?
+    ref cbc:TimingComplaintCode ?
+    ref cbc:TimingComplaint ?
+    ref cac:OrderLineReference ?
+    ref cac:DespatchLineReference *
+    ref cac:DocumentReference *
+    ref cac:Item *
+    ref cac:Shipment *
+  type RegulationType
+    ref cbc:Name
+    ref cbc:LegalReference ?
+    ref cbc:OntologyURI ?
+  type RelatedItemType
+    ref cbc:ID ?
+    ref cbc:Quantity ?
+    ref cbc:Description *
+  type ReminderLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:UUID ?
+    ref cbc:BalanceBroughtForwardIndicator ?
+    ref cbc:DebitLineAmount ?
+    ref cbc:CreditLineAmount ?
+    ref cbc:AccountingCostCode ?
+    ref cbc:AccountingCost ?
+    ref cbc:PenaltySurchargePercent ?
+    ref cbc:Amount ?
+    ref cbc:PaymentPurposeCode ?
+    ref cac:ReminderPeriod *
+    ref cac:BillingReference *
+    ref cac:ExchangeRate ?
+  type RemittanceAdviceLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:UUID ?
+    ref cbc:DebitLineAmount ?
+    ref cbc:CreditLineAmount ?
+    ref cbc:BalanceAmount ?
+    ref cbc:PaymentPurposeCode ?
+    ref cbc:InvoicingPartyReference ?
+    ref cac:AccountingSupplierParty ?
+    ref cac:AccountingCustomerParty ?
+    ref cac:BuyerCustomerParty ?
+    ref cac:SellerSupplierParty ?
+    ref cac:OriginatorCustomerParty ?
+    ref cac:PayeeParty ?
+    ref cac:InvoicePeriod *
+    ref cac:BillingReference *
+    ref cac:DocumentReference *
+    ref cac:ExchangeRate ?
+  type RenewalType
+    ref cbc:Amount ?
+    ref cac:Period ?
+  type RequestForQuotationLineType
+    ref cbc:ID ?
+    ref cbc:UUID ?
+    ref cbc:Note *
+    ref cbc:OptionalLineItemIndicator ?
+    ref cbc:PrivacyCode ?
+    ref cbc:SecurityClassificationCode ?
+    ref cac:DocumentReference *
+    ref cac:LineItem
+  type RequestForTenderLineType
+    ref cbc:ID ?
+    ref cbc:UUID ?
+    ref cbc:Note *
+    ref cbc:Quantity ?
+    ref cbc:MinimumQuantity ?
+    ref cbc:MaximumQuantity ?
+    ref cbc:TaxIncludedIndicator ?
+    ref cbc:MinimumAmount ?
+    ref cbc:MaximumAmount ?
+    ref cbc:EstimatedAmount ?
+    ref cac:DocumentReference *
+    ref cac:DeliveryPeriod *
+    ref cac:RequiredItemLocationQuantity *
+    ref cac:WarrantyValidityPeriod ?
+    ref cac:Item
+    ref cac:SubRequestForTenderLine *
+  type RequestedTenderTotalType
+    ref cbc:EstimatedOverallContractAmount ?
+    ref cbc:TotalAmount ?
+    ref cbc:TaxIncludedIndicator ?
+    ref cbc:MinimumAmount ?
+    ref cbc:MaximumAmount ?
+    ref cbc:MonetaryScope *
+    ref cbc:AverageSubsequentContractAmount ?
+    ref cac:ApplicableTaxCategory *
+  type ResponseType
+    ref cbc:ReferenceID ?
+    ref cbc:ResponseCode ?
+    ref cbc:Description *
+    ref cbc:EffectiveDate ?
+    ref cbc:EffectiveTime ?
+    ref cac:Status *
+  type ResultOfVerificationType
+    ref cbc:ValidatorID ?
+    ref cbc:ValidationResultCode ?
+    ref cbc:ValidationDate ?
+    ref cbc:ValidationTime ?
+    ref cbc:ValidateProcess ?
+    ref cbc:ValidateTool ?
+    ref cbc:ValidateToolVersion ?
+    ref cac:SignatoryParty ?
+  type RetailPlannedImpactType
+    ref cbc:Amount
+    ref cbc:ForecastPurposeCode
+    ref cbc:ForecastTypeCode
+    ref cac:Period ?
+  type RoadTransportType
+    ref cbc:LicensePlateID
+  type SalesItemType
+    ref cbc:Quantity
+    ref cac:ActivityProperty *
+    ref cac:TaxExclusivePrice *
+    ref cac:TaxInclusivePrice *
+    ref cac:Item
+  type SecondaryHazardType
+    ref cbc:ID ?
+    ref cbc:PlacardNotation ?
+    ref cbc:PlacardEndorsement ?
+    ref cbc:EmergencyProceduresCode ?
+    ref cbc:Extension *
+  type ServiceFrequencyType
+    ref cbc:WeekDayCode
+  type ServiceProviderPartyType
+    ref cbc:ID ?
+    ref cbc:ServiceTypeCode ?
+    ref cbc:ServiceType *
+    ref cac:Party
+    ref cac:SellerContact ?
+  type ShareholderPartyType
+    ref cbc:PartecipationPercent ?
+    ref cac:Party ?
+  type ShipmentType
+    ref cbc:ID
+    ref cbc:ShippingPriorityLevelCode ?
+    ref cbc:HandlingCode ?
+    ref cbc:HandlingInstructions *
+    ref cbc:Information *
+    ref cbc:GrossWeightMeasure ?
+    ref cbc:NetWeightMeasure ?
+    ref cbc:NetNetWeightMeasure ?
+    ref cbc:GrossVolumeMeasure ?
+    ref cbc:NetVolumeMeasure ?
+    ref cbc:TotalGoodsItemQuantity ?
+    ref cbc:TotalTransportHandlingUnitQuantity ?
+    ref cbc:InsuranceValueAmount ?
+    ref cbc:DeclaredCustomsValueAmount ?
+    ref cbc:DeclaredForCarriageValueAmount ?
+    ref cbc:DeclaredStatisticsValueAmount ?
+    ref cbc:FreeOnBoardValueAmount ?
+    ref cbc:SpecialInstructions *
+    ref cbc:DeliveryInstructions *
+    ref cbc:SplitConsignmentIndicator ?
+    ref cbc:ConsignmentQuantity ?
+    ref cac:Consignment *
+    ref cac:GoodsItem *
+    ref cac:ShipmentStage *
+    ref cac:Delivery ?
+    ref cac:TransportHandlingUnit *
+    ref cac:ReturnAddress ?
+    ref cac:OriginAddress ?
+    ref cac:FirstArrivalPortLocation ?
+    ref cac:LastExitPortLocation ?
+    ref cac:ExportCountry ?
+    ref cac:FreightAllowanceCharge *
+  type ShipmentStageType
+    ref cbc:ID ?
+    ref cbc:TransportModeCode ?
+    ref cbc:TransportMeansTypeCode ?
+    ref cbc:TransitDirectionCode ?
+    ref cbc:PreCarriageIndicator ?
+    ref cbc:OnCarriageIndicator ?
+    ref cbc:EstimatedDeliveryDate ?
+    ref cbc:EstimatedDeliveryTime ?
+    ref cbc:RequiredDeliveryDate ?
+    ref cbc:RequiredDeliveryTime ?
+    ref cbc:LoadingSequenceID ?
+    ref cbc:SuccessiveSequenceID ?
+    ref cbc:Instructions *
+    ref cbc:DemurrageInstructions *
+    ref cbc:CrewQuantity ?
+    ref cbc:PassengerQuantity ?
+    ref cac:TransitPeriod ?
+    ref cac:CarrierParty *
+    ref cac:TransportMeans ?
+    ref cac:LoadingPortLocation ?
+    ref cac:UnloadingPortLocation ?
+    ref cac:TransshipPortLocation ?
+    ref cac:LoadingTransportEvent ?
+    ref cac:ExaminationTransportEvent ?
+    ref cac:AvailabilityTransportEvent ?
+    ref cac:ExportationTransportEvent ?
+    ref cac:DischargeTransportEvent ?
+    ref cac:WarehousingTransportEvent ?
+    ref cac:TakeoverTransportEvent ?
+    ref cac:OptionalTakeoverTransportEvent ?
+    ref cac:DropoffTransportEvent ?
+    ref cac:ActualPickupTransportEvent ?
+    ref cac:DeliveryTransportEvent ?
+    ref cac:ReceiptTransportEvent ?
+    ref cac:StorageTransportEvent ?
+    ref cac:AcceptanceTransportEvent ?
+    ref cac:TerminalOperatorParty ?
+    ref cac:CustomsAgentParty ?
+    ref cac:EstimatedTransitPeriod ?
+    ref cac:FreightAllowanceCharge *
+    ref cac:FreightChargeLocation ?
+    ref cac:DetentionTransportEvent *
+    ref cac:RequestedDepartureTransportEvent ?
+    ref cac:RequestedArrivalTransportEvent ?
+    ref cac:RequestedWaypointTransportEvent *
+    ref cac:PlannedDepartureTransportEvent ?
+    ref cac:PlannedArrivalTransportEvent ?
+    ref cac:PlannedWaypointTransportEvent *
+    ref cac:ActualDepartureTransportEvent ?
+    ref cac:ActualWaypointTransportEvent ?
+    ref cac:ActualArrivalTransportEvent ?
+    ref cac:TransportEvent *
+    ref cac:EstimatedDepartureTransportEvent ?
+    ref cac:EstimatedArrivalTransportEvent ?
+    ref cac:PassengerPerson *
+    ref cac:DriverPerson *
+    ref cac:ReportingPerson ?
+    ref cac:CrewMemberPerson *
+    ref cac:SecurityOfficerPerson ?
+    ref cac:MasterPerson ?
+    ref cac:ShipsSurgeonPerson ?
+  type SignatureType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:ValidationDate ?
+    ref cbc:ValidationTime ?
+    ref cbc:ValidatorID ?
+    ref cbc:CanonicalizationMethod ?
+    ref cbc:SignatureMethod ?
+    ref cac:SignatoryParty ?
+    ref cac:DigitalSignatureAttachment ?
+    ref cac:OriginalDocumentReference ?
+  type StatementLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:UUID ?
+    ref cbc:BalanceBroughtForwardIndicator ?
+    ref cbc:DebitLineAmount ?
+    ref cbc:CreditLineAmount ?
+    ref cbc:BalanceAmount ?
+    ref cbc:PaymentPurposeCode ?
+    ref cac:PaymentMeans ?
+    ref cac:PaymentTerms *
+    ref cac:BuyerCustomerParty ?
+    ref cac:SellerSupplierParty ?
+    ref cac:OriginatorCustomerParty ?
+    ref cac:AccountingCustomerParty ?
+    ref cac:AccountingSupplierParty ?
+    ref cac:PayeeParty ?
+    ref cac:InvoicePeriod *
+    ref cac:BillingReference *
+    ref cac:DocumentReference *
+    ref cac:ExchangeRate ?
+    ref cac:AllowanceCharge *
+    ref cac:CollectedPayment *
+  type StatusType
+    ref cbc:ConditionCode ?
+    ref cbc:ReferenceDate ?
+    ref cbc:ReferenceTime ?
+    ref cbc:Description *
+    ref cbc:StatusReasonCode ?
+    ref cbc:StatusReason *
+    ref cbc:SequenceID ?
+    ref cbc:Text *
+    ref cbc:IndicationIndicator ?
+    ref cbc:Percent ?
+    ref cbc:ReliabilityPercent ?
+    ref cac:Condition *
+  type StockAvailabilityReportLineType
+    ref cbc:ID
+    ref cbc:Note *
+    ref cbc:Quantity
+    ref cbc:ValueAmount ?
+    ref cbc:AvailabilityDate ?
+    ref cbc:AvailabilityStatusCode ?
+    ref cac:Item
+  type StowageType
+    ref cbc:LocationID ?
+    ref cbc:Location *
+    ref cac:MeasurementDimension *
+  type SubcontractTermsType
+    ref cbc:Rate ?
+    ref cbc:UnknownPriceIndicator ?
+    ref cbc:Description *
+    ref cbc:Amount ?
+    ref cbc:SubcontractingConditionsCode ?
+    ref cbc:MaximumPercent ?
+    ref cbc:MinimumPercent ?
+  type SubscriberConsumptionType
+    ref cbc:ConsumptionID ?
+    ref cbc:SpecificationTypeCode ?
+    ref cbc:Note *
+    ref cbc:TotalMeteredQuantity ?
+    ref cac:SubscriberParty ?
+    ref cac:UtilityConsumptionPoint
+    ref cac:OnAccountPayment *
+    ref cac:Consumption ?
+    ref cac:SupplierConsumption *
+  type SupplierConsumptionType
+    ref cbc:Description *
+    ref cac:UtilitySupplierParty ?
+    ref cac:UtilityCustomerParty ?
+    ref cac:Consumption
+    ref cac:Contract ?
+    ref cac:ConsumptionLine +
+  type SupplierPartyType
+    ref cbc:CustomerAssignedAccountID ?
+    ref cbc:AdditionalAccountID *
+    ref cbc:DataSendingCapability ?
+    ref cac:Party ?
+    ref cac:DespatchContact ?
+    ref cac:AccountingContact ?
+    ref cac:SellerContact ?
+  type TaxCategoryType
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref cbc:Percent ?
+    ref cbc:BaseUnitMeasure ?
+    ref cbc:PerUnitAmount ?
+    ref cbc:TaxExemptionReasonCode ?
+    ref cbc:TaxExemptionReason *
+    ref cbc:TierRange ?
+    ref cbc:TierRatePercent ?
+    ref cac:TaxScheme
+  type TaxSchemeType
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref cbc:TaxTypeCode ?
+    ref cbc:CurrencyCode ?
+    ref cac:JurisdictionRegionAddress *
+  type TaxSubtotalType
+    ref cbc:TaxableAmount ?
+    ref cbc:TaxAmount
+    ref cbc:CalculationSequenceNumeric ?
+    ref cbc:TransactionCurrencyTaxAmount ?
+    ref cbc:Percent ?
+    ref cbc:BaseUnitMeasure ?
+    ref cbc:PerUnitAmount ?
+    ref cbc:TierRange ?
+    ref cbc:TierRatePercent ?
+    ref cac:TaxCategory
+  type TaxTotalType
+    ref cbc:TaxAmount
+    ref cbc:RoundingAmount ?
+    ref cbc:TaxEvidenceIndicator ?
+    ref cbc:TaxIncludedIndicator ?
+    ref cac:TaxSubtotal *
+  type TelecommunicationsServiceType
+    ref cbc:ID ?
+    ref cbc:CallDate
+    ref cbc:CallTime
+    ref cbc:ServiceNumberCalled
+    ref cbc:TelecommunicationsServiceCategory ?
+    ref cbc:TelecommunicationsServiceCategoryCode ?
+    ref cbc:MovieTitle ?
+    ref cbc:RoamingPartnerName ?
+    ref cbc:PayPerView ?
+    ref cbc:Quantity ?
+    ref cbc:TelecommunicationsServiceCall ?
+    ref cbc:TelecommunicationsServiceCallCode ?
+    ref cbc:CallBaseAmount ?
+    ref cbc:CallExtensionAmount ?
+    ref cac:Price ?
+    ref cac:Country ?
+    ref cac:ExchangeRate *
+    ref cac:AllowanceCharge *
+    ref cac:TaxTotal *
+    ref cac:CallDuty *
+    ref cac:TimeDuty *
+  type TelecommunicationsSupplyType
+    ref cbc:TelecommunicationsSupplyType ?
+    ref cbc:TelecommunicationsSupplyTypeCode ?
+    ref cbc:PrivacyCode
+    ref cbc:Description *
+    ref cbc:TotalAmount ?
+    ref cac:TelecommunicationsSupplyLine +
+  type TelecommunicationsSupplyLineType
+    ref cbc:ID
+    ref cbc:PhoneNumber
+    ref cbc:Description *
+    ref cbc:LineExtensionAmount ?
+    ref cac:ExchangeRate *
+    ref cac:AllowanceCharge *
+    ref cac:TaxTotal *
+    ref cac:TelecommunicationsService +
+  type TemperatureType
+    ref cbc:AttributeID
+    ref cbc:Measure
+    ref cbc:Description *
+  type TenderLineType
+    ref cbc:ID ?
+    ref cbc:Note *
+    ref cbc:Quantity ?
+    ref cbc:LineExtensionAmount ?
+    ref cbc:TotalTaxAmount ?
+    ref cbc:OrderableUnit ?
+    ref cbc:ContentUnitQuantity ?
+    ref cbc:OrderQuantityIncrementNumeric ?
+    ref cbc:MinimumOrderQuantity ?
+    ref cbc:MaximumOrderQuantity ?
+    ref cbc:WarrantyInformation *
+    ref cbc:PackLevelCode ?
+    ref cac:DocumentReference *
+    ref cac:Item ?
+    ref cac:OfferedItemLocationQuantity *
+    ref cac:ReplacementRelatedItem *
+    ref cac:WarrantyParty ?
+    ref cac:WarrantyValidityPeriod ?
+    ref cac:SubTenderLine *
+    ref cac:CallForTendersLineReference ?
+    ref cac:CallForTendersDocumentReference ?
+  type TenderPreparationType
+    ref cbc:TenderEnvelopeID
+    ref cbc:TenderEnvelopeTypeCode ?
+    ref cbc:Description *
+    ref cbc:OpenTenderID ?
+    ref cac:ProcurementProjectLot *
+    ref cac:DocumentTenderRequirement *
+  type TenderRequirementType
+    ref cbc:Name
+    ref cbc:Description *
+    ref cac:TemplateDocumentReference ?
+  type TenderResultType
+    ref cbc:TenderResultCode ?
+    ref cbc:Description *
+    ref cbc:AdvertisementAmount ?
+    ref cbc:AwardDate
+    ref cbc:AwardTime ?
+    ref cbc:ReceivedTenderQuantity ?
+    ref cbc:LowerTenderAmount ?
+    ref cbc:HigherTenderAmount ?
+    ref cbc:StartDate ?
+    ref cbc:ReceivedElectronicTenderQuantity ?
+    ref cbc:ReceivedForeignTenderQuantity ?
+    ref cac:Contract ?
+    ref cac:AwardedTenderedProject ?
+    ref cac:ContractFormalizationPeriod ?
+    ref cac:SubcontractTerms *
+    ref cac:WinningParty *
+  type TenderedProjectType
+    ref cbc:VariantID ?
+    ref cbc:FeeAmount ?
+    ref cbc:FeeDescription *
+    ref cbc:TenderEnvelopeID ?
+    ref cbc:TenderEnvelopeTypeCode ?
+    ref cac:ProcurementProjectLot ?
+    ref cac:EvidenceDocumentReference *
+    ref cac:TaxTotal *
+    ref cac:LegalMonetaryTotal ?
+    ref cac:TenderLine *
+    ref cac:AwardingCriterionResponse *
+  type TendererPartyQualificationType
+    ref cac:InterestedProcurementProjectLot *
+    ref cac:MainQualifyingParty
+    ref cac:AdditionalQualifyingParty *
+  type TendererQualificationRequestType
+    ref cbc:CompanyLegalFormCode ?
+    ref cbc:CompanyLegalForm ?
+    ref cbc:PersonalSituation *
+    ref cbc:OperatingYearsQuantity ?
+    ref cbc:EmployeeQuantity ?
+    ref cbc:Description *
+    ref cac:RequiredBusinessClassificationScheme *
+    ref cac:TechnicalEvaluationCriterion *
+    ref cac:FinancialEvaluationCriterion *
+    ref cac:SpecificTendererRequirement *
+    ref cac:EconomicOperatorRole *
+  type TendererRequirementType
+    ref cbc:Name *
+    ref cbc:TendererRequirementTypeCode ?
+    ref cbc:Description *
+    ref cbc:LegalReference ?
+    ref cac:SuggestedEvidence *
+  type TenderingProcessType
+    ref cbc:ID ?
+    ref cbc:OriginalContractingSystemID ?
+    ref cbc:Description *
+    ref cbc:NegotiationDescription *
+    ref cbc:ProcedureCode ?
+    ref cbc:UrgencyCode ?
+    ref cbc:ExpenseCode ?
+    ref cbc:PartPresentationCode ?
+    ref cbc:ContractingSystemCode ?
+    ref cbc:SubmissionMethodCode ?
+    ref cbc:CandidateReductionConstraintIndicator ?
+    ref cbc:GovernmentAgreementConstraintIndicator ?
+    ref cac:DocumentAvailabilityPeriod ?
+    ref cac:TenderSubmissionDeadlinePeriod ?
+    ref cac:InvitationSubmissionPeriod ?
+    ref cac:ParticipationRequestReceptionPeriod ?
+    ref cac:NoticeDocumentReference *
+    ref cac:AdditionalDocumentReference *
+    ref cac:ProcessJustification *
+    ref cac:EconomicOperatorShortList ?
+    ref cac:OpenTenderEvent *
+    ref cac:AuctionTerms ?
+    ref cac:FrameworkAgreement ?
+  type TenderingTermsType
+    ref cbc:AwardingMethodTypeCode ?
+    ref cbc:PriceEvaluationCode ?
+    ref cbc:MaximumVariantQuantity ?
+    ref cbc:VariantConstraintIndicator ?
+    ref cbc:AcceptedVariantsDescription *
+    ref cbc:PriceRevisionFormulaDescription *
+    ref cbc:FundingProgramCode ?
+    ref cbc:FundingProgram *
+    ref cbc:MaximumAdvertisementAmount ?
+    ref cbc:Note *
+    ref cbc:PaymentFrequencyCode ?
+    ref cbc:EconomicOperatorRegistryURI ?
+    ref cbc:RequiredCurriculaIndicator ?
+    ref cbc:OtherConditionsIndicator ?
+    ref cbc:AdditionalConditions *
+    ref cbc:LatestSecurityClearanceDate ?
+    ref cbc:DocumentationFeeAmount ?
+    ref cac:PenaltyClause *
+    ref cac:RequiredFinancialGuarantee *
+    ref cac:ProcurementLegislationDocumentReference ?
+    ref cac:FiscalLegislationDocumentReference ?
+    ref cac:EnvironmentalLegislationDocumentReference ?
+    ref cac:EmploymentLegislationDocumentReference ?
+    ref cac:ContractualDocumentReference *
+    ref cac:CallForTendersDocumentReference ?
+    ref cac:WarrantyValidityPeriod ?
+    ref cac:PaymentTerms *
+    ref cac:TendererQualificationRequest *
+    ref cac:AllowedSubcontractTerms *
+    ref cac:TenderPreparation *
+    ref cac:ContractExecutionRequirement *
+    ref cac:AwardingTerms ?
+    ref cac:AdditionalInformationParty ?
+    ref cac:DocumentProviderParty ?
+    ref cac:TenderRecipientParty ?
+    ref cac:ContractResponsibleParty ?
+    ref cac:TenderEvaluationParty *
+    ref cac:TenderValidityPeriod ?
+    ref cac:ContractAcceptancePeriod ?
+    ref cac:AppealTerms ?
+    ref cac:Language *
+    ref cac:BudgetAccountLine *
+    ref cac:ReplacedNoticeDocumentReference ?
+  type TradeFinancingType
+    ref cbc:ID ?
+    ref cbc:FinancingInstrumentCode ?
+    ref cac:ContractDocumentReference ?
+    ref cac:DocumentReference *
+    ref cac:FinancingParty
+    ref cac:FinancingFinancialAccount ?
+    ref cac:Clause *
+  type TradingTermsType
+    ref cbc:Information *
+    ref cbc:Reference ?
+    ref cac:ApplicableAddress ?
+  type TransactionConditionsType
+    ref cbc:ID ?
+    ref cbc:ActionCode ?
+    ref cbc:Description *
+    ref cac:DocumentReference *
+  type TransportEquipmentType
+    ref cbc:ID ?
+    ref cbc:ReferencedConsignmentID *
+    ref cbc:TransportEquipmentTypeCode ?
+    ref cbc:ProviderTypeCode ?
+    ref cbc:OwnerTypeCode ?
+    ref cbc:SizeTypeCode ?
+    ref cbc:DispositionCode ?
+    ref cbc:FullnessIndicationCode ?
+    ref cbc:RefrigerationOnIndicator ?
+    ref cbc:Information *
+    ref cbc:ReturnabilityIndicator ?
+    ref cbc:LegalStatusIndicator ?
+    ref cbc:AirFlowPercent ?
+    ref cbc:HumidityPercent ?
+    ref cbc:AnimalFoodApprovedIndicator ?
+    ref cbc:HumanFoodApprovedIndicator ?
+    ref cbc:DangerousGoodsApprovedIndicator ?
+    ref cbc:RefrigeratedIndicator ?
+    ref cbc:Characteristics ?
+    ref cbc:DamageRemarks *
+    ref cbc:Description *
+    ref cbc:SpecialTransportRequirements *
+    ref cbc:GrossWeightMeasure ?
+    ref cbc:GrossVolumeMeasure ?
+    ref cbc:TareWeightMeasure ?
+    ref cbc:TrackingDeviceCode ?
+    ref cbc:PowerIndicator ?
+    ref cbc:TraceID ?
+    ref cac:MeasurementDimension *
+    ref cac:TransportEquipmentSeal *
+    ref cac:MinimumTemperature ?
+    ref cac:MaximumTemperature ?
+    ref cac:ProviderParty ?
+    ref cac:LoadingProofParty ?
+    ref cac:SupplierParty ?
+    ref cac:OwnerParty ?
+    ref cac:OperatingParty ?
+    ref cac:LoadingLocation ?
+    ref cac:UnloadingLocation ?
+    ref cac:StorageLocation ?
+    ref cac:PositioningTransportEvent *
+    ref cac:QuarantineTransportEvent *
+    ref cac:DeliveryTransportEvent *
+    ref cac:PickupTransportEvent *
+    ref cac:HandlingTransportEvent *
+    ref cac:LoadingTransportEvent *
+    ref cac:TransportEvent *
+    ref cac:ApplicableTransportMeans ?
+    ref cac:HaulageTradingTerms *
+    ref cac:HazardousGoodsTransit *
+    ref cac:PackagedTransportHandlingUnit *
+    ref cac:ServiceAllowanceCharge *
+    ref cac:FreightAllowanceCharge *
+    ref cac:AttachedTransportEquipment *
+    ref cac:Delivery ?
+    ref cac:Pickup ?
+    ref cac:Despatch ?
+    ref cac:ShipmentDocumentReference *
+    ref cac:ContainedInTransportEquipment *
+    ref cac:Package *
+    ref cac:GoodsItem *
+  type TransportEquipmentSealType
+    ref cbc:ID
+    ref cbc:SealIssuerTypeCode ?
+    ref cbc:Condition ?
+    ref cbc:SealStatusCode ?
+    ref cbc:SealingPartyType ?
+  type TransportEventType
+    ref cbc:IdentificationID ?
+    ref cbc:OccurrenceDate ?
+    ref cbc:OccurrenceTime ?
+    ref cbc:TransportEventTypeCode ?
+    ref cbc:Description *
+    ref cbc:CompletionIndicator ?
+    ref cac:ReportedShipment ?
+    ref cac:CurrentStatus *
+    ref cac:Contact *
+    ref cac:Location ?
+    ref cac:Signature ?
+    ref cac:Period *
+  type TransportExecutionTermsType
+    ref cbc:TransportUserSpecialTerms *
+    ref cbc:TransportServiceProviderSpecialTerms *
+    ref cbc:ChangeConditions *
+    ref cac:PaymentTerms *
+    ref cac:DeliveryTerms *
+    ref cac:BonusPaymentTerms ?
+    ref cac:CommissionPaymentTerms ?
+    ref cac:PenaltyPaymentTerms ?
+    ref cac:EnvironmentalEmission *
+    ref cac:NotificationRequirement *
+    ref cac:ServiceChargePaymentTerms ?
+  type TransportHandlingUnitType
+    ref cbc:ID ?
+    ref cbc:TransportHandlingUnitTypeCode ?
+    ref cbc:HandlingCode ?
+    ref cbc:HandlingInstructions *
+    ref cbc:HazardousRiskIndicator ?
+    ref cbc:TotalGoodsItemQuantity ?
+    ref cbc:TotalPackageQuantity ?
+    ref cbc:DamageRemarks *
+    ref cbc:ShippingMarks *
+    ref cbc:TraceID ?
+    ref cac:HandlingUnitDespatchLine *
+    ref cac:ActualPackage *
+    ref cac:ReceivedHandlingUnitReceiptLine *
+    ref cac:TransportEquipment *
+    ref cac:TransportMeans *
+    ref cac:HazardousGoodsTransit *
+    ref cac:MeasurementDimension *
+    ref cac:MinimumTemperature ?
+    ref cac:MaximumTemperature ?
+    ref cac:GoodsItem *
+    ref cac:FloorSpaceMeasurementDimension ?
+    ref cac:PalletSpaceMeasurementDimension ?
+    ref cac:ShipmentDocumentReference *
+    ref cac:Status *
+    ref cac:CustomsDeclaration *
+    ref cac:ReferencedShipment *
+    ref cac:Package *
+  type TransportMeansType
+    ref cbc:JourneyID ?
+    ref cbc:RegistrationNationalityID ?
+    ref cbc:RegistrationNationality *
+    ref cbc:DirectionCode ?
+    ref cbc:TransportMeansTypeCode ?
+    ref cbc:TradeServiceCode ?
+    ref cac:Stowage ?
+    ref cac:AirTransport ?
+    ref cac:RoadTransport ?
+    ref cac:RailTransport ?
+    ref cac:MaritimeTransport ?
+    ref cac:OwnerParty ?
+    ref cac:MeasurementDimension *
+  type TransportScheduleType
+    ref cbc:SequenceNumeric
+    ref cbc:ReferenceDate ?
+    ref cbc:ReferenceTime ?
+    ref cbc:ReliabilityPercent ?
+    ref cbc:Remarks *
+    ref cac:StatusLocation
+    ref cac:ActualArrivalTransportEvent ?
+    ref cac:ActualDepartureTransportEvent ?
+    ref cac:EstimatedDepartureTransportEvent ?
+    ref cac:EstimatedArrivalTransportEvent ?
+    ref cac:PlannedDepartureTransportEvent ?
+    ref cac:PlannedArrivalTransportEvent ?
+  type TransportationSegmentType
+    ref cbc:SequenceNumeric
+    ref cbc:TransportExecutionPlanReferenceID ?
+    ref cac:TransportationService
+    ref cac:TransportServiceProviderParty
+    ref cac:ReferencedConsignment ?
+    ref cac:ShipmentStage *
+  type TransportationServiceType
+    ref cbc:TransportServiceCode
+    ref cbc:TariffClassCode ?
+    ref cbc:Priority ?
+    ref cbc:FreightRateClassCode ?
+    ref cbc:TransportationServiceDescription *
+    ref cbc:TransportationServiceDetailsURI ?
+    ref cbc:NominationDate ?
+    ref cbc:NominationTime ?
+    ref cbc:Name ?
+    ref cbc:SequenceNumeric ?
+    ref cac:TransportEquipment *
+    ref cac:SupportedTransportEquipment *
+    ref cac:UnsupportedTransportEquipment *
+    ref cac:CommodityClassification *
+    ref cac:SupportedCommodityClassification *
+    ref cac:UnsupportedCommodityClassification *
+    ref cac:TotalCapacityDimension ?
+    ref cac:ShipmentStage *
+    ref cac:TransportEvent *
+    ref cac:ResponsibleTransportServiceProviderParty ?
+    ref cac:EnvironmentalEmission *
+    ref cac:EstimatedDurationPeriod ?
+    ref cac:ScheduledServiceFrequency *
+  type UnstructuredPriceType
+    ref cbc:PriceAmount ?
+    ref cbc:TimeAmount ?
+  type UtilityItemType
+    ref cbc:ID
+    ref cbc:SubscriberID ?
+    ref cbc:SubscriberType ?
+    ref cbc:SubscriberTypeCode ?
+    ref cbc:Description *
+    ref cbc:PackQuantity ?
+    ref cbc:PackSizeNumeric ?
+    ref cbc:ConsumptionType ?
+    ref cbc:ConsumptionTypeCode ?
+    ref cbc:CurrentChargeType ?
+    ref cbc:CurrentChargeTypeCode ?
+    ref cbc:OneTimeChargeType ?
+    ref cbc:OneTimeChargeTypeCode ?
+    ref cac:TaxCategory ?
+    ref cac:Contract ?
+  type WebSiteAccessType
+    ref cbc:URI ?
+    ref cbc:Password
+    ref cbc:Login
+  type WinningPartyType
+    ref cbc:Rank ?
+    ref cac:Party
+  type WorkPhaseReferenceType
+    ref cbc:ID ?
+    ref cbc:WorkPhaseCode ?
+    ref cbc:WorkPhase *
+    ref cbc:ProgressPercent ?
+    ref cbc:StartDate ?
+    ref cbc:EndDate ?
+    ref cac:WorkOrderDocumentReference *
