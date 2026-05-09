@@ -530,19 +530,19 @@ impl XmlElement {
                 // With --expand, inline the matching template if found
                 if let Some(select) = self.attributes.get("select") {
                     // Check if we should expand this template
-                    if let Some(reg) = registry {
-                        if let Some(template) = reg.get(select) {
-                            // Expand: add comment and inline template content
-                            result.push_str(&format!("{indent_str}# [expanded: apply {select}]\n"));
-                            for child in &template.children {
-                                result.push_str(&child.format_yaml_like(
-                                    indent,
-                                    &FormatOpts::XSLT,
-                                    Some(reg),
-                                ));
-                            }
-                            return Some(result);
+                    if let Some(reg) = registry
+                        && let Some(template) = reg.get(select)
+                    {
+                        // Expand: add comment and inline template content
+                        result.push_str(&format!("{indent_str}# [expanded: apply {select}]\n"));
+                        for child in &template.children {
+                            result.push_str(&child.format_yaml_like(
+                                indent,
+                                &FormatOpts::XSLT,
+                                Some(reg),
+                            ));
                         }
+                        return Some(result);
                     }
                     // No expansion, just output apply
                     result.push_str(&format!("{indent_str}apply {select}\n"));
@@ -1494,8 +1494,8 @@ fn emit_complextype_child(
 ) {
     let cl = xsd_local(&child.name);
     let is_transparent = cl == "sequence"
-        && child.attributes.get("minOccurs").is_none()
-        && child.attributes.get("maxOccurs").is_none();
+        && !child.attributes.contains_key("minOccurs")
+        && !child.attributes.contains_key("maxOccurs");
     if is_transparent {
         for grandchild in &child.children {
             if let Some(s) = grandchild.format_xsd_member(indent, indent_str, registry) {
@@ -1642,10 +1642,10 @@ impl TemplateRegistry {
 
     /// Collect templates from an XmlElement tree (looks for xsl:template elements)
     fn collect_from_element(&mut self, element: &XmlElement) {
-        if element.name == "xsl:template" {
-            if let Some(match_attr) = element.attributes.get("match") {
-                self.templates.insert(match_attr.clone(), element.clone());
-            }
+        if element.name == "xsl:template"
+            && let Some(match_attr) = element.attributes.get("match")
+        {
+            self.templates.insert(match_attr.clone(), element.clone());
         }
         for child in &element.children {
             self.collect_from_element(child);
@@ -1655,10 +1655,10 @@ impl TemplateRegistry {
     /// Collect xsl:import hrefs from an element tree
     fn collect_imports(element: &XmlElement) -> Vec<String> {
         let mut imports = Vec::new();
-        if element.name == "xsl:import" || element.name == "xsl:include" {
-            if let Some(href) = element.attributes.get("href") {
-                imports.push(href.clone());
-            }
+        if (element.name == "xsl:import" || element.name == "xsl:include")
+            && let Some(href) = element.attributes.get("href")
+        {
+            imports.push(href.clone());
         }
         for child in &element.children {
             imports.extend(Self::collect_imports(child));
