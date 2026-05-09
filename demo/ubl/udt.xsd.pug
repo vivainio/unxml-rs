@@ -4,16 +4,22 @@ schema urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2 (elem
   import urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2 from CCTS_CCT_SchemaModule-2.1.xsd
   type AmountType restricts ccts-cct:AmountType
     @currencyID : xsd:normalizedString (required)
+      // The currency of the amount.
   type BinaryObjectType restricts ccts-cct:BinaryObjectType
     @mimeCode : xsd:normalizedString (required)
+      // The mime type of the binary object.
   type GraphicType restricts ccts-cct:BinaryObjectType
     @mimeCode : xsd:normalizedString (required)
+      // The mime type of the graphic object.
   type PictureType restricts ccts-cct:BinaryObjectType
     @mimeCode : xsd:normalizedString (required)
+      // The mime type of the picture object.
   type SoundType restricts ccts-cct:BinaryObjectType
     @mimeCode : xsd:normalizedString (required)
+      // The mime type of the sound object.
   type VideoType restricts ccts-cct:BinaryObjectType
     @mimeCode : xsd:normalizedString (required)
+      // The mime type of the video object.
   type CodeType extends ccts-cct:CodeType
   type DateTimeType extends xsd:dateTime
   type DateType extends xsd:date
@@ -22,6 +28,7 @@ schema urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2 (elem
   type IndicatorType extends xsd:boolean
   type MeasureType restricts ccts-cct:MeasureType
     @unitCode : xsd:normalizedString (required)
+      // The type of unit of measure.
   type NumericType extends ccts-cct:NumericType
   type ValueType extends ccts-cct:NumericType
   type PercentType extends ccts-cct:NumericType

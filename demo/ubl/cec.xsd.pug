@@ -9,19 +9,30 @@ schema urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2 
   type UBLExtensionsType
     // A container for all extensions present in the document.
     ref UBLExtension +
+      // A single extension for private use.
   element UBLExtension : UBLExtensionType
   type UBLExtensionType
     // A single extension for private use.
     ref cbc:ID ?
+      // An identifier for the Extension assigned by the creator of the extension.
     ref cbc:Name ?
+      // A name for the Extension assigned by the creator of the extension.
     ref ExtensionAgencyID ?
+      // An agency that maintains one or more Extensions.
     ref ExtensionAgencyName ?
+      // The name of the agency that maintains the Extension.
     ref ExtensionVersionID ?
+      // The version of the Extension.
     ref ExtensionAgencyURI ?
+      // A URI for the Agency that maintains the Extension.
     ref ExtensionURI ?
+      // A URI for the Extension.
     ref ExtensionReasonCode ?
+      // A code for reason the Extension is being included.
     ref ExtensionReason ?
+      // A description of the reason for the Extension.
     ref ExtensionContent
+      // The definition of the extension content.
   element ExtensionAgencyID : ExtensionAgencyIDType
   element ExtensionAgencyName : ExtensionAgencyNameType
   element ExtensionAgencyURI : ExtensionAgencyURIType

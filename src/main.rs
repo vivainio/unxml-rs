@@ -1249,6 +1249,14 @@ impl XmlElement {
                 if !text.is_empty() {
                     let clean = text.split_whitespace().collect::<Vec<_>>().join(" ");
                     result.push_str(&format!("{indent_str}// {clean}\n"));
+                } else {
+                    // UBL/CCTS-style: prose is buried in nested elements like
+                    // <ccts:Definition>...</ccts:Definition>. Pull those out.
+                    let mut prose = Vec::new();
+                    extract_doc_prose(self, &mut prose);
+                    for line in prose {
+                        result.push_str(&format!("{indent_str}// {line}\n"));
+                    }
                 }
                 Some(result)
             }
@@ -1399,13 +1407,24 @@ impl XmlElement {
 
         if let Some(r) = self.attributes.get("ref") {
             result.push_str(&format!("{indent_str}{prefix}ref {r}{occurs}{tail}\n"));
+            // Emit annotation/documentation children indented under the ref line.
+            for child in &self.children {
+                if xsd_local(&child.name) == "annotation" {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+            }
             return Some(result);
         }
         let n = self.attributes.get("name")?;
 
-        // If there's an explicit type, emit one-liner.
+        // If there's an explicit type, emit one-liner with any annotations below.
         if let Some(t) = self.attributes.get("type") {
             result.push_str(&format!("{indent_str}{prefix}{n} : {t}{occurs}{tail}\n"));
+            for child in &self.children {
+                if xsd_local(&child.name) == "annotation" {
+                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                }
+            }
             return Some(result);
         }
 
@@ -1435,6 +1454,24 @@ impl XmlElement {
 
 fn is_true(value: Option<&String>) -> bool {
     matches!(value.map(|s| s.as_str()), Some("true") | Some("1"))
+}
+
+/// Walk an xsd:documentation subtree and collect prose text from elements
+/// whose local name is "Definition" or "Description" (CCTS convention used
+/// by UBL: <ccts:Definition>A class to define ...</ccts:Definition>).
+fn extract_doc_prose(elem: &XmlElement, out: &mut Vec<String>) {
+    let local = elem.name.rsplit(':').next().unwrap_or(&elem.name);
+    if matches!(local, "Definition" | "Description") {
+        let text = elem.text_content.trim();
+        if !text.is_empty() {
+            let clean = text.split_whitespace().collect::<Vec<_>>().join(" ");
+            out.push(clean);
+            return;
+        }
+    }
+    for child in &elem.children {
+        extract_doc_prose(child, out);
+    }
 }
 
 fn xsd_local(name: &str) -> &str {

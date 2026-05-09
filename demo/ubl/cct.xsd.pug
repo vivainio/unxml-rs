@@ -3,46 +3,81 @@ schema urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2 
   ns ccts = urn:un:unece:uncefact:documentation:2
   type AmountType extends xsd:decimal
     @currencyID : xsd:normalizedString
+      // The currency of the amount.
     @currencyCodeListVersionID : xsd:normalizedString
+      // The VersionID of the UN/ECE Rec9 code list.
   type BinaryObjectType extends xsd:base64Binary
     @format : xsd:string
+      // The format of the binary content.
     @mimeCode : xsd:normalizedString
+      // The mime type of the binary object.
     @encodingCode : xsd:normalizedString
+      // Specifies the decoding algorithm of the binary object.
     @characterSetCode : xsd:normalizedString
+      // The character set of the binary object if the mime type is text.
     @uri : xsd:anyURI
+      // The Uniform Resource Identifier that identifies where the binary object is located.
     @filename : xsd:string
+      // The filename of the binary object.
   type CodeType extends xsd:normalizedString
     @listID : xsd:normalizedString
+      // The identification of a list of codes.
     @listAgencyID : xsd:normalizedString
+      // An agency that maintains one or more lists of codes.
     @listAgencyName : xsd:string
+      // The name of the agency that maintains the list of codes.
     @listName : xsd:string
+      // The name of a list of codes.
     @listVersionID : xsd:normalizedString
+      // The version of the list of codes.
     @name : xsd:string
+      // The textual equivalent of the code content component.
     @languageID : xsd:language
+      // The identifier of the language used in the code name.
     @listURI : xsd:anyURI
+      // The Uniform Resource Identifier that identifies where the code list is located.
     @listSchemeURI : xsd:anyURI
+      // The Uniform Resource Identifier that identifies where the code list scheme is located.
   type DateTimeType extends xsd:string
     @format : xsd:string
+      // The format of the date time content
   type IdentifierType extends xsd:normalizedString
     @schemeID : xsd:normalizedString
+      // The identification of the identification scheme.
     @schemeName : xsd:string
+      // The name of the identification scheme.
     @schemeAgencyID : xsd:normalizedString
+      // The identification of the agency that maintains the identification scheme.
     @schemeAgencyName : xsd:string
+      // The name of the agency that maintains the identification scheme.
     @schemeVersionID : xsd:normalizedString
+      // The version of the identification scheme.
     @schemeDataURI : xsd:anyURI
+      // The Uniform Resource Identifier that identifies where the identification scheme data is located.
     @schemeURI : xsd:anyURI
+      // The Uniform Resource Identifier that identifies where the identification scheme is located.
   type IndicatorType extends xsd:string
     @format : xsd:string
+      // Whether the indicator is numeric, textual or binary.
   type MeasureType extends xsd:decimal
     @unitCode : xsd:normalizedString
+      // The type of unit of measure.
     @unitCodeListVersionID : xsd:normalizedString
+      // The version of the measure unit code list.
   type NumericType extends xsd:decimal
     @format : xsd:string
+      // Whether the number is an integer, decimal, real number or percentage.
   type QuantityType extends xsd:decimal
     @unitCode : xsd:normalizedString
+      // The unit of the quantity
     @unitCodeListID : xsd:normalizedString
+      // The quantity unit code list.
     @unitCodeListAgencyID : xsd:normalizedString
+      // The identification of the agency that maintains the quantity unit code list
     @unitCodeListAgencyName : xsd:string
+      // The name of the agency which maintains the quantity unit code list.
   type TextType extends xsd:string
     @languageID : xsd:language
+      // The identifier of the language used in the content component.
     @languageLocaleID : xsd:normalizedString
+      // The identification of the locale of the language.
