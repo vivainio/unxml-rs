@@ -1,0 +1,48 @@
+schema urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2 (elementFormDefault=qualified)
+  ns cct = urn:un:unece:uncefact:data:specification:CoreComponentTypeSchemaModule:2
+  ns ccts = urn:un:unece:uncefact:documentation:2
+  type AmountType extends xsd:decimal
+    @currencyID : xsd:normalizedString
+    @currencyCodeListVersionID : xsd:normalizedString
+  type BinaryObjectType extends xsd:base64Binary
+    @format : xsd:string
+    @mimeCode : xsd:normalizedString
+    @encodingCode : xsd:normalizedString
+    @characterSetCode : xsd:normalizedString
+    @uri : xsd:anyURI
+    @filename : xsd:string
+  type CodeType extends xsd:normalizedString
+    @listID : xsd:normalizedString
+    @listAgencyID : xsd:normalizedString
+    @listAgencyName : xsd:string
+    @listName : xsd:string
+    @listVersionID : xsd:normalizedString
+    @name : xsd:string
+    @languageID : xsd:language
+    @listURI : xsd:anyURI
+    @listSchemeURI : xsd:anyURI
+  type DateTimeType extends xsd:string
+    @format : xsd:string
+  type IdentifierType extends xsd:normalizedString
+    @schemeID : xsd:normalizedString
+    @schemeName : xsd:string
+    @schemeAgencyID : xsd:normalizedString
+    @schemeAgencyName : xsd:string
+    @schemeVersionID : xsd:normalizedString
+    @schemeDataURI : xsd:anyURI
+    @schemeURI : xsd:anyURI
+  type IndicatorType extends xsd:string
+    @format : xsd:string
+  type MeasureType extends xsd:decimal
+    @unitCode : xsd:normalizedString
+    @unitCodeListVersionID : xsd:normalizedString
+  type NumericType extends xsd:decimal
+    @format : xsd:string
+  type QuantityType extends xsd:decimal
+    @unitCode : xsd:normalizedString
+    @unitCodeListID : xsd:normalizedString
+    @unitCodeListAgencyID : xsd:normalizedString
+    @unitCodeListAgencyName : xsd:string
+  type TextType extends xsd:string
+    @languageID : xsd:language
+    @languageLocaleID : xsd:normalizedString

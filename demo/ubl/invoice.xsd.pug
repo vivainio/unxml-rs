@@ -1,0 +1,65 @@
+schema urn:oasis:names:specification:ubl:schema:xsd:Invoice-2 (elementFormDefault=qualified)
+  xmlns = urn:oasis:names:specification:ubl:schema:xsd:Invoice-2
+  ns cac = urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2
+  ns cbc = urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2
+  ns ccts = urn:un:unece:uncefact:documentation:2
+  ns ext = urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2
+  import urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2 from ../common/UBL-CommonAggregateComponents-2.1.xsd
+  import urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2 from ../common/UBL-CommonBasicComponents-2.1.xsd
+  import urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2 from ../common/UBL-CommonExtensionComponents-2.1.xsd
+  element Invoice : InvoiceType
+  type InvoiceType
+    ref ext:UBLExtensions ?
+    ref cbc:UBLVersionID ?
+    ref cbc:CustomizationID ?
+    ref cbc:ProfileID ?
+    ref cbc:ProfileExecutionID ?
+    ref cbc:ID
+    ref cbc:CopyIndicator ?
+    ref cbc:UUID ?
+    ref cbc:IssueDate
+    ref cbc:IssueTime ?
+    ref cbc:DueDate ?
+    ref cbc:InvoiceTypeCode ?
+    ref cbc:Note *
+    ref cbc:TaxPointDate ?
+    ref cbc:DocumentCurrencyCode ?
+    ref cbc:TaxCurrencyCode ?
+    ref cbc:PricingCurrencyCode ?
+    ref cbc:PaymentCurrencyCode ?
+    ref cbc:PaymentAlternativeCurrencyCode ?
+    ref cbc:AccountingCostCode ?
+    ref cbc:AccountingCost ?
+    ref cbc:LineCountNumeric ?
+    ref cbc:BuyerReference ?
+    ref cac:InvoicePeriod *
+    ref cac:OrderReference ?
+    ref cac:BillingReference *
+    ref cac:DespatchDocumentReference *
+    ref cac:ReceiptDocumentReference *
+    ref cac:StatementDocumentReference *
+    ref cac:OriginatorDocumentReference *
+    ref cac:ContractDocumentReference *
+    ref cac:AdditionalDocumentReference *
+    ref cac:ProjectReference *
+    ref cac:Signature *
+    ref cac:AccountingSupplierParty
+    ref cac:AccountingCustomerParty
+    ref cac:PayeeParty ?
+    ref cac:BuyerCustomerParty ?
+    ref cac:SellerSupplierParty ?
+    ref cac:TaxRepresentativeParty ?
+    ref cac:Delivery *
+    ref cac:DeliveryTerms ?
+    ref cac:PaymentMeans *
+    ref cac:PaymentTerms *
+    ref cac:PrepaidPayment *
+    ref cac:AllowanceCharge *
+    ref cac:TaxExchangeRate ?
+    ref cac:PricingExchangeRate ?
+    ref cac:PaymentExchangeRate ?
+    ref cac:PaymentAlternativeExchangeRate ?
+    ref cac:TaxTotal *
+    ref cac:WithholdingTaxTotal *
+    ref cac:LegalMonetaryTotal
+    ref cac:InvoiceLine +

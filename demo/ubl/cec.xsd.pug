@@ -1,0 +1,39 @@
+schema urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2 (elementFormDefault=qualified)
+  xmlns = urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2
+  ns cbc = urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2
+  ns udt = urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2
+  import urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2 from UBL-UnqualifiedDataTypes-2.1.xsd
+  import urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2 from UBL-CommonBasicComponents-2.1.xsd
+  include UBL-ExtensionContentDataType-2.1.xsd
+  element UBLExtensions : UBLExtensionsType
+  type UBLExtensionsType
+    // A container for all extensions present in the document.
+    ref UBLExtension +
+  element UBLExtension : UBLExtensionType
+  type UBLExtensionType
+    // A single extension for private use.
+    ref cbc:ID ?
+    ref cbc:Name ?
+    ref ExtensionAgencyID ?
+    ref ExtensionAgencyName ?
+    ref ExtensionVersionID ?
+    ref ExtensionAgencyURI ?
+    ref ExtensionURI ?
+    ref ExtensionReasonCode ?
+    ref ExtensionReason ?
+    ref ExtensionContent
+  element ExtensionAgencyID : ExtensionAgencyIDType
+  element ExtensionAgencyName : ExtensionAgencyNameType
+  element ExtensionAgencyURI : ExtensionAgencyURIType
+  element ExtensionContent : ExtensionContentType
+  element ExtensionReason : ExtensionReasonType
+  element ExtensionReasonCode : ExtensionReasonCodeType
+  element ExtensionURI : ExtensionURIType
+  element ExtensionVersionID : ExtensionVersionIDType
+  type ExtensionAgencyIDType extends udt:IdentifierType
+  type ExtensionAgencyNameType extends udt:TextType
+  type ExtensionAgencyURIType extends udt:IdentifierType
+  type ExtensionReasonType extends udt:TextType
+  type ExtensionReasonCodeType extends udt:CodeType
+  type ExtensionURIType extends udt:IdentifierType
+  type ExtensionVersionIDType extends udt:IdentifierType

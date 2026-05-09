@@ -837,9 +837,8 @@ schema (elementFormDefault=qualified)
     VatFreeText : genericStringType0_70 [0..3]
     VatExemptionReasonCode : VatExReasonCodeType ?
   type VatExReasonCodeType
-    restriction capAZ09
-      minLength 1
-      maxLength 3
+    restriction xs:NMTOKEN
+      pattern [A-Za-z0-9\-]{1,20}
   type VatPointType
     choice
       VatPointDate : date
