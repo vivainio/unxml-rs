@@ -133,4 +133,61 @@ jobs:
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-wheels:
+    name: Build wheel (${{ matrix.target }})
+    strategy:
+      matrix:
+        include:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+          - target: x86_64-apple-darwin
+            os: macos-latest
+          - target: aarch64-apple-darwin
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set version from tag
+      shell: bash
+      run: |
+        cargo install cargo-edit --locked
+        cargo set-version "${GITHUB_REF#refs/tags/v}"
+
+    - name: Build wheel
+      uses: PyO3/maturin-action@v1
+      with:
+        target: ${{ matrix.target }}
+        args: --release --out dist
+        manylinux: auto
+
+    - name: Upload wheel artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: wheels-${{ matrix.target }}
+        path: dist/
+
+  publish-pypi:
+    name: Publish to PyPI
+    needs: [build-wheels]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write  # OIDC token for PyPI Trusted Publishing
+    steps:
+    - name: Download all wheels
+      uses: actions/download-artifact@v4
+      with:
+        path: dist
+        pattern: wheels-*
+        merge-multiple: true
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: dist/ 

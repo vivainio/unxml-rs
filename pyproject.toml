@@ -1,0 +1,19 @@
+[build-system]
+requires = ["maturin>=1.7,<2"]
+build-backend = "maturin"
+
+[project]
+name = "unxml-rs"
+description = "Pretty-print XML and HTML files in a light, YAML-like, readable format"
+requires-python = ">=3.10"
+readme = "README.md"
+license = { text = "MIT" }
+keywords = ["xml", "html", "yaml", "pretty-print", "cli", "parser"]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/vivainio/unxml-rs"
+Repository = "https://github.com/vivainio/unxml-rs"
+
+[tool.maturin]
+bindings = "bin"
