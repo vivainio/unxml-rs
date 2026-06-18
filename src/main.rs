@@ -10,6 +10,21 @@ use quick_xml::Reader;
 use quick_xml::events::Event;
 use scraper::{ElementRef, Html, Selector};
 
+/// Read a file as text, tolerating non-UTF-8 inputs.
+///
+/// Many real-world XML files (e.g. SAP/EDI invoice exports) are encoded as
+/// ISO-8859-1 / Latin-1 and often carry no `<?xml encoding=...?>` declaration.
+/// `fs::read_to_string` rejects any non-UTF-8 byte, so we read raw bytes and
+/// fall back to a Latin-1 decode (every byte 0x00-0xFF maps directly to the
+/// matching Unicode code point, so this never fails).
+fn read_file_lenient(file_path: &str) -> Result<String> {
+    let bytes = fs::read(file_path).with_context(|| format!("Failed to read file: {file_path}"))?;
+    Ok(match String::from_utf8(bytes) {
+        Ok(text) => text,
+        Err(e) => e.into_bytes().into_iter().map(|b| b as char).collect(),
+    })
+}
+
 #[derive(Parser)]
 #[command(name = "unxml")]
 #[command(about = "Simplify and 'flatten' XML and HTML files")]
@@ -1688,7 +1703,7 @@ impl TemplateRegistry {
         }
         processed.insert(canonical_str);
 
-        let content = fs::read_to_string(file_path)
+        let content = read_file_lenient(file_path)
             .with_context(|| format!("Failed to read file for template expansion: {file_path}"))?;
 
         let elements = parse_xml(&content)?;
@@ -1980,8 +1995,7 @@ fn process_file(
     };
 
     // Read the file
-    let content = fs::read_to_string(file_path)
-        .with_context(|| format!("Failed to read file: {file_path}"))?;
+    let content = read_file_lenient(file_path)?;
 
     process_content(
         &content,
@@ -1993,11 +2007,15 @@ fn process_file(
 }
 
 fn process_stdin(format_override: Option<&str>, opts: &FormatOpts) -> Result<String> {
-    // Read from stdin
-    let mut content = String::new();
+    // Read from stdin, tolerating non-UTF-8 input (see read_file_lenient).
+    let mut bytes = Vec::new();
     io::stdin()
-        .read_to_string(&mut content)
+        .read_to_end(&mut bytes)
         .context("Failed to read from stdin")?;
+    let content = match String::from_utf8(bytes) {
+        Ok(text) => text,
+        Err(e) => e.into_bytes().into_iter().map(|b| b as char).collect(),
+    };
 
     // Note: expand mode not supported for stdin since we need file paths for imports
     process_content(&content, "stdin", format_override, opts, None)
