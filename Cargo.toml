@@ -1,6 +1,6 @@
 [package]
 name = "unxml"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2024"
 description = "Unxml 'pretty-prints' xml and html files in light, yaml-like, readable format"
 authors = ["Ville Vainio <vivainio@gmail.com>"]

@@ -8,7 +8,19 @@ description = "Pretty-print XML and HTML files in a light, YAML-like, readable f
 requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "MIT" }
+authors = [{ name = "Ville Vainio", email = "vivainio@gmail.com" }]
 keywords = ["xml", "html", "yaml", "pretty-print", "cli", "parser"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Rust",
+    "Topic :: Text Processing :: Markup :: XML",
+    "Topic :: Text Processing :: Markup :: HTML",
+    "Topic :: Utilities",
+]
 dynamic = ["version"]
 
 [project.urls]
