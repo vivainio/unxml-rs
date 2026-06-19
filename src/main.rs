@@ -28,7 +28,7 @@ fn read_file_lenient(file_path: &str) -> Result<String> {
 #[derive(Parser)]
 #[command(name = "unxml")]
 #[command(about = "Simplify and 'flatten' XML and HTML files")]
-#[command(version = "1.0.0")]
+#[command(version)]
 struct Cli {
     /// XML or HTML files to process (supports glob patterns)
     files: Vec<String>,
