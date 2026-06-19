@@ -22,8 +22,20 @@ contexts:
     - match: '^\s*(?://.*|#\s*\[.*)$'
       scope: comment.line.unxml
 
+    # An `each X in <xpath>` loop clause -- highlight the XPath data source.
+    - match: '^\s*(each)\b'
+      captures:
+        1: keyword.control.unxml
+      push: each-tail
+
+    # `if` / `when` test clauses -- the rest of the line is an XPath expression.
+    - match: '^\s*(if|when)\b'
+      captures:
+        1: keyword.control.unxml
+      push: xpath-tail
+
     # Control / structural keywords that lead a line.
-    - match: '^\s*(if|else|each|when|choose|apply|call|copy|foreach|import|element|param|template|rule|pattern|phase|schema|active|notation|list|union|type|ns|title|mixin)\b'
+    - match: '^\s*(else|choose|apply|call|copy|foreach|import|element|param|template|rule|pattern|phase|schema|active|notation|list|union|type|ns|title|mixin)\b'
       captures:
         1: keyword.control.unxml
       push: line-tail
@@ -55,10 +67,6 @@ contexts:
     - match: '$'
       pop: true
 
-    # "in" inside an `each X in Y` clause.
-    - match: '\bin\b'
-      scope: keyword.control.unxml
-
     # Attribute list — may span multiple lines until the closing paren.
     - match: '\('
       scope: punctuation.section.parens.begin.unxml
@@ -68,15 +76,58 @@ contexts:
     - match: ':==|:=|::|='
       scope: keyword.operator.assignment.unxml
 
+    # "<- xpath" maps-from operator (xsl:value-of): highlight the XPath.
+    - match: '<-'
+      scope: keyword.operator.unxml
+      push: xpath-tail
+
     # @attr references and | union members.
     - match: '@[\w.:*-]+'
       scope: variable.parameter.unxml
-    - match: '<-|\|'
+    - match: '\|'
       scope: keyword.operator.unxml
 
     - match: '"'
       scope: punctuation.definition.string.begin.unxml
       push: dq-string
+
+  # An `each` clause line: like an XPath line but with the `in` keyword.
+  each-tail:
+    - match: '$'
+      pop: true
+    - match: '\bin\b'
+      scope: keyword.control.unxml
+    - include: xpath-body
+
+  # The remainder of a line that is an XPath expression (after <-, if, when).
+  xpath-tail:
+    - match: '$'
+      pop: true
+    - include: xpath-body
+
+  # XPath token rules, shared by the contexts above.
+  xpath-body:
+    - match: '//|/'
+      scope: punctuation.separator.path.unxml
+    - match: '!=|<=|>=|=|<|>'
+      scope: keyword.operator.comparison.unxml
+    - match: '\b(and|or|not|div|mod)\b'
+      scope: keyword.operator.logical.unxml
+    - match: '@[\w.:-]+'
+      scope: variable.parameter.unxml
+    - match: "'[^']*'"
+      scope: string.quoted.single.unxml
+    - match: '"'
+      scope: punctuation.definition.string.begin.unxml
+      push: dq-string
+    - match: '\b\d+(?:\.\d+)?\b'
+      scope: constant.numeric.unxml
+    - match: '\b[A-Za-z_][\w.-]*(?=\s*\()'
+      scope: entity.name.function.unxml
+    - match: '[A-Za-z_][\w.:-]*'
+      scope: variable.parameter.xpath.unxml
+    - match: '\*'
+      scope: keyword.operator.unxml
 
   attributes:
     - match: '\)'

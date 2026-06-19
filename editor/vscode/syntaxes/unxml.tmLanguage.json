@@ -4,10 +4,12 @@
   "scopeName": "source.unxml",
   "patterns": [
     { "include": "#comment" },
+    { "include": "#each-line" },
+    { "include": "#test-line" },
     { "include": "#keyword-line" },
     { "include": "#section-line" },
     { "include": "#tag-line" },
-    { "include": "#in-keyword" },
+    { "include": "#value-of" },
     { "include": "#attributes" },
     { "include": "#operators" },
     { "include": "#attr-ref" },
@@ -40,9 +42,50 @@
         "4": { "name": "entity.other.attribute-name.class.unxml" }
       }
     },
-    "in-keyword": {
-      "match": "\\bin\\b",
-      "name": "keyword.control.unxml"
+    "each-line": {
+      "begin": "^\\s*(each)\\b",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.unxml" }
+      },
+      "end": "$",
+      "patterns": [
+        { "match": "\\bin\\b", "name": "keyword.control.unxml" },
+        { "include": "#xpath" }
+      ]
+    },
+    "test-line": {
+      "begin": "^\\s*(if|when)\\b",
+      "beginCaptures": {
+        "1": { "name": "keyword.control.unxml" }
+      },
+      "end": "$",
+      "patterns": [
+        { "include": "#xpath" }
+      ]
+    },
+    "value-of": {
+      "begin": "<-",
+      "beginCaptures": {
+        "0": { "name": "keyword.operator.unxml" }
+      },
+      "end": "$",
+      "patterns": [
+        { "include": "#xpath" }
+      ]
+    },
+    "xpath": {
+      "patterns": [
+        { "match": "//|/", "name": "punctuation.separator.path.unxml" },
+        { "match": "!=|<=|>=|=|<|>", "name": "keyword.operator.comparison.unxml" },
+        { "match": "\\b(and|or|not|div|mod)\\b", "name": "keyword.operator.logical.unxml" },
+        { "match": "@[\\w.:-]+", "name": "variable.parameter.unxml" },
+        { "include": "#string" },
+        { "match": "'[^']*'", "name": "string.quoted.single.unxml" },
+        { "match": "\\b\\d+(?:\\.\\d+)?\\b", "name": "constant.numeric.unxml" },
+        { "match": "\\b[A-Za-z_][\\w.-]*(?=\\s*\\()", "name": "entity.name.function.unxml" },
+        { "match": "[A-Za-z_][\\w.:-]*", "name": "variable.parameter.xpath.unxml" },
+        { "match": "\\*", "name": "keyword.operator.unxml" }
+      ]
     },
     "operators": {
       "match": ":==|:=|::|=",
