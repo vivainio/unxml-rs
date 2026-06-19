@@ -32,10 +32,12 @@
       }
     },
     "tag-line": {
-      "match": "^\\s*([A-Za-z_][\\w-]*(?::[A-Za-z_][\\w.-]*)?)((?:\\.[\\w-]+)*)",
+      "match": "^\\s*(?:([A-Za-z_][\\w-]*:)([A-Za-z_][\\w.-]*)|([A-Za-z_][\\w-]*))((?:\\.[\\w-]+)*)",
       "captures": {
-        "1": { "name": "entity.name.tag.unxml" },
-        "2": { "name": "entity.other.attribute-name.class.unxml" }
+        "1": { "name": "comment.namespace.unxml" },
+        "2": { "name": "entity.name.tag.unxml" },
+        "3": { "name": "entity.name.tag.unxml" },
+        "4": { "name": "entity.other.attribute-name.class.unxml" }
       }
     },
     "in-keyword": {

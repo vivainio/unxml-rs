@@ -36,10 +36,14 @@ contexts:
       push: line-tail
 
     # An element name (with optional .class.class HTML suffixes) leading a line.
-    - match: '^\s*({{ident}})((?:\.[\w-]+)*)'
+    # The namespace prefix (e.g. "ram:") is scoped as a comment so themes render
+    # it dimmer than the local name, including the stock bat color schemes.
+    - match: '^\s*(?:([A-Za-z_][\w-]*:)([A-Za-z_][\w.-]*)|([A-Za-z_][\w-]*))((?:\.[\w-]+)*)'
       captures:
-        1: entity.name.tag.unxml
-        2: entity.other.attribute-name.class.unxml
+        1: comment.namespace.unxml
+        2: entity.name.tag.unxml
+        3: entity.name.tag.unxml
+        4: entity.other.attribute-name.class.unxml
       push: line-tail
 
     # Fallback: keep the file scoped even on odd lines.
