@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<catalog xmlns:p="urn:example:products">
+  <header>
+    <title>Spring catalog</title>
+  </header>
+  <section name="tools">
+    <item sku="A1">
+      <name>Hammer</name>
+      <price currency="EUR">12.50</price>
+      <item sku="A1-sub">Nested item should stay inside its parent, not duplicate</item>
+    </item>
+    <p:item sku="P9">
+      <name>Prefixed item matched by local name</name>
+    </p:item>
+  </section>
+  <section name="misc">
+    <item sku="B2">
+      <name>Wrench</name>
+    </item>
+  </section>
+</catalog>

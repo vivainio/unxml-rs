@@ -76,6 +76,15 @@ struct Cli {
     #[arg(long, value_delimiter = ',')]
     hide_ns: Vec<String>,
 
+    /// Render only the subtrees whose element name matches this tag, instead of
+    /// the whole document. Matching is by tag name only (no paths or
+    /// predicates): a bare name like `InvoiceLine` matches on the local name so
+    /// it ignores namespace prefixes, while a prefixed name like
+    /// `cac:InvoiceLine` matches the full name. Each matched subtree is rendered
+    /// as a top-level fragment.
+    #[arg(long)]
+    select: Option<String>,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     stdin: bool,
@@ -1969,6 +1978,33 @@ fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>) {
     }
 }
 
+/// Whether an element's tag matches a Tier-A `--select` pattern. A pattern
+/// containing a `:` matches the full prefixed name; a bare pattern matches the
+/// local name (the part after any prefix), so `InvoiceLine` finds
+/// `cac:InvoiceLine` and is robust to `--hide-ns` having stripped the prefix.
+fn name_matches_select(name: &str, pattern: &str) -> bool {
+    if pattern.contains(':') {
+        name == pattern
+    } else {
+        let local = name.rsplit(':').next().unwrap_or(name);
+        local == pattern
+    }
+}
+
+/// Collect the topmost subtrees whose element name matches `pattern` (Tier-A
+/// `--select`). Matching is by tag name only — no paths, axes, or predicates.
+/// A matched subtree is returned whole and not descended into, so a nested
+/// element of the same name doesn't also produce a separate fragment.
+fn select_subtrees<'a>(elements: &'a [XmlElement], pattern: &str, out: &mut Vec<&'a XmlElement>) {
+    for elem in elements {
+        if name_matches_select(&elem.name, pattern) {
+            out.push(elem);
+        } else {
+            select_subtrees(&elem.children, pattern, out);
+        }
+    }
+}
+
 /// True if `root` is a genuine UBL *instance* document, i.e. an unprefixed
 /// document element (e.g. `<Invoice>`, `<CreditNote>`) whose default namespace
 /// is a UBL document schema. This deliberately excludes files that merely
@@ -2218,6 +2254,7 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
     Ok(root_elements)
 }
 
+#[allow(clippy::too_many_arguments)]
 fn process_content(
     content: &str,
     file_path: &str,
@@ -2226,6 +2263,7 @@ fn process_content(
     registry: Option<&TemplateRegistry>,
     hide_ns: &HashSet<String>,
     sniff: bool,
+    select: Option<&str>,
 ) -> Result<String> {
     // Determine input format
     let format = if let Some(format_str) = format_override {
@@ -2261,10 +2299,22 @@ fn process_content(
         }
     }
 
-    // Format output
+    // Format output. With --select, render each matched subtree as a top-level
+    // fragment separated by a blank line; otherwise render every root element.
     let mut output = String::new();
-    for element in elements {
-        output.push_str(&element.format_yaml_like(0, opts, registry));
+    if let Some(pattern) = select {
+        let mut matched = Vec::new();
+        select_subtrees(&elements, pattern, &mut matched);
+        for (i, elem) in matched.iter().enumerate() {
+            if i > 0 {
+                output.push('\n');
+            }
+            output.push_str(&elem.format_yaml_like(0, opts, registry));
+        }
+    } else {
+        for element in elements {
+            output.push_str(&element.format_yaml_like(0, opts, registry));
+        }
     }
 
     Ok(output)
@@ -2277,6 +2327,7 @@ fn process_file(
     expand: bool,
     hide_ns: &HashSet<String>,
     sniff: bool,
+    select: Option<&str>,
 ) -> Result<String> {
     // Build template registry if expand mode is enabled
     let registry = if expand && opts.xslt {
@@ -2296,6 +2347,7 @@ fn process_file(
         registry.as_ref(),
         hide_ns,
         sniff,
+        select,
     )
 }
 
@@ -2304,6 +2356,7 @@ fn process_stdin(
     opts: &FormatOpts,
     hide_ns: &HashSet<String>,
     sniff: bool,
+    select: Option<&str>,
 ) -> Result<String> {
     // Read from stdin, tolerating non-UTF-8 input (see read_file_lenient).
     let mut bytes = Vec::new();
@@ -2324,6 +2377,7 @@ fn process_stdin(
         None,
         hide_ns,
         sniff,
+        select,
     )
 }
 
@@ -2394,7 +2448,13 @@ fn main() -> Result<()> {
         }
 
         // Process stdin input (no path, so nothing to autodetect from).
-        match process_stdin(cli.format.as_deref(), &opts, &hide_ns, sniff) {
+        match process_stdin(
+            cli.format.as_deref(),
+            &opts,
+            &hide_ns,
+            sniff,
+            cli.select.as_deref(),
+        ) {
             Ok(output) => emit(&output, cli.bat),
             Err(e) => {
                 eprintln!("Error processing stdin: {e}");
@@ -2478,6 +2538,7 @@ fn main() -> Result<()> {
             cli.expand,
             &hide_ns,
             sniff,
+            cli.select.as_deref(),
         ) {
             Ok(output) => combined.push_str(&output),
             Err(e) => {

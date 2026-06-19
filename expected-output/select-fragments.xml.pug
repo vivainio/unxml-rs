@@ -1,0 +1,10 @@
+item(sku="A1")
+  name = Hammer
+  price(currency="EUR") = 12.50
+  item(sku="A1-sub") = Nested item should stay inside its parent, not duplicate
+
+p:item(sku="P9")
+  name = Prefixed item matched by local name
+
+item(sku="B2")
+  name = Wrench

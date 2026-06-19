@@ -143,6 +143,12 @@ class TestRunner:
             if file_path.suffix == ".xsd":
                 cmd.append("--xsd")
 
+            # Exercise --select (Tier-A subtree selection by tag name) for files
+            # named select-*: render only the `item` subtrees as top-level
+            # fragments.
+            if file_path.name.startswith("select-"):
+                cmd.extend(["--select", "item"])
+
             # Exercise --auto (mode autodetection + UBL namespace sniffing) for
             # files named ubl-*: the instance should have cbc:/cac: hidden, while
             # a UBL-producing stylesheet keeps them.
