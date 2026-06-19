@@ -79,6 +79,58 @@ impl FormatOpts {
     };
 }
 
+/// Render Pug-style attribute parentheses for an element at the given indent.
+///
+/// Short lists stay on one line: `(a="1", b="2")`. A list whose single-line
+/// form would exceed `WRAP_WIDTH` columns wraps to one attribute per line,
+/// indented two levels deeper than the element (so it sits clearly below the
+/// children), with the closing paren attached to the last attribute. Width is
+/// the trigger rather than attribute count: a single long namespace URI should
+/// wrap even when it's the only attribute.
+///
+/// `leading_space` prefixes a space before the opening paren (used where the
+/// attributes follow already-emitted text rather than the bare element name).
+/// `col` is the number of columns already used on the current line (indent plus
+/// the element name and any text emitted before the attributes), so the width
+/// decision reflects the whole line, not just the parenthesised part.
+/// Columns used by the last (unterminated) line of `s` — i.e. characters after
+/// the final newline. Used to tell `render_attrs` how much of the line the
+/// element name has already consumed.
+fn current_col(s: &str) -> usize {
+    match s.rfind('\n') {
+        Some(i) => s.len() - i - 1,
+        None => s.len(),
+    }
+}
+
+fn render_attrs(attr_parts: &[String], col: usize, indent: usize, leading_space: bool) -> String {
+    const WRAP_WIDTH: usize = 100;
+
+    if attr_parts.is_empty() {
+        return String::new();
+    }
+
+    let sep = if leading_space { " " } else { "" };
+    let single = format!("{sep}({})", attr_parts.join(", "));
+
+    if col + single.len() <= WRAP_WIDTH {
+        return single;
+    }
+
+    let attr_indent = "  ".repeat(indent + 2);
+    let mut out = format!("{sep}(\n");
+    for (i, part) in attr_parts.iter().enumerate() {
+        out.push_str(&attr_indent);
+        out.push_str(part);
+        if i + 1 < attr_parts.len() {
+            out.push_str(",\n");
+        } else {
+            out.push(')');
+        }
+    }
+    out
+}
+
 #[derive(Debug, Clone)]
 struct XmlElement {
     name: String,
@@ -383,9 +435,8 @@ impl XmlElement {
                                 attr_parts.push(key.to_string());
                             }
 
-                            if !attr_parts.is_empty() {
-                                result.push_str(&format!("({})", attr_parts.join(", ")));
-                            }
+                            let col = current_col(&result);
+                            result.push_str(&render_attrs(&attr_parts, col, indent, false));
                         }
 
                         // Text content with = assignment
@@ -474,9 +525,8 @@ impl XmlElement {
                 attr_parts.push(key.to_string());
             }
 
-            if !attr_parts.is_empty() {
-                result.push_str(&format!("({})", attr_parts.join(", ")));
-            }
+            let col = current_col(&result);
+            result.push_str(&render_attrs(&attr_parts, col, indent, false));
         }
 
         // Text content with = assignment
@@ -527,7 +577,8 @@ impl XmlElement {
                         .iter()
                         .map(|(k, v)| format!("{k}=\"{v}\""))
                         .collect();
-                    result.push_str(&format!(" ({})", attr_str.join(", ")));
+                    let col = current_col(&result);
+                    result.push_str(&render_attrs(&attr_str, col, indent, true));
                 }
 
                 result.push('\n');

@@ -31,7 +31,12 @@ html(lang="en")
             option(value="other") = Other
         .form-group
           label(for="message") = Message:
-          textarea(id="message", name="message", placeholder="Please enter your message here...", rows="5", required)
+          textarea(
+              id="message",
+              name="message",
+              placeholder="Please enter your message here...",
+              rows="5",
+              required)
         .form-group
           input(id="newsletter", name="newsletter", type="checkbox", value="yes")
           label(for="newsletter") = Subscribe to our newsletter
