@@ -35,6 +35,10 @@ unxml --bat some.xsl     # shortcut: unxml pipes through `bat -l unxml` itself
 
 Install **JadeView** from <https://github.com/vivainio/jadeview> (download the
 `.vsix` from the [latest release](https://github.com/vivainio/jadeview/releases/latest)
-and run **Extensions: Install from VSIX…**). Files ending in `.unxml` are then
+and run **Extensions: Install from VSIX…**).
+
+With an XML/XSLT/XSD/Schematron file open, run the **Unxml: Render** command
+from the Command Palette to render the current file as `.unxml` in a new tab
+(JadeView shells out to the `unxml` binary on your `PATH`). The output is
 highlighted automatically; for other files, run **Change Language Mode** and
 pick *UnXML*.
