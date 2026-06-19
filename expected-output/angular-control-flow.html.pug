@@ -3,22 +3,23 @@ html(lang="en")
     meta(charset="UTF-8")
     meta(content="width=device-width, initial-scale=1.0", name="viewport")
     title = Angular Control Flow Test
-    style = body { 
-            font-family: Arial, sans-serif; 
-            margin: 20px;
-            line-height: 1.6;
-        }
-        .section { 
-            margin-bottom: 30px; 
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .highlight { 
-            background-color: #f0f8ff; 
-            padding: 5px;
-            border-radius: 3px;
-        }
+    style =
+      | body {
+      |             font-family: Arial, sans-serif;
+      |             margin: 20px;
+      |             line-height: 1.6;
+      |         }
+      |         .section {
+      |             margin-bottom: 30px;
+      |             padding: 15px;
+      |             border: 1px solid #ddd;
+      |             border-radius: 5px;
+      |         }
+      |         .highlight {
+      |             background-color: #f0f8ff;
+      |             padding: 5px;
+      |             border-radius: 3px;
+      |         }
   body
     h1 = Angular Control Flow Constructs Test
     .section
@@ -148,43 +149,44 @@ html(lang="en")
         h3 = Please log in to access your dashboard
         button = Sign In
         button = Create Account
-    script = // Sample data that would typically come from Angular component
-        const sampleData = {
-            user: {
-                isLoggedIn: true,
-                name: 'John Doe',
-                role: 'editor',
-                profile: {
-                    settings: {
-                        startDate: '2023-01-15'
-                    }
-                }
-            },
-            items: ['item1', 'item2', 'item3'],
-            products: [
-                { id: 1, name: 'Laptop', price: 999 },
-                { id: 2, name: 'Mouse', price: 25 },
-                { id: 3, name: 'Keyboard', price: 75 }
-            ],
-            comments: [
-                { id: 1, author: 'Alice', text: 'Great product!', date: '2024-01-01' },
-                { id: 2, author: 'Bob', text: 'Highly recommended', date: '2024-01-02' }
-            ],
-            teamMembers: [
-                { id: 1, name: 'Sarah', role: 'Lead Developer' },
-                { id: 2, name: 'Mike', role: 'Designer' },
-                { id: 3, name: 'Lisa', role: 'QA Engineer' }
-            ],
-            userPermissions: 'admin',
-            subscription: {
-                status: 'active',
-                expiryDate: '2024-12-31'
-            },
-            tasks: [
-                { id: 1, title: 'Fix login bug', priority: 'high', status: 'completed', completedDate: '2024-01-10' },
-                { id: 2, title: 'Update documentation', priority: 'medium', status: 'in-progress', progress: 75 },
-                { id: 3, title: 'Code review', priority: 'low', status: 'pending' }
-            ]
-        };
-        
-        console.log('Sample data for Angular control flow:', sampleData);
+    script =
+      | // Sample data that would typically come from Angular component
+      |         const sampleData = {
+      |             user: {
+      |                 isLoggedIn: true,
+      |                 name: 'John Doe',
+      |                 role: 'editor',
+      |                 profile: {
+      |                     settings: {
+      |                         startDate: '2023-01-15'
+      |                     }
+      |                 }
+      |             },
+      |             items: ['item1', 'item2', 'item3'],
+      |             products: [
+      |                 { id: 1, name: 'Laptop', price: 999 },
+      |                 { id: 2, name: 'Mouse', price: 25 },
+      |                 { id: 3, name: 'Keyboard', price: 75 }
+      |             ],
+      |             comments: [
+      |                 { id: 1, author: 'Alice', text: 'Great product!', date: '2024-01-01' },
+      |                 { id: 2, author: 'Bob', text: 'Highly recommended', date: '2024-01-02' }
+      |             ],
+      |             teamMembers: [
+      |                 { id: 1, name: 'Sarah', role: 'Lead Developer' },
+      |                 { id: 2, name: 'Mike', role: 'Designer' },
+      |                 { id: 3, name: 'Lisa', role: 'QA Engineer' }
+      |             ],
+      |             userPermissions: 'admin',
+      |             subscription: {
+      |                 status: 'active',
+      |                 expiryDate: '2024-12-31'
+      |             },
+      |             tasks: [
+      |                 { id: 1, title: 'Fix login bug', priority: 'high', status: 'completed', completedDate: '2024-01-10' },
+      |                 { id: 2, title: 'Update documentation', priority: 'medium', status: 'in-progress', progress: 75 },
+      |                 { id: 3, title: 'Code review', priority: 'low', status: 'pending' }
+      |             ]
+      |         };
+      |
+      |         console.log('Sample data for Angular control flow:', sampleData);

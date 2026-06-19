@@ -3,9 +3,10 @@ html(lang="en")
     meta(charset="UTF-8")
     meta(content="width=device-width, initial-scale=1.0", name="viewport")
     title = Angular Control Flow with Comments
-    style = body { font-family: Arial, sans-serif; margin: 20px; }
-        .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; }
-        .highlight { background-color: #f0f8ff; padding: 5px; }
+    style =
+      | body { font-family: Arial, sans-serif; margin: 20px; }
+      |         .section { margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; }
+      |         .highlight { background-color: #f0f8ff; padding: 5px; }
   body
     h1 = Angular Control Flow with Preservation Comments
     .section
@@ -84,16 +85,17 @@ html(lang="en")
         h3 = Please log in
         button = Sign In
         button = Create Account
-    script = // Sample data for Angular templates
-        const sampleData = {
-            user: { isLoggedIn: true, name: 'John Doe', role: 'admin' },
-            items: ['item1', 'item2'],
-            products: [
-                { id: 1, name: 'Laptop', price: 999 },
-                { id: 2, name: 'Mouse', price: 25 }
-            ],
-            users: [
-                { id: 1, name: 'Alice', email: 'alice@example.com', isActive: true },
-                { id: 2, name: 'Bob', email: 'bob@example.com', isActive: false }
-            ]
-        };
+    script =
+      | // Sample data for Angular templates
+      |         const sampleData = {
+      |             user: { isLoggedIn: true, name: 'John Doe', role: 'admin' },
+      |             items: ['item1', 'item2'],
+      |             products: [
+      |                 { id: 1, name: 'Laptop', price: 999 },
+      |                 { id: 2, name: 'Mouse', price: 25 }
+      |             ],
+      |             users: [
+      |                 { id: 1, name: 'Alice', email: 'alice@example.com', isActive: true },
+      |                 { id: 2, name: 'Bob', email: 'bob@example.com', isActive: false }
+      |             ]
+      |         };

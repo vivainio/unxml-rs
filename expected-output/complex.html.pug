@@ -140,15 +140,16 @@ html(lang="en")
       .footer-bottom
         p = © 2024 Our Company. All rights reserved.
     script(src="script.js")
-    script = // Inline JavaScript for demonstration
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('Page loaded successfully');
-            
-            // Add event listeners for cart buttons
-            document.querySelectorAll('.add-to-cart').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    const productId = e.target.getAttribute('data-product-id');
-                    alert(`Added product ${productId} to cart!`);
-                });
-            });
-        });
+    script =
+      | // Inline JavaScript for demonstration
+      |         document.addEventListener('DOMContentLoaded', function() {
+      |             console.log('Page loaded successfully');
+      |
+      |             // Add event listeners for cart buttons
+      |             document.querySelectorAll('.add-to-cart').forEach(button => {
+      |                 button.addEventListener('click', function(e) {
+      |                     const productId = e.target.getAttribute('data-product-id');
+      |                     alert(`Added product ${productId} to cart!`);
+      |                 });
+      |             });
+      |         });

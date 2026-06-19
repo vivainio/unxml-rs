@@ -103,6 +103,56 @@ fn current_col(s: &str) -> usize {
     }
 }
 
+/// Append an element's text content to a line whose element has already been
+/// rendered. Single-line text is emitted inline as ` = text`. Multi-line text
+/// is emitted as a pug-style piped block: each line prefixed with `| ` and
+/// indented one level deeper than the element, so it is clear where the value
+/// begins and ends rather than continuation lines bleeding to column zero.
+/// Does not emit a trailing newline; the caller appends one.
+fn render_text(result: &mut String, text: &str, indent: usize) {
+    if text.trim().is_empty() {
+        return;
+    }
+    if text.trim().contains('\n') {
+        // Drop fully-blank leading/trailing lines but keep the original
+        // indentation of the inner lines so we can dedent them as a block.
+        let lines: Vec<&str> = text.lines().collect();
+        let start = lines.iter().position(|l| !l.trim().is_empty()).unwrap();
+        let end = lines.iter().rposition(|l| !l.trim().is_empty()).unwrap();
+        let lines = &lines[start..=end];
+
+        // Strip the common leading whitespace shared by all non-empty lines so
+        // the block sits flush under the element, while preserving each line's
+        // relative indentation (meaningful for embedded code such as <script>).
+        let common = lines
+            .iter()
+            .filter(|l| !l.trim().is_empty())
+            .map(|l| l.len() - l.trim_start().len())
+            .min()
+            .unwrap_or(0);
+
+        let block_indent = "  ".repeat(indent + 1);
+        result.push_str(" =");
+        for line in lines {
+            result.push('\n');
+            result.push_str(&block_indent);
+            let line = if line.trim().is_empty() {
+                ""
+            } else {
+                line[common..].trim_end()
+            };
+            if line.is_empty() {
+                result.push('|');
+            } else {
+                result.push_str("| ");
+                result.push_str(line);
+            }
+        }
+    } else {
+        result.push_str(&format!(" = {}", text.trim()));
+    }
+}
+
 fn render_attrs(attr_parts: &[String], col: usize, indent: usize, leading_space: bool) -> String {
     const WRAP_WIDTH: usize = 100;
 
@@ -440,9 +490,7 @@ impl XmlElement {
                         }
 
                         // Text content with = assignment
-                        if !self.text_content.trim().is_empty() {
-                            result.push_str(&format!(" = {}", self.text_content.trim()));
-                        }
+                        render_text(&mut result, &self.text_content, indent);
 
                         result.push('\n');
 
@@ -530,9 +578,7 @@ impl XmlElement {
         }
 
         // Text content with = assignment
-        if !self.text_content.trim().is_empty() {
-            result.push_str(&format!(" = {}", self.text_content.trim()));
-        }
+        render_text(&mut result, &self.text_content, indent);
 
         result.push('\n');
 

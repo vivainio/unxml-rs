@@ -3,11 +3,12 @@ html(lang="en")
     meta(charset="UTF-8")
     meta(content="width=device-width, initial-scale=1.0", name="viewport")
     title = Contact Form
-    style = body { font-family: Arial, sans-serif; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 5px; }
-        input, textarea, select { width: 100%; padding: 8px; }
-        button { padding: 10px 20px; background: #007cba; color: white; border: none; cursor: pointer; }
+    style =
+      | body { font-family: Arial, sans-serif; }
+      |         .form-group { margin-bottom: 15px; }
+      |         label { display: block; margin-bottom: 5px; }
+      |         input, textarea, select { width: 100%; padding: 8px; }
+      |         button { padding: 10px 20px; background: #007cba; color: white; border: none; cursor: pointer; }
   body
     .container
       h1 = Contact Us
@@ -43,7 +44,8 @@ html(lang="en")
         .form-group
           button(type="submit", mat-button, mat-raised-button) = Send Message
           button(type="reset", mat-button) = Clear Form
-    script = document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Form submitted successfully!');
-        });
+    script =
+      | document.getElementById('contactForm').addEventListener('submit', function(e) {
+      |             e.preventDefault();
+      |             alert('Form submitted successfully!');
+      |         });
