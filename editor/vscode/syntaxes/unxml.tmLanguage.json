@@ -1,0 +1,102 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "UnXML",
+  "scopeName": "source.unxml",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#keyword-line" },
+    { "include": "#section-line" },
+    { "include": "#tag-line" },
+    { "include": "#in-keyword" },
+    { "include": "#attributes" },
+    { "include": "#operators" },
+    { "include": "#attr-ref" },
+    { "include": "#string" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "^\\s*(?://.*|#\\s*\\[.*)$",
+      "name": "comment.line.unxml"
+    },
+    "keyword-line": {
+      "match": "^\\s*(if|else|each|when|choose|apply|call|copy|foreach|import|element|param|template|rule|pattern|phase|schema|active|notation|list|union|type|ns|title|mixin)\\b",
+      "captures": {
+        "1": { "name": "keyword.control.unxml" }
+      }
+    },
+    "section-line": {
+      "match": "^\\s*(#)([A-Za-z_][\\w.:-]*)",
+      "captures": {
+        "1": { "name": "punctuation.definition.section.unxml" },
+        "2": { "name": "entity.name.section.unxml" }
+      }
+    },
+    "tag-line": {
+      "match": "^\\s*([A-Za-z_][\\w-]*(?::[A-Za-z_][\\w.-]*)?)((?:\\.[\\w-]+)*)",
+      "captures": {
+        "1": { "name": "entity.name.tag.unxml" },
+        "2": { "name": "entity.other.attribute-name.class.unxml" }
+      }
+    },
+    "in-keyword": {
+      "match": "\\bin\\b",
+      "name": "keyword.control.unxml"
+    },
+    "operators": {
+      "match": ":==|:=|::|=",
+      "name": "keyword.operator.assignment.unxml"
+    },
+    "attr-ref": {
+      "match": "(@[\\w.:*-]+)|(<-|\\|)",
+      "captures": {
+        "1": { "name": "variable.parameter.unxml" },
+        "2": { "name": "keyword.operator.unxml" }
+      }
+    },
+    "attributes": {
+      "begin": "\\(",
+      "beginCaptures": {
+        "0": { "name": "punctuation.section.parens.begin.unxml" }
+      },
+      "end": "\\)",
+      "endCaptures": {
+        "0": { "name": "punctuation.section.parens.end.unxml" }
+      },
+      "patterns": [
+        {
+          "match": "([\\w.:*-]+)\\s*(=)",
+          "captures": {
+            "1": { "name": "entity.other.attribute-name.unxml" },
+            "2": { "name": "keyword.operator.assignment.unxml" }
+          }
+        },
+        { "include": "#string" },
+        {
+          "match": ",",
+          "name": "punctuation.separator.unxml"
+        },
+        {
+          "match": "[\\w.:*-]+",
+          "name": "constant.language.boolean.attribute.unxml"
+        }
+      ]
+    },
+    "string": {
+      "begin": "\"",
+      "beginCaptures": {
+        "0": { "name": "punctuation.definition.string.begin.unxml" }
+      },
+      "end": "\"",
+      "endCaptures": {
+        "0": { "name": "punctuation.definition.string.end.unxml" }
+      },
+      "name": "string.quoted.double.unxml",
+      "patterns": [
+        {
+          "match": "&(?:quot|amp|lt|gt|apos);",
+          "name": "constant.character.escape.unxml"
+        }
+      ]
+    }
+  }
+}

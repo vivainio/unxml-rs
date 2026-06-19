@@ -1,0 +1,101 @@
+%YAML 1.2
+---
+# Syntax highlighting for unxml output (the Pug-like ".unxml" format).
+# Engine: Sublime Text / syntect (used by `bat`).
+#
+# Install for bat:
+#   cp editor/unxml.sublime-syntax "$(bat --config-dir)/syntaxes/"
+#   bat cache --build
+# Then: bat file.unxml   (or force with: bat -l unxml file)
+name: UnXML
+file_extensions:
+  - unxml
+scope: source.unxml
+
+variables:
+  # An element / tag name: optional ns prefix, then name, e.g. xsl:stylesheet
+  ident: '[A-Za-z_][\w-]*(?::[A-Za-z_][\w.-]*)?'
+
+contexts:
+  main:
+    # Comments emitted by the converter: "// ..." and "# [expanded: ...]"
+    - match: '^\s*(?://.*|#\s*\[.*)$'
+      scope: comment.line.unxml
+
+    # Control / structural keywords that lead a line.
+    - match: '^\s*(if|else|each|when|choose|apply|call|copy|foreach|import|element|param|template|rule|pattern|phase|schema|active|notation|list|union|type|ns|title|mixin)\b'
+      captures:
+        1: keyword.control.unxml
+      push: line-tail
+
+    # A "#name" section / named-template reference leading a line.
+    - match: '^\s*(#)({{ident}})'
+      captures:
+        1: punctuation.definition.section.unxml
+        2: entity.name.section.unxml
+      push: line-tail
+
+    # An element name (with optional .class.class HTML suffixes) leading a line.
+    - match: '^\s*({{ident}})((?:\.[\w-]+)*)'
+      captures:
+        1: entity.name.tag.unxml
+        2: entity.other.attribute-name.class.unxml
+      push: line-tail
+
+    # Fallback: keep the file scoped even on odd lines.
+    - match: '^\s*'
+      push: line-tail
+
+  # Everything after the leading token on a line: attribute lists, text, ops.
+  line-tail:
+    - match: '$'
+      pop: true
+
+    # "in" inside an `each X in Y` clause.
+    - match: '\bin\b'
+      scope: keyword.control.unxml
+
+    # Attribute list — may span multiple lines until the closing paren.
+    - match: '\('
+      scope: punctuation.section.parens.begin.unxml
+      push: attributes
+
+    # Assignment / text operators.
+    - match: ':==|:=|::|='
+      scope: keyword.operator.assignment.unxml
+
+    # @attr references and | union members.
+    - match: '@[\w.:*-]+'
+      scope: variable.parameter.unxml
+    - match: '<-|\|'
+      scope: keyword.operator.unxml
+
+    - match: '"'
+      scope: punctuation.definition.string.begin.unxml
+      push: dq-string
+
+  attributes:
+    - match: '\)'
+      scope: punctuation.section.parens.end.unxml
+      pop: true
+    - match: ','
+      scope: punctuation.separator.unxml
+    # name="..."  — the attribute name up to the '='
+    - match: '([\w.:*-]+)\s*(=)'
+      captures:
+        1: entity.other.attribute-name.unxml
+        2: keyword.operator.assignment.unxml
+    - match: '"'
+      scope: punctuation.definition.string.begin.unxml
+      push: dq-string
+    # Bare boolean attribute (no value), e.g. (required, disabled)
+    - match: '[\w.:*-]+'
+      scope: constant.language.boolean.attribute.unxml
+
+  dq-string:
+    - meta_scope: string.quoted.double.unxml
+    - match: '&(?:quot|amp|lt|gt|apos);'
+      scope: constant.character.escape.unxml
+    - match: '"'
+      scope: punctuation.definition.string.end.unxml
+      pop: true
