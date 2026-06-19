@@ -1,67 +1,65 @@
 schema (elementFormDefault=qualified)
   element Finvoice
-    type
-      MessageTransmissionDetails : MessageTransmissionDetailsType ?
-      SellerPartyDetails : SellerPartyDetailsType
-      SellerOrganisationUnitNumber : genericStringType0_35 ?
-      SellerSiteCode : genericStringType0_35 ?
-      SellerContactPersonName : genericStringType0_70 ?
-      SellerContactPersonFunction : genericStringType0_35 [0..2]
-      SellerContactPersonDepartment : genericStringType0_35 [0..2]
-      SellerCommunicationDetails : SellerCommunicationDetailsType ?
-      SellerInformationDetails : SellerInformationDetailsType ?
-      InvoiceSenderPartyDetails : InvoiceSenderPartyDetailsType ?
-      InvoiceRecipientPartyDetails : InvoiceRecipientPartyDetailsType ?
-      InvoiceRecipientOrganisationUnitNumber : genericStringType0_35 ?
-      InvoiceRecipientSiteCode : genericStringType0_35 ?
-      InvoiceRecipientContactPersonName : genericStringType0_70 ?
-      InvoiceRecipientContactPersonFunction : genericStringType0_35 [0..2]
-      InvoiceRecipientContactPersonDepartment : genericStringType0_35 [0..2]
-      InvoiceRecipientLanguageCode : LanguageCodeType ?
-      InvoiceRecipientCommunicationDetails : InvoiceRecipientCommunicationDetailsType ?
-      BuyerPartyDetails : BuyerPartyDetailsType
-      BuyerOrganisationUnitNumber : genericStringType0_35 ?
-      BuyerSiteCode : genericStringType0_35 ?
-      BuyerContactPersonName : genericStringType0_70 ?
-      BuyerContactPersonFunction : genericStringType0_35 [0..2]
-      BuyerContactPersonDepartment : genericStringType0_35 [0..2]
-      BuyerCommunicationDetails : BuyerCommunicationDetailsType ?
-      DeliveryPartyDetails : DeliveryPartyDetailsType ?
-      DeliveryOrganisationUnitNumber : genericStringType0_35 ?
-      DeliverySiteCode : genericStringType0_35 ?
-      DeliveryContactPersonName : genericStringType0_70 ?
-      DeliveryContactPersonFunction : genericStringType0_35 [0..2]
-      DeliveryContactPersonDepartment : genericStringType0_35 [0..2]
-      DeliveryCommunicationDetails : DeliveryCommunicationDetailsType ?
-      DeliveryDetails : DeliveryDetailsType ?
-      AnyPartyDetails : AnyPartyDetailsType *
-      InvoiceDetails : InvoiceDetailsType
-      PaymentCardInfo : PaymentCardInfoType ?
-      DirectDebitInfo : DirectDebitInfoType ?
-      PaymentStatusDetails : PaymentStatusDetailsType ?
-      PartialPaymentDetails : PartialPaymentDetailsType *
-      FactoringAgreementDetails : FactoringAgreementDetailsType ?
-      VirtualBankBarcode : genericStringType0_512 ?
-      InvoiceRow : InvoiceRowType +
-      SpecificationDetails : SpecificationDetailsType ?
-      EpiDetails : EpiDetailsType
-      InvoiceUrlNameText : genericStringType0_512 *
-      InvoiceUrlText : genericStringType0_512 *
-      StorageUrlText : genericStringType0_512 ?
-      LayOutIdentifier : genericStringType0_35 ?
-      InvoiceSegmentIdentifier : genericStringType0_35 ?
-      ControlChecksum : genericStringType0_512 ?
-      MessageChecksum : genericStringType0_512 ?
-      ControlStampText : genericStringType0_512 ?
-      AcceptanceStampText : genericStringType0_512 ?
-      OriginalInvoiceFormat : genericStringType0_35 ?
-      AttachmentMessageDetails : AttachmentMessageDetailsType ?
-      @Version (required)
-        type : xs:NMTOKEN
-          | 1.3
-          | 2.0
-          | 2.01
-          | 3.0
+    MessageTransmissionDetails : MessageTransmissionDetailsType ?
+    SellerPartyDetails : SellerPartyDetailsType
+    SellerOrganisationUnitNumber : genericStringType0_35 ?
+    SellerSiteCode : genericStringType0_35 ?
+    SellerContactPersonName : genericStringType0_70 ?
+    SellerContactPersonFunction : genericStringType0_35 [0..2]
+    SellerContactPersonDepartment : genericStringType0_35 [0..2]
+    SellerCommunicationDetails : SellerCommunicationDetailsType ?
+    SellerInformationDetails : SellerInformationDetailsType ?
+    InvoiceSenderPartyDetails : InvoiceSenderPartyDetailsType ?
+    InvoiceRecipientPartyDetails : InvoiceRecipientPartyDetailsType ?
+    InvoiceRecipientOrganisationUnitNumber : genericStringType0_35 ?
+    InvoiceRecipientSiteCode : genericStringType0_35 ?
+    InvoiceRecipientContactPersonName : genericStringType0_70 ?
+    InvoiceRecipientContactPersonFunction : genericStringType0_35 [0..2]
+    InvoiceRecipientContactPersonDepartment : genericStringType0_35 [0..2]
+    InvoiceRecipientLanguageCode : LanguageCodeType ?
+    InvoiceRecipientCommunicationDetails : InvoiceRecipientCommunicationDetailsType ?
+    BuyerPartyDetails : BuyerPartyDetailsType
+    BuyerOrganisationUnitNumber : genericStringType0_35 ?
+    BuyerSiteCode : genericStringType0_35 ?
+    BuyerContactPersonName : genericStringType0_70 ?
+    BuyerContactPersonFunction : genericStringType0_35 [0..2]
+    BuyerContactPersonDepartment : genericStringType0_35 [0..2]
+    BuyerCommunicationDetails : BuyerCommunicationDetailsType ?
+    DeliveryPartyDetails : DeliveryPartyDetailsType ?
+    DeliveryOrganisationUnitNumber : genericStringType0_35 ?
+    DeliverySiteCode : genericStringType0_35 ?
+    DeliveryContactPersonName : genericStringType0_70 ?
+    DeliveryContactPersonFunction : genericStringType0_35 [0..2]
+    DeliveryContactPersonDepartment : genericStringType0_35 [0..2]
+    DeliveryCommunicationDetails : DeliveryCommunicationDetailsType ?
+    DeliveryDetails : DeliveryDetailsType ?
+    AnyPartyDetails : AnyPartyDetailsType *
+    InvoiceDetails : InvoiceDetailsType
+    PaymentCardInfo : PaymentCardInfoType ?
+    DirectDebitInfo : DirectDebitInfoType ?
+    PaymentStatusDetails : PaymentStatusDetailsType ?
+    PartialPaymentDetails : PartialPaymentDetailsType *
+    FactoringAgreementDetails : FactoringAgreementDetailsType ?
+    VirtualBankBarcode : genericStringType0_512 ?
+    InvoiceRow : InvoiceRowType +
+    SpecificationDetails : SpecificationDetailsType ?
+    EpiDetails : EpiDetailsType
+    InvoiceUrlNameText : genericStringType0_512 *
+    InvoiceUrlText : genericStringType0_512 *
+    StorageUrlText : genericStringType0_512 ?
+    LayOutIdentifier : genericStringType0_35 ?
+    InvoiceSegmentIdentifier : genericStringType0_35 ?
+    ControlChecksum : genericStringType0_512 ?
+    MessageChecksum : genericStringType0_512 ?
+    ControlStampText : genericStringType0_512 ?
+    AcceptanceStampText : genericStringType0_512 ?
+    OriginalInvoiceFormat : genericStringType0_35 ?
+    AttachmentMessageDetails : AttachmentMessageDetailsType ?
+    @Version : xs:NMTOKEN (required)
+      | 1.3
+      | 2.0
+      | 2.01
+      | 3.0
   type MessageTransmissionDetailsType
     MessageSenderDetails
       type
@@ -216,14 +214,12 @@ schema (elementFormDefault=qualified)
     CountryName : genericStringType0_35 ?
     DeliveryPostofficeBoxIdentifier : genericStringType0_35 ?
   type EpiAccountIDType extends genericNMtokenType1_34
-    @IdentificationSchemeName (required)
-      type : xs:NMTOKEN
-        | IBAN
-        | BBAN
+    @IdentificationSchemeName : xs:NMTOKEN (required)
+      | IBAN
+      | BBAN
   type EpiBfiIdentifierType extends genericNMtokenType8_11
-    @IdentificationSchemeName (required)
-      type : xs:NMTOKEN
-        | BIC
+    @IdentificationSchemeName : xs:NMTOKEN (required)
+      | BIC
   type EpiDetailsType
     EpiIdentificationDetails : EpiIdentificationDetailsType
     EpiPartyDetails : EpiPartyDetailsType
@@ -255,20 +251,18 @@ schema (elementFormDefault=qualified)
     EpiPaymentMeansCode : untdid4461 ?
     EpiPaymentMeansText : genericStringType1_70 ?
   type EpiRemittanceInfoIdentifierType extends EpiRemittanceInfoIdentifierPattern
-    @IdentificationSchemeName
-      type : xs:NMTOKEN
-        | SPY
-        | ISO
+    @IdentificationSchemeName : xs:NMTOKEN
+      | SPY
+      | ISO
   type EpiRemittanceInfoIdentifierPattern
     restriction xs:NMTOKEN
       pattern ([0-9]{2,20})|(RF[0-9][0-9][0-9A-Za-z]{1,21})
   type EpiChargeType extends xs:token
-    @ChargeOption (required)
-      type : xs:NMTOKEN
-        | SHA
-        | OUR
-        | BEN
-        | SLEV
+    @ChargeOption : xs:NMTOKEN (required)
+      | SHA
+      | OUR
+      | BEN
+      | SLEV
   type InvoiceDetailsType
     InvoiceTypeCode : InvoiceTypeCodeTypeFI
     InvoiceTypeCodeUN : untdid1001 ?
@@ -678,9 +672,8 @@ schema (elementFormDefault=qualified)
     restriction xs:NMTOKEN
       pattern (REQ|QUO|ORD|ORC|INV|DEV|TES|INF|PRI|DEN|SEI|REC|RES|SDD)[0-9]{2}
   type InvoiceTypeCodeTypeFI extends InvoiceTypeCodePatternFI
-    @CodeListAgencyIdentifier
-      type : xs:NMTOKEN
-        | SPY
+    @CodeListAgencyIdentifier : xs:NMTOKEN
+      | SPY
   type InvoiceClassificationType
     ClassificationCode : genericStringType1_10 ?
     ClassificationText : genericStringType1_70 ?
@@ -771,14 +764,12 @@ schema (elementFormDefault=qualified)
     SellerBic : SellerBicType
     SellerAccountName : genericStringType1_70 ?
   type SellerAccountIDType extends genericNMtokenType2_35
-    @IdentificationSchemeName (required)
-      type : xs:NMTOKEN
-        | IBAN
-        | BBAN
+    @IdentificationSchemeName : xs:NMTOKEN (required)
+      | IBAN
+      | BBAN
   type SellerBicType extends genericNMtokenType8_11
-    @IdentificationSchemeName (required)
-      type : xs:NMTOKEN
-        | BIC
+    @IdentificationSchemeName : xs:NMTOKEN (required)
+      | BIC
   type SellerCommunicationDetailsType
     SellerPhoneNumberIdentifier : genericStringType0_35 ?
     SellerEmailaddressIdentifier : genericStringType0_70 ?
@@ -1048,9 +1039,8 @@ schema (elementFormDefault=qualified)
     restriction xs:string
       pattern [0-9]{1,15}(,[0-9]{1,6})?
   type date extends dateType
-    @Format (required)
-      type : xs:NMTOKEN
-        | CCYYMMDD
+    @Format : xs:NMTOKEN (required)
+      | CCYYMMDD
   type dateType
     restriction xs:integer
       pattern [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]

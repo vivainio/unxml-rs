@@ -90,7 +90,7 @@ cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
 
 **Test Files:**
 - `test-input/`: Sample XML and HTML files covering various scenarios
-- `expected-output/`: Expected `.pug` output files for regression testing
+- `expected-output/`: Expected `.unxml` output files for regression testing
 
 ## Development Workflow
 
