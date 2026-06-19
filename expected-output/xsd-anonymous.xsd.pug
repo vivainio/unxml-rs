@@ -1,0 +1,11 @@
+schema (elementFormDefault=qualified)
+  element Batch
+    Period : xsd:string
+    ref Sender [3..3]
+    ref Invoice *
+    @type : xsd:NMTOKEN (required)
+      | xml02
+      | xml03
+  element Sender
+    any ##any * (skip)
+    @lang : xsd:string (required)

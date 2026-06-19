@@ -1158,6 +1158,45 @@ impl XmlElement {
                     result.push_str(&body);
                     return Some(result);
                 }
+                // Anonymous nested complexType — fold its body directly under
+                // the element, dropping the redundant bare `type` line, when the
+                // type carries no extra semantics (no name, not mixed/abstract,
+                // not a complexContent/simpleContent derivation).
+                if content.len() == 1 && xsd_local(&content[0].name) == "complexType" {
+                    let ct = content[0];
+                    let ct_structural: Vec<&XmlElement> = ct
+                        .children
+                        .iter()
+                        .filter(|c| xsd_local(&c.name) != "annotation")
+                        .collect();
+                    let is_derivation = ct_structural.len() == 1
+                        && matches!(
+                            xsd_local(&ct_structural[0].name),
+                            "complexContent" | "simpleContent"
+                        );
+                    let plain = !ct.attributes.contains_key("name")
+                        && !is_true(ct.attributes.get("abstract"))
+                        && !is_true(ct.attributes.get("mixed"))
+                        && !ct.attributes.contains_key("block")
+                        && !ct.attributes.contains_key("final")
+                        && !is_derivation;
+                    if plain {
+                        result
+                            .push_str(&format!("{indent_str}{prefix}element {n}{occurs}{tail}\n"));
+                        let inner_indent = "  ".repeat(indent + 1);
+                        for ct_child in &ct.children {
+                            emit_complextype_child(
+                                ct_child,
+                                indent + 1,
+                                &inner_indent,
+                                opts,
+                                registry,
+                                &mut result,
+                            );
+                        }
+                        return Some(result);
+                    }
+                }
                 result.push_str(&format!("{indent_str}{prefix}element {n}{occurs}{tail}\n"));
                 for child in &self.children {
                     result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
@@ -1178,15 +1217,41 @@ impl XmlElement {
                 };
                 if let Some(r) = self.attributes.get("ref") {
                     result.push_str(&format!("{indent_str}@ref {r}{suffix}\n"));
-                } else if let Some(n) = self.attributes.get("name") {
-                    if let Some(t) = self.attributes.get("type") {
-                        result.push_str(&format!("{indent_str}@{n} : {t}{suffix}\n"));
-                    } else {
-                        result.push_str(&format!("{indent_str}@{n}{suffix}\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
                     }
-                } else {
-                    return None;
+                    return Some(result);
                 }
+                let n = self.attributes.get("name")?;
+                if let Some(t) = self.attributes.get("type") {
+                    result.push_str(&format!("{indent_str}@{n} : {t}{suffix}\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                    }
+                    return Some(result);
+                }
+                // Anonymous nested type — inline a simpleType the same way
+                // elements do, so an attribute restriction reads as
+                // `@name : base (required)` rather than a nested bare `type`.
+                let content: Vec<&XmlElement> = self
+                    .children
+                    .iter()
+                    .filter(|c| xsd_local(&c.name) != "annotation")
+                    .collect();
+                if content.len() == 1
+                    && xsd_local(&content[0].name) == "simpleType"
+                    && let Some((type_suffix, body)) = try_inline_simple_type(content[0], indent)
+                {
+                    result.push_str(&format!("{indent_str}@{n}{type_suffix}{suffix}\n"));
+                    result.push_str(&body);
+                    for child in &self.children {
+                        if xsd_local(&child.name) == "annotation" {
+                            result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+                        }
+                    }
+                    return Some(result);
+                }
+                result.push_str(&format!("{indent_str}@{n}{suffix}\n"));
                 for child in &self.children {
                     result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
                 }
