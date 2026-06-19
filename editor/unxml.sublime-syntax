@@ -47,6 +47,13 @@ contexts:
         2: entity.name.section.unxml
       push: line-tail
 
+    # An XSD `ref Name [m..n]` element/type reference leading a line.
+    - match: '^\s*(ref)\s+([\w][\w.:-]*)'
+      captures:
+        1: keyword.control.unxml
+        2: storage.type.unxml
+      push: line-tail
+
     # An element name (with optional .class.class HTML suffixes) leading a line.
     # The namespace prefix (e.g. "ram:") is scoped as a comment so themes render
     # it dimmer than the local name, including the stock bat color schemes.
@@ -72,9 +79,36 @@ contexts:
       scope: punctuation.section.parens.begin.unxml
       push: attributes
 
-    # Assignment / text operators.
-    - match: ':==|:=|::|='
+    # Assignment / text operators. A trailing '=' / '==' introduces a text
+    # value (element text, or an XSD default/fixed value); everything after it
+    # is literal, so route it to value-tail where the XSD rules don't apply.
+    - match: ':==|:=|::'
       scope: keyword.operator.assignment.unxml
+    - match: '==?'
+      scope: keyword.operator.assignment.unxml
+      push: value-tail
+
+    # XSD: a type reference after a colon ( name : Type ).
+    - match: '(:)\s+([\w][\w.:-]*)'
+      captures:
+        1: punctuation.separator.type.unxml
+        2: storage.type.unxml
+
+    # XSD: relationship keywords followed by a referenced name/type.
+    - match: '\b(ref|extends|restricts|substitutes|from)\s+([\w][\w.:-]*)'
+      captures:
+        1: keyword.control.unxml
+        2: storage.type.unxml
+
+    # XSD: bare modifier keywords.
+    - match: '\b(nillable|mixed)\b'
+      scope: keyword.control.unxml
+
+    # XSD: occurrence / cardinality markers ( ?  *  +  [m..n] ).
+    - match: '\[\d+\.\.(?:\d+|unbounded|\*)\]'
+      scope: keyword.operator.cardinality.unxml
+    - match: '(?<=\s)[?*+](?=\s|$)'
+      scope: keyword.operator.cardinality.unxml
 
     # "<- xpath" maps-from operator (xsl:value-of): highlight the XPath.
     - match: '<-'
@@ -87,6 +121,14 @@ contexts:
     - match: '\|'
       scope: keyword.operator.unxml
 
+    - match: '"'
+      scope: punctuation.definition.string.begin.unxml
+      push: dq-string
+
+  # A text value after '=' / '==': literal to end of line, no XSD/XPath rules.
+  value-tail:
+    - match: '$'
+      pop: true
     - match: '"'
       scope: punctuation.definition.string.begin.unxml
       push: dq-string

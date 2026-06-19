@@ -6,12 +6,17 @@
     { "include": "#comment" },
     { "include": "#each-line" },
     { "include": "#test-line" },
+    { "include": "#ref-line" },
     { "include": "#keyword-line" },
     { "include": "#section-line" },
     { "include": "#tag-line" },
     { "include": "#value-of" },
     { "include": "#attributes" },
+    { "include": "#type-ref" },
+    { "include": "#xsd-keyword" },
+    { "include": "#cardinality" },
     { "include": "#operators" },
+    { "include": "#assignment-value" },
     { "include": "#attr-ref" },
     { "include": "#string" }
   ],
@@ -41,6 +46,41 @@
         "3": { "name": "entity.name.tag.unxml" },
         "4": { "name": "entity.other.attribute-name.class.unxml" }
       }
+    },
+    "ref-line": {
+      "match": "^\\s*(ref)\\s+([\\w][\\w.:-]*)",
+      "captures": {
+        "1": { "name": "keyword.control.unxml" },
+        "2": { "name": "storage.type.unxml" }
+      }
+    },
+    "type-ref": {
+      "match": "(:)\\s+([\\w][\\w.:-]*)",
+      "captures": {
+        "1": { "name": "punctuation.separator.type.unxml" },
+        "2": { "name": "storage.type.unxml" }
+      }
+    },
+    "xsd-keyword": {
+      "patterns": [
+        {
+          "match": "\\b(ref|extends|restricts|substitutes|from)\\s+([\\w][\\w.:-]*)",
+          "captures": {
+            "1": { "name": "keyword.control.unxml" },
+            "2": { "name": "storage.type.unxml" }
+          }
+        },
+        { "match": "\\b(nillable|mixed)\\b", "name": "keyword.control.unxml" }
+      ]
+    },
+    "cardinality": {
+      "patterns": [
+        {
+          "match": "\\[\\d+\\.\\.(?:\\d+|unbounded|\\*)\\]",
+          "name": "keyword.operator.cardinality.unxml"
+        },
+        { "match": "(?<=\\s)[?*+](?=\\s|$)", "name": "keyword.operator.cardinality.unxml" }
+      ]
     },
     "each-line": {
       "begin": "^\\s*(each)\\b",
@@ -88,8 +128,18 @@
       ]
     },
     "operators": {
-      "match": ":==|:=|::|=",
+      "match": ":==|:=|::",
       "name": "keyword.operator.assignment.unxml"
+    },
+    "assignment-value": {
+      "begin": "==?",
+      "beginCaptures": {
+        "0": { "name": "keyword.operator.assignment.unxml" }
+      },
+      "end": "$",
+      "patterns": [
+        { "include": "#string" }
+      ]
     },
     "attr-ref": {
       "match": "(@[\\w.:*-]+)|(<-|\\|)",
