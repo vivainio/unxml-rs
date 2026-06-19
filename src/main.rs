@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::{self, Read};
 use std::path::Path;
@@ -57,6 +57,25 @@ struct Cli {
     #[arg(long)]
     expand: bool,
 
+    /// Autodetect the processing mode from each file's extension
+    /// (.xsl/.xslt -> xslt, .sch -> schematron, .xsd -> xsd). Without this
+    /// (and without an explicit mode flag) files render as plain XML.
+    #[arg(long)]
+    auto: bool,
+
+    /// Pipe the rendered output through `bat -l unxml` for syntax-highlighted,
+    /// paged display. Implies --auto. Falls back to plain stdout if `bat` is
+    /// not installed.
+    #[arg(long)]
+    bat: bool,
+
+    /// Hide one or more namespace prefixes from element names to cut noise,
+    /// e.g. `--hide-ns cbc,cac`. Repeatable and comma-separated. The matching
+    /// xmlns: declarations are dropped too. Under --auto/--bat, well-known
+    /// document types (e.g. UBL) also get a sensible set hidden automatically.
+    #[arg(long, value_delimiter = ',')]
+    hide_ns: Vec<String>,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     stdin: bool,
@@ -77,6 +96,12 @@ impl FormatOpts {
         schematron: false,
         xsd: false,
     };
+
+    /// True if the user explicitly selected any processing mode. When none is
+    /// set we fall back to autodetecting the mode from the file extension.
+    fn has_mode(&self) -> bool {
+        self.special || self.xslt || self.schematron || self.xsd
+    }
 }
 
 /// Render Pug-style attribute parentheses for an element at the given indent.
@@ -1896,6 +1921,94 @@ enum InputFormat {
     Html,
 }
 
+/// Pick a processing mode from a file's extension when the user hasn't forced
+/// one. Mirrors the extension->flag mapping the test suite applies:
+///   .xsl / .xslt -> --xslt,  .sch -> --schematron,  .xsd -> --xsd.
+/// `--special` is intentionally excluded: it is proprietary and selected by
+/// file name, not extension. Returns the default (no mode) for anything else.
+fn detect_mode_from_ext(file_path: &str) -> FormatOpts {
+    let ext = Path::new(file_path)
+        .extension()
+        .map(|e| e.to_string_lossy().to_lowercase())
+        .unwrap_or_default();
+    match ext.as_str() {
+        "xsl" | "xslt" => FormatOpts {
+            xslt: true,
+            ..FormatOpts::default()
+        },
+        "sch" => FormatOpts {
+            schematron: true,
+            ..FormatOpts::default()
+        },
+        "xsd" => FormatOpts {
+            xsd: true,
+            ..FormatOpts::default()
+        },
+        _ => FormatOpts::default(),
+    }
+}
+
+/// Recursively strip the given namespace prefixes from element names and drop
+/// the matching `xmlns:<prefix>` declarations. Purely cosmetic: it makes a
+/// prefix-heavy vocabulary (e.g. UBL's `cbc:`/`cac:`) read as bare local names
+/// while leaving signal-carrying prefixes (e.g. `ext:`/`bim:`) untouched.
+fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>) {
+    if let Some((pfx, local)) = elem.name.split_once(':')
+        && prefixes.contains(pfx)
+    {
+        elem.name = local.to_string();
+    }
+    // Drop the now-redundant xmlns: declarations for the hidden prefixes.
+    elem.attributes
+        .retain(|k, _| match k.strip_prefix("xmlns:") {
+            Some(pfx) => !prefixes.contains(pfx),
+            None => true,
+        });
+    for child in &mut elem.children {
+        hide_namespaces(child, prefixes);
+    }
+}
+
+/// True if `root` is a genuine UBL *instance* document, i.e. an unprefixed
+/// document element (e.g. `<Invoice>`, `<CreditNote>`) whose default namespace
+/// is a UBL document schema. This deliberately excludes files that merely
+/// *reference* UBL namespaces — an XSLT translating to/from UBL has a prefixed
+/// root (`xsl:stylesheet`) and carries literal `cbc:`/`cac:` result elements
+/// and XPath that must keep their prefixes.
+fn is_ubl_document(root: &XmlElement) -> bool {
+    const UBL_NS: &str = "urn:oasis:names:specification:ubl:schema:xsd:";
+    !root.name.contains(':')
+        && root
+            .attributes
+            .get("xmlns")
+            .is_some_and(|uri| uri.contains(UBL_NS))
+}
+
+/// Sniff well-known document types from the root elements' namespace bindings
+/// and return the set of prefixes worth hiding. Currently recognises the UBL
+/// family: for a genuine UBL instance document, any prefix bound to the
+/// CommonBasicComponents or CommonAggregateComponents namespace is returned
+/// (matched by URI, so it works regardless of the actual prefix the document
+/// chose). Non-UBL documents, and stylesheets/schemas that merely reference UBL,
+/// contribute nothing.
+fn sniff_hidden_prefixes(elements: &[XmlElement]) -> HashSet<String> {
+    const UBL_MARKERS: [&str; 2] = ["CommonBasicComponents", "CommonAggregateComponents"];
+    let mut hidden = HashSet::new();
+    for root in elements {
+        if !is_ubl_document(root) {
+            continue;
+        }
+        for (key, value) in &root.attributes {
+            if let Some(pfx) = key.strip_prefix("xmlns:")
+                && UBL_MARKERS.iter().any(|m| value.contains(m))
+            {
+                hidden.insert(pfx.to_string());
+            }
+        }
+    }
+    hidden
+}
+
 fn detect_format(content: &str, file_path: &str) -> InputFormat {
     // Check file extension first
     if let Some(extension) = Path::new(file_path).extension() {
@@ -2111,6 +2224,8 @@ fn process_content(
     format_override: Option<&str>,
     opts: &FormatOpts,
     registry: Option<&TemplateRegistry>,
+    hide_ns: &HashSet<String>,
+    sniff: bool,
 ) -> Result<String> {
     // Determine input format
     let format = if let Some(format_str) = format_override {
@@ -2129,10 +2244,22 @@ fn process_content(
     };
 
     // Parse the content based on detected/specified format
-    let elements = match format {
+    let mut elements = match format {
         InputFormat::Html => parse_html(content, &format).context("Failed to parse HTML")?,
         InputFormat::Xml => parse_xml(content).context("Failed to parse XML")?,
     };
+
+    // Build the effective set of prefixes to hide: those requested explicitly,
+    // plus any inferred by sniffing the document type (only under --auto/--bat).
+    let mut hidden = hide_ns.clone();
+    if sniff {
+        hidden.extend(sniff_hidden_prefixes(&elements));
+    }
+    if !hidden.is_empty() {
+        for element in &mut elements {
+            hide_namespaces(element, &hidden);
+        }
+    }
 
     // Format output
     let mut output = String::new();
@@ -2148,6 +2275,8 @@ fn process_file(
     format_override: Option<&str>,
     opts: &FormatOpts,
     expand: bool,
+    hide_ns: &HashSet<String>,
+    sniff: bool,
 ) -> Result<String> {
     // Build template registry if expand mode is enabled
     let registry = if expand && opts.xslt {
@@ -2165,10 +2294,17 @@ fn process_file(
         format_override,
         opts,
         registry.as_ref(),
+        hide_ns,
+        sniff,
     )
 }
 
-fn process_stdin(format_override: Option<&str>, opts: &FormatOpts) -> Result<String> {
+fn process_stdin(
+    format_override: Option<&str>,
+    opts: &FormatOpts,
+    hide_ns: &HashSet<String>,
+    sniff: bool,
+) -> Result<String> {
     // Read from stdin, tolerating non-UTF-8 input (see read_file_lenient).
     let mut bytes = Vec::new();
     io::stdin()
@@ -2180,7 +2316,53 @@ fn process_stdin(format_override: Option<&str>, opts: &FormatOpts) -> Result<Str
     };
 
     // Note: expand mode not supported for stdin since we need file paths for imports
-    process_content(&content, "stdin", format_override, opts, None)
+    process_content(
+        &content,
+        "stdin",
+        format_override,
+        opts,
+        None,
+        hide_ns,
+        sniff,
+    )
+}
+
+/// Emit rendered output, optionally through `bat` for syntax highlighting.
+/// When `use_bat` is set we pipe to `bat -l unxml`; if no `bat` binary is
+/// found we fall back to plain stdout so `--bat` degrades gracefully.
+fn emit(output: &str, use_bat: bool) {
+    if use_bat && pipe_to_bat(output) {
+        return;
+    }
+    print!("{output}");
+}
+
+/// Try to display `output` via `bat -l unxml`. Returns true if a `bat` (or
+/// `batcat`, the Debian/Ubuntu name) process was launched and handed the
+/// output, false if no such binary exists.
+fn pipe_to_bat(output: &str) -> bool {
+    use std::io::Write;
+    use std::process::{Command, Stdio};
+
+    for bin in ["bat", "batcat"] {
+        // Only stdin is piped; bat inherits our stdout/stderr so its pager
+        // draws straight to the terminal.
+        let mut child = match Command::new(bin)
+            .args(["-l", "unxml"])
+            .stdin(Stdio::piped())
+            .spawn()
+        {
+            Ok(c) => c,
+            Err(_) => continue, // binary not found — try the next name
+        };
+        if let Some(mut stdin) = child.stdin.take() {
+            // Ignore a broken pipe if the user quits the pager early.
+            let _ = stdin.write_all(output.as_bytes());
+        }
+        let _ = child.wait();
+        return true;
+    }
+    false
 }
 
 fn main() -> Result<()> {
@@ -2192,6 +2374,16 @@ fn main() -> Result<()> {
         xsd: cli.xsd,
     };
 
+    // Plain XML rendering is the default. Suffix-based mode autodetection is
+    // opt-in via `--auto` (or implied by `--bat`), and only fills in a mode
+    // when the user hasn't already forced one explicitly.
+    let autodetect = (cli.auto || cli.bat) && !opts.has_mode();
+
+    // Prefixes to hide from element names: the explicit --hide-ns list, plus
+    // (under --auto/--bat) any inferred by sniffing the document type.
+    let hide_ns: HashSet<String> = cli.hide_ns.iter().cloned().collect();
+    let sniff = cli.auto || cli.bat;
+
     // Handle stdin input
     if cli.stdin {
         // When using stdin, files should be empty
@@ -2201,9 +2393,9 @@ fn main() -> Result<()> {
             ));
         }
 
-        // Process stdin input
-        match process_stdin(cli.format.as_deref(), &opts) {
-            Ok(output) => print!("{output}"),
+        // Process stdin input (no path, so nothing to autodetect from).
+        match process_stdin(cli.format.as_deref(), &opts, &hide_ns, sniff) {
+            Ok(output) => emit(&output, cli.bat),
             Err(e) => {
                 eprintln!("Error processing stdin: {e}");
                 return Err(e);
@@ -2256,21 +2448,38 @@ fn main() -> Result<()> {
         ));
     }
 
-    // Process each file
+    // Process each file, accumulating output so it can be sent to the pager
+    // (or stdout) in one stream.
+    let multiple = all_files.len() > 1;
+    let mut combined = String::new();
     for (i, file_path) in all_files.iter().enumerate() {
-        // Add file separator comment (except for the first file)
+        // Blank separator line between files (not before the first).
         if i > 0 {
-            println!();
+            combined.push('\n');
         }
 
-        // Add file header comment only if there are multiple files
-        if all_files.len() > 1 {
-            println!("// FILE: {file_path}");
+        // File header comment only when processing more than one file.
+        if multiple {
+            combined.push_str(&format!("// FILE: {file_path}\n"));
         }
 
-        // Process and output the file
-        match process_file(file_path, cli.format.as_deref(), &opts, cli.expand) {
-            Ok(output) => print!("{output}"),
+        // When the user didn't force a mode, pick one from this file's
+        // extension; otherwise honour the explicit flags for every file.
+        let file_opts = if autodetect {
+            detect_mode_from_ext(file_path)
+        } else {
+            opts
+        };
+
+        match process_file(
+            file_path,
+            cli.format.as_deref(),
+            &file_opts,
+            cli.expand,
+            &hide_ns,
+            sniff,
+        ) {
+            Ok(output) => combined.push_str(&output),
             Err(e) => {
                 eprintln!("Error processing file '{file_path}': {e}");
                 // Continue processing other files instead of stopping
@@ -2278,5 +2487,6 @@ fn main() -> Result<()> {
         }
     }
 
+    emit(&combined, cli.bat);
     Ok(())
 }

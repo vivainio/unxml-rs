@@ -6,6 +6,20 @@ This is a Rust clone of the original [unxml](https://github.com/vivainio/unxml) 
 
 ## Installation
 
+### Using uv (Easiest)
+
+Install the published wheel from PyPI as a standalone tool:
+
+```bash
+uv tool install unxml-rs
+```
+
+This puts the `unxml` command on your PATH. To try it without installing anything:
+
+```bash
+uvx --from unxml-rs unxml <xml_file>
+```
+
 ### Pre-built Binaries (Recommended)
 
 Download the latest release for your platform from the [GitHub Releases](https://github.com/yourusername/unxml-rs/releases) page:
@@ -36,6 +50,48 @@ cargo install unxml
 ```bash
 unxml <xml_file>
 ```
+
+By default files render as plain XML. Pass `--auto` to pick the processing mode
+from each file's extension:
+
+| Extension      | Mode applied   |
+| -------------- | -------------- |
+| `.xsl` `.xslt` | `--xslt`       |
+| `.sch`         | `--schematron` |
+| `.xsd`         | `--xsd`        |
+
+An explicit mode flag (`--xslt`, `--schematron`, `--xsd`, `--special`) always
+overrides autodetection.
+
+### Syntax-highlighted output (`--bat`)
+
+```bash
+unxml --bat some.xsd      # implies --auto (detects --xsd), pipes through `bat -l unxml`
+```
+
+`--bat` renders the output through [`bat`](https://github.com/sharkdp/bat) using
+the bundled `unxml` grammar (see `editor/`) for paged, colourised display. If
+`bat` is not installed it falls back to plain stdout.
+
+### Hiding noisy namespace prefixes (`--hide-ns`)
+
+Vocabularies like UBL bury the signal under repeated prefixes (`cbc:`, `cac:`).
+`--hide-ns` drops the named prefixes from element names — and their `xmlns:`
+declarations — so the output reads as bare local names:
+
+```bash
+unxml --hide-ns cbc,cac invoice.xml   # repeatable and comma-separated
+```
+
+Signal-carrying prefixes you don't list (e.g. `ext:`, `bim:`) are kept, so an
+extension subtree still stands out.
+
+Under `--auto`/`--bat`, unxml also **sniffs** the document type and hides a
+sensible set automatically. Currently it recognises UBL *instance* documents
+(an unprefixed root such as `<Invoice>` in a UBL namespace) and hides whichever
+prefixes are bound to the Common Basic/Aggregate Components namespaces. A
+stylesheet or schema that merely *references* UBL (e.g. an `xsl:stylesheet`
+translating to UBL) is left untouched, since there the prefixes are real syntax.
 
 ## Introduction
 

@@ -36,6 +36,7 @@ Then:
 unxml some.xsl > some.unxml
 bat some.unxml            # auto-detected by extension
 unxml some.xsl | bat -l unxml   # force the language for a pipe
+unxml --bat some.xsl     # shortcut: unxml pipes through `bat -l unxml` itself
 ```
 
 ## VS Code

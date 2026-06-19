@@ -142,7 +142,13 @@ class TestRunner:
             # Add --xsd flag for .xsd files
             if file_path.suffix == ".xsd":
                 cmd.append("--xsd")
-            
+
+            # Exercise --auto (mode autodetection + UBL namespace sniffing) for
+            # files named ubl-*: the instance should have cbc:/cac: hidden, while
+            # a UBL-producing stylesheet keeps them.
+            if file_path.name.startswith("ubl-"):
+                cmd.append("--auto")
+
             cmd.append(str(file_path))
             
             result = subprocess.run(
