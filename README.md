@@ -68,6 +68,7 @@ transformations, with side-by-side samples, is documented per format:
 
 - [XSLT transformations](docs/xslt.md) — `xsl:*` stylesheets
 - [XSD transformations](docs/xsd.md) — `xs:*` / `xsd:*` schemas
+- [Schematron transformations](docs/schematron.md) — `.sch` rule schemas
 
 ### Syntax-highlighted output (`--bat`)
 
