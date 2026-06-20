@@ -166,6 +166,9 @@ contexts:
 
   # XPath token rules, shared by the contexts above.
   xpath-body:
+    # Null-coalesce: a value-of's text default ( <- X ?? "fallback" ).
+    - match: '\?\?'
+      scope: keyword.operator.unxml
     - match: '//|/'
       scope: punctuation.separator.path.unxml
     - match: '!=|<=|>=|=|<|>'

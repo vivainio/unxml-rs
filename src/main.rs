@@ -767,10 +767,24 @@ impl XmlElement {
             }
             "xsl:value-of" => {
                 // xsl:value-of(select="X") → <- X
-                // Body content (a fallback value, or an XSLT-2.0+ sequence
-                // constructor used instead of select) is rendered beneath it.
+                // A text-only default/fallback body renders inline as a null-
+                // coalesce (`<- X ?? "text"`); a body with element content (or
+                // an XSLT-2.0+ sequence constructor used instead of select) is
+                // rendered nested beneath instead.
                 let has_body = !self.nodes.is_empty();
                 if let Some(select) = self.attributes.get("select") {
+                    // A text-only default (no child elements) collapses inline.
+                    if self.children.is_empty() {
+                        let text = self
+                            .text_content
+                            .split_whitespace()
+                            .collect::<Vec<_>>()
+                            .join(" ");
+                        if !text.is_empty() {
+                            result.push_str(&format!("{indent_str}<- {select} ?? \"{text}\"\n"));
+                            return Some(result);
+                        }
+                    }
                     result.push_str(&format!("{indent_str}<- {select}\n"));
                 } else if has_body {
                     result.push_str(&format!("{indent_str}<-\n"));
