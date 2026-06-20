@@ -5,6 +5,9 @@
 *.tar.gz
 *.zip
 
+# Claude Code local state (settings, agent worktrees)
+.claude/
+
 # IDE files
 .vscode/
 .idea/
