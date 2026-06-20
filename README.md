@@ -4,6 +4,10 @@ Simplify and "flatten" XML files into a YAML-like readable format.
 
 This is a Rust clone of the original [unxml](https://github.com/vivainio/unxml) F# tool.
 
+**[See it in action →](https://vivainio.github.io/unxml-demos/)** — a gallery of
+real-world XML documents, schemas, stylesheets, and Schematron rules rendered
+with `unxml`, with original-vs-rendered size comparisons.
+
 ## Installation
 
 ### Using uv (Easiest)

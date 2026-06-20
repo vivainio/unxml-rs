@@ -46,6 +46,7 @@ UNXML_BIN = REPO_ROOT / "target" / "release" / (
     "unxml.exe" if sys.platform == "win32" else "unxml")
 
 UBL = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xsd"
+UBL_XML = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xml"
 DOCBOOK = "https://cdn.docbook.org/release/xsl/current"
 SCHEMATRON = "https://raw.githubusercontent.com/Schematron/schematron/master/trunk/schematron/code"
 EN16931 = ("https://raw.githubusercontent.com/ConnectingEurope/"
@@ -53,7 +54,12 @@ EN16931 = ("https://raw.githubusercontent.com/ConnectingEurope/"
 
 # The single source of truth: (unxml mode, output slug, title, source URL).
 # Mode picks both the `unxml --<mode>` flag and the category subdir/section.
+# "auto" renders an instance document in plain mode; for known vocabularies
+# (e.g. UBL) it also sniffs and hides the noisy namespace prefixes.
 DEMOS: list[tuple[str, str, str, str]] = [
+    ("auto", "ubl/invoice-example", "UBL — Invoice (instance)", f"{UBL_XML}/UBL-Invoice-2.1-Example.xml"),
+    ("auto", "ubl/order-example", "UBL — Order (instance)", f"{UBL_XML}/UBL-Order-2.1-Example.xml"),
+    ("auto", "ubl/creditnote-example", "UBL — Credit Note (instance)", f"{UBL_XML}/UBL-CreditNote-2.1-Example.xml"),
     ("xsd", "finvoice-3.0", "Finvoice 3.0", "https://file.finanssiala.fi/finvoice/Finvoice3.0.xsd"),
     ("xsd", "ubl/cct", "UBL — Core Component Types", f"{UBL}/common/CCTS_CCT_SchemaModule-2.1.xsd"),
     ("xsd", "ubl/udt", "UBL — Unqualified Data Types", f"{UBL}/common/UBL-UnqualifiedDataTypes-2.1.xsd"),
@@ -71,11 +77,12 @@ DEMOS: list[tuple[str, str, str, str]] = [
 ]
 # mode -> (subdir, index-section heading); SECTION_ORDER sets section order.
 MODE_CATEGORY = {
+    "auto": ("xml", "XML documents"),
     "xsd": ("schemas", "Schemas"),
     "xslt": ("xslt", "XSLT"),
     "schematron": ("schematron", "Schematron"),
 }
-SECTION_ORDER = ["Schemas", "XSLT", "Schematron"]
+SECTION_ORDER = ["XML documents", "Schemas", "XSLT", "Schematron"]
 
 # Page chrome shared by every standalone demo: a dark, edge-to-edge,
 # horizontally-scrolling code surface plus the floating "back" link. Appended
