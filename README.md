@@ -63,6 +63,12 @@ from each file's extension:
 An explicit mode flag (`--xslt`, `--schematron`, `--xsd`, `--special`) always
 overrides autodetection.
 
+Each mode rewrites its vocabulary into a terser pseudocode. The full set of
+transformations, with side-by-side samples, is documented per format:
+
+- [XSLT transformations](docs/xslt.md) — `xsl:*` stylesheets
+- [XSD transformations](docs/xsd.md) — `xs:*` / `xsd:*` schemas
+
 ### Syntax-highlighted output (`--bat`)
 
 ```bash
