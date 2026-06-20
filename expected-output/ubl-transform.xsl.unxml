@@ -3,7 +3,7 @@ xsl:stylesheet(
     xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
     xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
-  template /Invoice
+  template /Invoice:
     cac:Party
       cbc:Name
         <- cbc:Name

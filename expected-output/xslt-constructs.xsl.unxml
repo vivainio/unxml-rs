@@ -3,48 +3,48 @@ xsl:stylesheet(version="1.0", xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
   xsl:strip-space(elements="*")
   globalVar := /root/config/value
   literalVar := literal value
-  template /
+  template /:
     apply root/items
-  template item (mode="summary")
+  template item (mode="summary"):
     summary
       <- @name
-  template #formatDate
+  template #formatDate:
     param date
     param format := 'YYYY-MM-DD'
     formatted
       <- $date
-  template items
+  template items:
     output
-      if count(item) > 0
+      if count(item) > 0:
         hasItems = true
-      choose
-        when @type = 'A'
+      choose:
+        when @type = 'A':
           type = Type A
-        when @type = 'B'
+        when @type = 'B':
           type = Type B
-        else
+        else:
           type = Unknown
-      foreach item
+      foreach item:
         entry
           @id
             <- @id
           name
             <- name
           copy details/*
-      call formatDate
+      call formatDate:
         date := @created
         format := DD/MM/YYYY
-      element dynamic
+      element dynamic:
         @source = generated
         "Some text content"
-      if item[@priority='high']
+      if item[@priority='high']:
         urgent
-          foreach item[@priority='high']
-            choose
-              when @status='pending'
+          foreach item[@priority='high']:
+            choose:
+              when @status='pending':
                 pending
                   <- name
-              else
+              else:
                 other
                   <- name
       total := sum(item/amount)

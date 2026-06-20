@@ -260,6 +260,16 @@ impl XmlElement {
         has_text && has_child
     }
 
+    /// True when this element has something to render beneath it — a child
+    /// element or a non-empty text run. Used to decide whether a block keyword
+    /// (`call`, `element`) should carry a trailing `:`.
+    fn has_renderable_body(&self) -> bool {
+        self.nodes.iter().any(|n| match n {
+            NodeRef::Text(t) => !t.trim().is_empty(),
+            NodeRef::Child(_) => true,
+        })
+    }
+
     /// Render this element's content in document order: text runs as quoted
     /// lines, child elements recursed. Used for mixed content in every mode so
     /// a text run between two elements keeps its position.
@@ -725,7 +735,7 @@ impl XmlElement {
                     result.push_str(&render_attrs(&attr_str, col, indent, true));
                 }
 
-                result.push('\n');
+                result.push_str(":\n");
                 result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
                 Some(result)
             }
@@ -782,7 +792,7 @@ impl XmlElement {
             "xsl:if" => {
                 // xsl:if(test="X") → if X
                 if let Some(test) = self.attributes.get("test") {
-                    result.push_str(&format!("{indent_str}if {test}\n"));
+                    result.push_str(&format!("{indent_str}if {test}:\n"));
                     result.push_str(&self.render_mixed_body(
                         indent + 1,
                         &FormatOpts::XSLT,
@@ -795,14 +805,14 @@ impl XmlElement {
             }
             "xsl:choose" => {
                 // xsl:choose stays as choose but children get transformed
-                result.push_str(&format!("{indent_str}choose\n"));
+                result.push_str(&format!("{indent_str}choose:\n"));
                 result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
                 Some(result)
             }
             "xsl:when" => {
                 // xsl:when(test="X") → when X
                 if let Some(test) = self.attributes.get("test") {
-                    result.push_str(&format!("{indent_str}when {test}\n"));
+                    result.push_str(&format!("{indent_str}when {test}:\n"));
                     result.push_str(&self.render_mixed_body(
                         indent + 1,
                         &FormatOpts::XSLT,
@@ -815,7 +825,7 @@ impl XmlElement {
             }
             "xsl:otherwise" => {
                 // xsl:otherwise → else
-                result.push_str(&format!("{indent_str}else\n"));
+                result.push_str(&format!("{indent_str}else:\n"));
                 result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
                 Some(result)
             }
@@ -876,7 +886,8 @@ impl XmlElement {
             "xsl:call-template" => {
                 // xsl:call-template(name="X") → call X
                 if let Some(name) = self.attributes.get("name") {
-                    result.push_str(&format!("{indent_str}call {name}\n"));
+                    let colon = if self.has_renderable_body() { ":" } else { "" };
+                    result.push_str(&format!("{indent_str}call {name}{colon}\n"));
                     result.push_str(&self.render_mixed_body(
                         indent + 1,
                         &FormatOpts::XSLT,
@@ -890,7 +901,7 @@ impl XmlElement {
             "xsl:for-each" => {
                 // xsl:for-each(select="X") → foreach X
                 if let Some(select) = self.attributes.get("select") {
-                    result.push_str(&format!("{indent_str}foreach {select}\n"));
+                    result.push_str(&format!("{indent_str}foreach {select}:\n"));
                     result.push_str(&self.render_mixed_body(
                         indent + 1,
                         &FormatOpts::XSLT,
@@ -914,7 +925,8 @@ impl XmlElement {
             "xsl:element" => {
                 // xsl:element(name="X") → element X
                 if let Some(name) = self.attributes.get("name") {
-                    result.push_str(&format!("{indent_str}element {name}\n"));
+                    let colon = if self.has_renderable_body() { ":" } else { "" };
+                    result.push_str(&format!("{indent_str}element {name}{colon}\n"));
                     result.push_str(&self.render_mixed_body(
                         indent + 1,
                         &FormatOpts::XSLT,

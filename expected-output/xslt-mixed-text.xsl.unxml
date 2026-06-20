@@ -1,23 +1,23 @@
 xsl:stylesheet(version="1.0", xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
-  template title
+  template title:
     "Title:"
     span
       <- .
-  template cd
-    foreach track
+  template cd:
+    foreach track:
       "Track:"
       <- .
-    if @featured
+    if @featured:
       "Featured!"
       <- @featured
-    choose
-      when price &gt; 10
+    choose:
+      when price &gt; 10:
         "Expensive:"
         <- price
-      else
+      else:
         "Cheap:"
         <- price
-    element note
+    element note:
       "Inline note"
       <- @id
     price
