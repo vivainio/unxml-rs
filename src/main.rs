@@ -117,6 +117,51 @@ impl FormatOpts {
 /// `function`/`template` param signature) wraps to one item per line.
 const WRAP_WIDTH: usize = 100;
 
+/// Local names of the XSD / XPath built-in atomic types. unxml strips a
+/// recognised `xs:` / `xsd:` prefix from these in type position (e.g.
+/// `xs:string` → `string`), the way it hides known vocabulary prefixes
+/// elsewhere. Anything not on this list keeps its prefix, so a custom type or a
+/// stylesheet that bound `xs:` to a different namespace is left untouched.
+fn is_builtin_xsd_type(local: &str) -> bool {
+    matches!(
+        local,
+        // 19 primitive types
+        "string" | "boolean" | "decimal" | "float" | "double" | "duration"
+        | "dateTime" | "time" | "date" | "gYearMonth" | "gYear" | "gMonthDay"
+        | "gDay" | "gMonth" | "hexBinary" | "base64Binary" | "anyURI" | "QName"
+        | "NOTATION"
+        // derived types
+        | "normalizedString" | "token" | "language" | "NMTOKEN" | "NMTOKENS"
+        | "Name" | "NCName" | "ID" | "IDREF" | "IDREFS" | "ENTITY" | "ENTITIES"
+        | "integer" | "nonPositiveInteger" | "negativeInteger" | "long" | "int"
+        | "short" | "byte" | "nonNegativeInteger" | "unsignedLong"
+        | "unsignedInt" | "unsignedShort" | "unsignedByte" | "positiveInteger"
+        // XPath / XQuery data model additions
+        | "yearMonthDuration" | "dayTimeDuration" | "dateTimeStamp"
+        | "anyAtomicType" | "untypedAtomic" | "untyped" | "numeric" | "error"
+    )
+}
+
+/// Strip a recognised `xs:` / `xsd:` prefix from a top-level built-in atomic
+/// type, preserving any trailing occurrence indicator: `xs:string?` →
+/// `string?`. Parametric / structural item types (`element(…)`, `map(…)`,
+/// `attribute()*`) are left as is — only a whole `xs:name` / `xsd:name` token
+/// is rewritten.
+fn simplify_type(t: &str) -> String {
+    let (core, occ) = match t.strip_suffix(['?', '*', '+']) {
+        Some(c) => (c, &t[c.len()..]),
+        None => (t, ""),
+    };
+    for prefix in ["xs:", "xsd:"] {
+        if let Some(local) = core.strip_prefix(prefix)
+            && is_builtin_xsd_type(local)
+        {
+            return format!("{local}{occ}");
+        }
+    }
+    t.to_string()
+}
+
 /// Render Pug-style attribute parentheses for an element at the given indent.
 ///
 /// Short lists stay on one line: `(a="1", b="2")`. A list whose single-line
@@ -310,7 +355,7 @@ impl XmlElement {
         let name = self.attributes.get("name")?;
         let mut sig = name.clone();
         if let Some(t) = self.attributes.get("as") {
-            sig.push_str(&format!(" as {t}"));
+            sig.push_str(&format!(" as {}", simplify_type(t)));
         }
         if let Some(select) = self.attributes.get("select") {
             sig.push_str(&format!(" := {select}"));
@@ -327,7 +372,7 @@ impl XmlElement {
     fn typed_name(&self) -> Option<String> {
         let name = self.attributes.get("name")?;
         Some(match self.attributes.get("as") {
-            Some(t) => format!("{name} as {t}"),
+            Some(t) => format!("{name} as {}", simplify_type(t)),
             None => name.clone(),
         })
     }
@@ -400,7 +445,11 @@ impl XmlElement {
         // Fold the params onto the header only when they all inline *and* the
         // resulting line fits — otherwise fall back to per-line `param` lines so
         // a wide signature doesn't run off the edge.
-        let ret_len = self.attributes.get("as").map_or(0, |t| t.len() + 4); // " -> T"
+        // " -> T", using the simplified type so the width check matches output.
+        let ret_len = self
+            .attributes
+            .get("as")
+            .map_or(0, |t| simplify_type(t).len() + 4);
         let fold = match &tokens {
             Some(toks) if !toks.is_empty() => {
                 let params = format!("({})", toks.join(", "));
@@ -413,7 +462,7 @@ impl XmlElement {
             result.push_str(&format!("({})", toks.join(", ")));
         }
         if let Some(t) = self.attributes.get("as") {
-            result.push_str(&format!(" -> {t}"));
+            result.push_str(&format!(" -> {}", simplify_type(t)));
         }
         let extra: Vec<_> = self
             .attributes

@@ -6,9 +6,9 @@ xsl:stylesheet(
   xsl:output(indent="yes", method="xml")
   xsl:character-map(name="entities")
     xsl:output-character(character=" ", string="&nbsp;")
-  function my:full-name(first as xs:string, last as xs:string) -> xs:string:
+  function my:full-name(first as string, last as string) -> string:
     <-- concat($first, ' ', $last)
-  threshold as xs:integer := 10
+  threshold as integer := 10
   match /orders:
     report
       xsl:for-each-group(group-by="@region", select="order")

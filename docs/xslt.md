@@ -231,7 +231,7 @@ typically an `xsl:sequence` — supplies the return value:
 </xsl:function>
 ```
 ```text
-function my:full-name(first as xs:string, last as xs:string) -> xs:string:
+function my:full-name(first as string, last as string) -> string:
   <-- concat($first, ' ', $last)
 ```
 
@@ -255,19 +255,29 @@ reads cleanly:
 function f:attributes -> attribute()*:
   param node as element()
   param attributes as attribute()*
-  param extra-classes as xs:string*
-  param exclude-classes as xs:string*
+  param extra-classes as string*
+  param exclude-classes as string*
   …
 ```
 
 ### Types
 
-The `as` type annotation is carried through verbatim wherever XSLT allows it —
-on `xsl:param`, `xsl:variable`, `xsl:with-param`, and (as the `-> T` result) on
+The `as` type annotation is carried through wherever XSLT allows it — on
+`xsl:param`, `xsl:variable`, `xsl:with-param`, and (as the `-> T` result) on
 `xsl:function`. It reads `name as T`, e.g. `param node as element()` or
-`threshold as xs:integer := 10`. The `as` keyword (rather than a `:`) keeps the
-type distinct from both XSLT's own `xs:`-prefixed type names and unxml's
+`threshold as integer := 10`. The `as` keyword (rather than a `:`) keeps the
+type distinct from both the type's own `xs:`-prefixed name and unxml's
 block-opening colon.
+
+**Built-in type prefixes are stripped.** A recognised `xs:` / `xsd:` prefix on a
+built-in XSD/XPath atomic type is dropped, so `xs:string` reads as `string`,
+`xs:integer?` as `integer?`, and `-> xs:boolean` as `-> boolean` — the same way
+unxml hides known vocabulary prefixes elsewhere. Any trailing occurrence
+indicator (`?`, `*`, `+`) is preserved. The rewrite is **top-level only** and
+**whitelisted**: a parametric or structural item type keeps its inner prefixes
+(`element(db:orderedlist)`, `map(xs:string, *)` are left as is), and a prefix on
+a non-built-in name (a user-defined type, or `xs:` rebound to another namespace)
+is never touched.
 
 ## Re-dispatch
 
@@ -400,13 +410,14 @@ A variable whose value is in its body uses the body text (or nested children):
 literalVar := literal value
 ```
 
-A declared `as` [type](#types) is carried through before the `:=`:
+A declared `as` [type](#types) is carried through before the `:=` (with the
+built-in `xs:` prefix stripped):
 
 ```xml
 <xsl:variable name="threshold" as="xs:integer" select="10"/>
 ```
 ```text
-threshold as xs:integer := 10
+threshold as integer := 10
 ```
 
 ### `xsl:param` → `param x := …`
@@ -428,7 +439,7 @@ With a type but no default value:
 <xsl:param name="date" as="xs:date"/>
 ```
 ```text
-param date as xs:date
+param date as date
 ```
 
 ## Constructing result markup
