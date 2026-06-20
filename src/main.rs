@@ -113,6 +113,10 @@ impl FormatOpts {
     }
 }
 
+/// Maximum line width before a parenthesised list (attributes, or a folded
+/// `function`/`template` param signature) wraps to one item per line.
+const WRAP_WIDTH: usize = 100;
+
 /// Render Pug-style attribute parentheses for an element at the given indent.
 ///
 /// Short lists stay on one line: `(a="1", b="2")`. A list whose single-line
@@ -188,8 +192,6 @@ fn render_text(result: &mut String, text: &str, indent: usize) {
 }
 
 fn render_attrs(attr_parts: &[String], col: usize, indent: usize, leading_space: bool) -> String {
-    const WRAP_WIDTH: usize = 100;
-
     if attr_parts.is_empty() {
         return String::new();
     }
@@ -297,6 +299,136 @@ impl XmlElement {
             }
         }
         out
+    }
+
+    /// The inline core of an `xsl:param` / `xsl:variable` / `xsl:with-param`:
+    /// `name`, `name as T`, `name := v`, or `name as T := v`. The `as` type is
+    /// carried through (XSLT's own keyword). Returns `None` when the value is a
+    /// complex element-content default that cannot sit on one line and must
+    /// nest beneath the binding instead.
+    fn binding_signature(&self) -> Option<String> {
+        let name = self.attributes.get("name")?;
+        let mut sig = name.clone();
+        if let Some(t) = self.attributes.get("as") {
+            sig.push_str(&format!(" as {t}"));
+        }
+        if let Some(select) = self.attributes.get("select") {
+            sig.push_str(&format!(" := {select}"));
+        } else if !self.children.is_empty() {
+            return None; // element-content default → caller nests it
+        } else if !self.text_content.trim().is_empty() {
+            sig.push_str(&format!(" := {}", self.text_content.trim()));
+        }
+        Some(sig)
+    }
+
+    /// `name`, or `name as T`, ignoring any value — used as the header stub when
+    /// a binding's complex default is rendered nested beneath it.
+    fn typed_name(&self) -> Option<String> {
+        let name = self.attributes.get("name")?;
+        Some(match self.attributes.get("as") {
+            Some(t) => format!("{name} as {t}"),
+            None => name.clone(),
+        })
+    }
+
+    /// Fold the leading run of `xsl:param` children into signature tokens for a
+    /// `function` / `template` header (e.g. `["date", "format := 'Y'"]`). An
+    /// empty vec means there are no leading params (caller omits the parens);
+    /// `None` means a leading param has a complex default and the run can't be
+    /// inlined, so the caller should render the params per-line instead.
+    fn fold_param_signature(&self) -> Option<Vec<String>> {
+        let mut tokens = Vec::new();
+        for node in &self.nodes {
+            match node {
+                NodeRef::Text(t) if t.trim().is_empty() => continue,
+                NodeRef::Text(_) => break,
+                NodeRef::Child(i) => {
+                    let child = &self.children[*i];
+                    if child.name != "xsl:param" {
+                        break;
+                    }
+                    tokens.push(child.binding_signature()?);
+                }
+            }
+        }
+        Some(tokens)
+    }
+
+    /// Like `render_mixed_body`, but skip the leading run of `xsl:param`
+    /// children (and surrounding whitespace) — used once their signatures have
+    /// been folded into a `function` / `template` header.
+    fn render_body_skipping_leading_params(
+        &self,
+        indent: usize,
+        opts: &FormatOpts,
+        registry: Option<&TemplateRegistry>,
+    ) -> String {
+        let ind = "  ".repeat(indent);
+        let mut out = String::new();
+        let mut leading = true;
+        for node in &self.nodes {
+            match node {
+                NodeRef::Text(text) => {
+                    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+                    if text.is_empty() {
+                        continue;
+                    }
+                    leading = false;
+                    out.push_str(&format!("{ind}\"{text}\"\n"));
+                }
+                NodeRef::Child(i) => {
+                    let child = &self.children[*i];
+                    if leading && child.name == "xsl:param" {
+                        continue;
+                    }
+                    leading = false;
+                    out.push_str(&child.format_yaml_like(indent, opts, registry));
+                }
+            }
+        }
+        out
+    }
+
+    /// Append the signature tail of a `function`/`template`/`match` header to
+    /// `result`: the folded `(params)`, a `-> T` return type, then any leftover
+    /// attributes (those not in `skip`, and not `as`) in parentheses. Returns
+    /// `true` when the leading params were folded, so the caller knows to skip
+    /// them while rendering the body.
+    fn push_signature_tail(&self, result: &mut String, indent: usize, skip: &[&str]) -> bool {
+        let tokens = self.fold_param_signature();
+        // Fold the params onto the header only when they all inline *and* the
+        // resulting line fits — otherwise fall back to per-line `param` lines so
+        // a wide signature doesn't run off the edge.
+        let ret_len = self.attributes.get("as").map_or(0, |t| t.len() + 4); // " -> T"
+        let fold = match &tokens {
+            Some(toks) if !toks.is_empty() => {
+                let params = format!("({})", toks.join(", "));
+                // +1 (folded into the `<`) leaves room for the trailing colon.
+                current_col(result) + params.len() + ret_len < WRAP_WIDTH
+            }
+            _ => false,
+        };
+        if fold && let Some(toks) = &tokens {
+            result.push_str(&format!("({})", toks.join(", ")));
+        }
+        if let Some(t) = self.attributes.get("as") {
+            result.push_str(&format!(" -> {t}"));
+        }
+        let extra: Vec<_> = self
+            .attributes
+            .iter()
+            .filter(|(k, _)| *k != "as" && !skip.contains(&k.as_str()))
+            .collect();
+        if !extra.is_empty() {
+            let mut sorted: Vec<_> = extra.into_iter().collect();
+            sorted.sort_by_key(|(k, _)| *k);
+            let attr_str: Vec<String> =
+                sorted.iter().map(|(k, v)| format!("{k}=\"{v}\"")).collect();
+            let col = current_col(result);
+            result.push_str(&render_attrs(&attr_str, col, indent, true));
+        }
+        fold
     }
 
     fn format_yaml_like(
@@ -710,6 +842,8 @@ impl XmlElement {
             "xsl:template" => {
                 // xsl:template(match="X") → match X   (declarative rule)
                 // xsl:template(name="X")  → template X (named def, invoked via `call`)
+                // Leading xsl:param children fold into a (signature); a 3.0
+                // `as` type becomes a `-> T` result annotation.
                 if let Some(match_val) = self.attributes.get("match") {
                     result.push_str(&format!("{indent_str}match {match_val}"));
                 } else if let Some(name_val) = self.attributes.get("name") {
@@ -717,26 +851,17 @@ impl XmlElement {
                 } else {
                     return None;
                 }
-
-                // Add any extra attributes (like xmlns declarations)
-                let extra_attrs: Vec<_> = self
-                    .attributes
-                    .iter()
-                    .filter(|(k, _)| *k != "match" && *k != "name")
-                    .collect();
-                if !extra_attrs.is_empty() {
-                    let mut sorted_attrs: Vec<_> = extra_attrs.into_iter().collect();
-                    sorted_attrs.sort_by_key(|(k, _)| *k);
-                    let attr_str: Vec<String> = sorted_attrs
-                        .iter()
-                        .map(|(k, v)| format!("{k}=\"{v}\""))
-                        .collect();
-                    let col = current_col(&result);
-                    result.push_str(&render_attrs(&attr_str, col, indent, true));
-                }
-
+                let folded = self.push_signature_tail(&mut result, indent, &["match", "name"]);
                 result.push_str(":\n");
-                result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
+                result.push_str(&if folded {
+                    self.render_body_skipping_leading_params(
+                        indent + 1,
+                        &FormatOpts::XSLT,
+                        registry,
+                    )
+                } else {
+                    self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry)
+                });
                 Some(result)
             }
             "xsl:apply-templates" => {
@@ -843,59 +968,31 @@ impl XmlElement {
                 result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
                 Some(result)
             }
-            "xsl:variable" => {
-                // xsl:variable(name="x", select="...") → x := ...
-                if let Some(name) = self.attributes.get("name") {
-                    if let Some(select) = self.attributes.get("select") {
-                        result.push_str(&format!("{indent_str}{name} := {select}\n"));
-                    } else if !self.text_content.trim().is_empty() {
-                        result.push_str(&format!(
-                            "{indent_str}{name} := {}\n",
-                            self.text_content.trim()
-                        ));
-                    } else if !self.children.is_empty() {
-                        result.push_str(&format!("{indent_str}{name} :=\n"));
-                        for child in &self.children {
-                            result.push_str(&child.format_yaml_like(
-                                indent + 1,
-                                &FormatOpts::XSLT,
-                                registry,
-                            ));
-                        }
-                    } else {
-                        result.push_str(&format!("{indent_str}{name} :=\n"));
-                    }
-                    Some(result)
+            "xsl:variable" | "xsl:with-param" => {
+                // Both render as a binding: `x := …`, `x as T := …`, or — when
+                // the value is element content — `x :=` with the value nested.
+                let name = self.attributes.get("name")?;
+                if let Some(select) = self.attributes.get("select") {
+                    let typed = self.typed_name().unwrap_or_else(|| name.clone());
+                    result.push_str(&format!("{indent_str}{typed} := {select}\n"));
+                } else if self.children.is_empty() && !self.text_content.trim().is_empty() {
+                    let typed = self.typed_name().unwrap_or_else(|| name.clone());
+                    result.push_str(&format!(
+                        "{indent_str}{typed} := {}\n",
+                        self.text_content.trim()
+                    ));
                 } else {
-                    None
-                }
-            }
-            "xsl:with-param" => {
-                // xsl:with-param(name="x", select="...") → x := ...
-                if let Some(name) = self.attributes.get("name") {
-                    if let Some(select) = self.attributes.get("select") {
-                        result.push_str(&format!("{indent_str}{name} := {select}\n"));
-                    } else if !self.text_content.trim().is_empty() {
-                        result.push_str(&format!(
-                            "{indent_str}{name} := {}\n",
-                            self.text_content.trim()
+                    let typed = self.typed_name().unwrap_or_else(|| name.clone());
+                    result.push_str(&format!("{indent_str}{typed} :=\n"));
+                    for child in &self.children {
+                        result.push_str(&child.format_yaml_like(
+                            indent + 1,
+                            &FormatOpts::XSLT,
+                            registry,
                         ));
-                    } else if !self.children.is_empty() {
-                        result.push_str(&format!("{indent_str}{name} :=\n"));
-                        for child in &self.children {
-                            result.push_str(&child.format_yaml_like(
-                                indent + 1,
-                                &FormatOpts::XSLT,
-                                registry,
-                            ));
-                        }
-                    } else {
-                        result.push_str(&format!("{indent_str}{name} :=\n"));
                     }
-                    Some(result)
-                } else {
-                    None
                 }
+                Some(result)
             }
             "xsl:call-template" => {
                 // xsl:call-template(name="X") → call X
@@ -977,17 +1074,27 @@ impl XmlElement {
                 }
             }
             "xsl:param" => {
-                // xsl:param(name="x", select="...") → param x := ...
-                if let Some(name) = self.attributes.get("name") {
-                    if let Some(select) = self.attributes.get("select") {
-                        result.push_str(&format!("{indent_str}param {name} := {select}\n"));
-                    } else {
-                        result.push_str(&format!("{indent_str}param {name}\n"));
+                // xsl:param → `param x`, `param x as T`, `param x := default`.
+                // (Leading params of a function/template are folded into its
+                // signature instead; this renders any that aren't.)
+                match self.binding_signature() {
+                    Some(sig) => {
+                        result.push_str(&format!("{indent_str}param {sig}\n"));
                     }
-                    Some(result)
-                } else {
-                    None
+                    None => {
+                        // Element-content default — nest it beneath the param.
+                        let typed = self.typed_name()?;
+                        result.push_str(&format!("{indent_str}param {typed} :=\n"));
+                        for child in &self.children {
+                            result.push_str(&child.format_yaml_like(
+                                indent + 1,
+                                &FormatOpts::XSLT,
+                                registry,
+                            ));
+                        }
+                    }
                 }
+                Some(result)
             }
             "xsl:sequence" => {
                 // xsl:sequence(select="X") → <-- X. The doubled arrow mirrors
@@ -1009,35 +1116,23 @@ impl XmlElement {
                 }
             }
             "xsl:function" => {
-                // xsl:function(name="f", as="T") → function f -> T:
-                // (no `as` → `function f:`). Params render as the usual `param`
-                // lines; any other attribute (e.g. visibility) stays in parens.
+                // xsl:function(name="f", as="T") → function f(params) -> T:
+                // Leading params fold into the signature (with their `as` types);
+                // a wide signature falls back to per-line params. Any other
+                // attribute (e.g. visibility) stays in parens.
                 if let Some(name) = self.attributes.get("name") {
                     result.push_str(&format!("{indent_str}function {name}"));
-                    if let Some(as_type) = self.attributes.get("as") {
-                        result.push_str(&format!(" -> {as_type}"));
-                    }
-                    let extra_attrs: Vec<_> = self
-                        .attributes
-                        .iter()
-                        .filter(|(k, _)| *k != "name" && *k != "as")
-                        .collect();
-                    if !extra_attrs.is_empty() {
-                        let mut sorted_attrs: Vec<_> = extra_attrs.into_iter().collect();
-                        sorted_attrs.sort_by_key(|(k, _)| *k);
-                        let attr_str: Vec<String> = sorted_attrs
-                            .iter()
-                            .map(|(k, v)| format!("{k}=\"{v}\""))
-                            .collect();
-                        let col = current_col(&result);
-                        result.push_str(&render_attrs(&attr_str, col, indent, true));
-                    }
+                    let folded = self.push_signature_tail(&mut result, indent, &["name"]);
                     result.push_str(":\n");
-                    result.push_str(&self.render_mixed_body(
-                        indent + 1,
-                        &FormatOpts::XSLT,
-                        registry,
-                    ));
+                    result.push_str(&if folded {
+                        self.render_body_skipping_leading_params(
+                            indent + 1,
+                            &FormatOpts::XSLT,
+                            registry,
+                        )
+                    } else {
+                        self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry)
+                    });
                     Some(result)
                 } else {
                     None

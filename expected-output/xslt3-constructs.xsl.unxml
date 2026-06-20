@@ -10,7 +10,7 @@ xsl:stylesheet(
   match /data (mode="main"):
     result
       greeting = Total so far: {accumulator-after('total')}
-      lookup :=
+      lookup as map(xs:string, xs:string) :=
         xsl:map
           xsl:map-entry(key="'a'", select="'alpha'")
           xsl:map-entry(key="'b'", select="'beta'")

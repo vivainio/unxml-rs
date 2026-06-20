@@ -33,21 +33,21 @@ when they actually have a body; childless constructs (`apply`, `<-`, `<--`,
 | XSLT construct | unxml output |
 | --- | --- |
 | `xsl:template match="X"` | `match X:` |
-| `xsl:template name="X"` | `template X:` |
+| `xsl:template name="X"` (with params) | `template X(a, b):` |
 | `xsl:apply-templates select="X"` | `apply X` |
 | `xsl:value-of select="X"` | `<- X` |
 | `xsl:sequence select="X"` | `<-- X` |
 | `xsl:copy-of select="X"` | `copy X` |
 | `xsl:copy` | `copy:` |
-| `xsl:function name="f" as="T"` | `function f -> T:` |
+| `xsl:function name="f" as="T"` (with params) | `function f(a, b) -> T:` |
 | `xsl:next-match` / `xsl:apply-imports` | `next-match` / `apply-imports` |
 | `xsl:if test="X"` | `if X:` |
 | `xsl:choose` | `choose:` |
 | `xsl:when test="X"` | `when X:` |
 | `xsl:otherwise` | `else:` |
 | `xsl:for-each select="X"` | `foreach X:` |
-| `xsl:variable name="x" select="…"` | `x := …` |
-| `xsl:param name="x" select="…"` | `param x := …` |
+| `xsl:variable name="x" as="T" select="…"` | `x as T := …` |
+| `xsl:param name="x" as="T" select="…"` | `param x as T := …` |
 | `xsl:with-param name="x" select="…"` | `x := …` |
 | `xsl:call-template name="X"` | `call X:` (`call X` if no params) |
 | `xsl:element name="X"` | `element X:` (`element X` if empty) |
@@ -104,16 +104,18 @@ match item (mode="summary"):
 ### `xsl:template` with `name` → `template X:`
 
 A named template is a procedure, invoked by `call`. It leads with `template`
-(no sigil needed — the keyword alone distinguishes it from a `match` rule):
+(no sigil needed — the keyword alone distinguishes it from a `match` rule). Its
+leading `xsl:param` declarations fold into a `(signature)`, the same way a
+function's do (see [Parameter folding](#parameter-folding)):
 
 ```xml
 <xsl:template name="formatDate">
   <xsl:param name="date"/>
+  <xsl:param name="format" select="'YYYY-MM-DD'"/>
 </xsl:template>
 ```
 ```text
-template formatDate:
-  param date
+template formatDate(date, format := 'YYYY-MM-DD'):
 ```
 
 ## Applying and calling templates
@@ -214,12 +216,12 @@ copy:
 
 ## User-defined functions
 
-### `xsl:function name="f" as="T"` → `function f -> T:`
+### `xsl:function name="f" as="T"` → `function f(…) -> T:`
 
 An `xsl:function` (XSLT 2.0+) is a callable invoked from XPath expressions. It
-leads with `function`, and its declared result type follows a `->` arrow. The
-`xsl:param` children render as the usual `param` lines, and the body — typically
-an `xsl:sequence` — supplies the return value:
+reads as a signature: the leading `xsl:param` children fold into a parenthesised
+argument list, and the declared result type follows a `->` arrow. The body —
+typically an `xsl:sequence` — supplies the return value:
 
 ```xml
 <xsl:function name="my:full-name" as="xs:string">
@@ -229,15 +231,43 @@ an `xsl:sequence` — supplies the return value:
 </xsl:function>
 ```
 ```text
-function my:full-name -> xs:string:
-  param first
-  param last
+function my:full-name(first as xs:string, last as xs:string) -> xs:string:
   <-- concat($first, ' ', $last)
 ```
 
-A function with no `as` renders as `function f:`. Any other attribute (e.g.
-`visibility="public"` in a 3.0 package) is preserved in parentheses before the
-colon, the way `mode` is on a `match` template.
+A function with no `as` renders as `function f(…):`. Any other attribute (e.g.
+`visibility="public"` in a 3.0 package) is preserved in parentheses after the
+signature, the way `mode` is on a `match` template.
+
+### Parameter folding
+
+`xsl:param` is a declaration, so the leading run of them on a `function` or
+named `template` *is* its signature — `unxml` folds them onto the header rather
+than spending a line each. Each parameter renders as its name, plus an `as T`
+[type](#types) and a `:= default` where present (`format := 'YYYY-MM-DD'`).
+
+Folding is skipped — and the params drop back to one `param` line each — when a
+parameter has a complex (element-content) default that can't sit inline, or when
+the folded signature would overflow the line width. So a wide function still
+reads cleanly:
+
+```text
+function f:attributes -> attribute()*:
+  param node as element()
+  param attributes as attribute()*
+  param extra-classes as xs:string*
+  param exclude-classes as xs:string*
+  …
+```
+
+### Types
+
+The `as` type annotation is carried through verbatim wherever XSLT allows it —
+on `xsl:param`, `xsl:variable`, `xsl:with-param`, and (as the `-> T` result) on
+`xsl:function`. It reads `name as T`, e.g. `param node as element()` or
+`threshold as xs:integer := 10`. The `as` keyword (rather than a `:`) keeps the
+type distinct from both XSLT's own `xs:`-prefixed type names and unxml's
+block-opening colon.
 
 ## Re-dispatch
 
@@ -370,10 +400,20 @@ A variable whose value is in its body uses the body text (or nested children):
 literalVar := literal value
 ```
 
+A declared `as` [type](#types) is carried through before the `:=`:
+
+```xml
+<xsl:variable name="threshold" as="xs:integer" select="10"/>
+```
+```text
+threshold as xs:integer := 10
+```
+
 ### `xsl:param` → `param x := …`
 
 Parameters are prefixed with `param` so they stand out from local variables.
-With `select`:
+(The leading params of a `function` or named `template` are instead folded into
+its signature — see [Parameter folding](#parameter-folding).) With `select`:
 
 ```xml
 <xsl:param name="format" select="'YYYY-MM-DD'"/>
@@ -382,13 +422,13 @@ With `select`:
 param format := 'YYYY-MM-DD'
 ```
 
-Without a default value:
+With a type but no default value:
 
 ```xml
-<xsl:param name="date"/>
+<xsl:param name="date" as="xs:date"/>
 ```
 ```text
-param date
+param date as xs:date
 ```
 
 ## Constructing result markup

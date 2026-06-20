@@ -11,8 +11,7 @@ xsl:package(
           apply
   xsl:expose(component="function", names="my:*", visibility="public")
   xsl:expose(component="template", names="internal", visibility="private")
-  function my:square -> xs:integer (visibility="public"):
-    param n
+  function my:square(n as xs:integer) -> xs:integer (visibility="public"):
     <-- $n * $n
   template internal (visibility="private"):
     <-- 'hidden'
