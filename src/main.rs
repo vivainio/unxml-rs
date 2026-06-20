@@ -2033,9 +2033,18 @@ fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>) {
     if let Some((pfx, local)) = elem.name.split_once(':')
         && prefixes.contains(pfx)
     {
+        let pfx = pfx.to_string();
         elem.name = local.to_string();
+        // The element's own namespace still identifies the document, so don't
+        // simply drop it: re-present its `xmlns:<pfx>` as the default `xmlns`
+        // (keeping the URI). This makes an all-prefixed vocabulary like CII read
+        // like UBL's default-namespaced root (`CrossIndustryInvoice(xmlns=…)`)
+        // rather than losing the namespace entirely.
+        if let Some(uri) = elem.attributes.remove(&format!("xmlns:{pfx}")) {
+            elem.attributes.entry("xmlns".to_string()).or_insert(uri);
+        }
     }
-    // Drop the now-redundant xmlns: declarations for the hidden prefixes.
+    // Drop the now-redundant xmlns: declarations for the other hidden prefixes.
     elem.attributes
         .retain(|k, _| match k.strip_prefix("xmlns:") {
             Some(pfx) => !prefixes.contains(pfx),

@@ -1,4 +1,6 @@
-CrossIndustryInvoice(xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance")
+CrossIndustryInvoice(
+    xmlns="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100",
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance")
   ExchangedDocumentContext
     GuidelineSpecifiedDocumentContextParameter
       ID = urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:basic
