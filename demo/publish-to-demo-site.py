@@ -54,6 +54,29 @@ SOURCES: dict[str, tuple[str, str]] = {
     "ubl/invoice.xsd.unxml": ("UBL — Invoice", f"{UBL}/maindoc/UBL-Invoice-2.1.xsd"),
 }
 
+# Demos are grouped into category subdirectories under demos/ based on the
+# source file type, e.g. demo/ubl/cct.xsd.unxml -> demos/schemas/ubl/cct.html.
+# Each entry maps a filename infix to (subdir, index-section heading); order
+# is the order sections appear on the index page.
+CATEGORIES: list[tuple[str, str, str]] = [
+    (".xsd", "schemas", "Schemas"),
+    (".xslt", "xslt", "XSLT"),
+    (".xsl", "xslt", "XSLT"),
+]
+
+
+def categorize(rel: str) -> tuple[str, str, str]:
+    """(subdir, heading, base) for a demo-relative .unxml path.
+
+    base is the path with the .unxml and type extension stripped, e.g.
+    "ubl/cct.xsd.unxml" -> ("schemas", "Schemas", "ubl/cct").
+    """
+    stem = rel.removesuffix(".unxml")
+    for ext, subdir, heading in CATEGORIES:
+        if stem.endswith(ext):
+            return subdir, heading, stem[: -len(ext)]
+    return "other", "Other", stem
+
 # Page chrome shared by every standalone demo: a dark, edge-to-edge,
 # horizontally-scrolling code surface plus the floating "back" link. This is
 # appended to ansi2html's generated colour classes in one shared stylesheet
@@ -125,19 +148,28 @@ def discover() -> list[Path]:
     ))
 
 
-def index_markdown(entries: list[tuple[str, str, str, int]]) -> str:
+def index_markdown(entries: list[tuple[str, str, str, str, int]]) -> str:
+    # entries: (heading, href, title, source, lines)
     out = [
         "# unxml demos\n",
-        "Real-world XML Schemas rendered with [`unxml --xsd`]"
+        "Real-world XML documents rendered with [`unxml`]"
         "(https://github.com/vivainio/unxml-rs), syntax-highlighted with the "
         "same grammar `unxml` ships for `bat`. Each link opens the full "
         "rendered output edge-to-edge.\n",
-        "| Schema | Lines | Source |",
-        "| --- | --- | --- |",
     ]
-    for href, title, source, lines in entries:
-        src = f"[xsd]({source})" if source else "—"
-        out.append(f"| [{title}]({href}) | {lines} | {src} |")
+    # Preserve the section order defined in CATEGORIES; group entries under it.
+    headings = list(dict.fromkeys(h for _, _, h in CATEGORIES)) + ["Other"]
+    for heading in headings:
+        rows = [e for e in entries if e[0] == heading]
+        if not rows:
+            continue
+        out.append(f"## {heading}\n")
+        out.append("| Document | Lines | Source |")
+        out.append("| --- | --- | --- |")
+        for _, href, title, source, lines in rows:
+            src = f"[source]({source})" if source else "—"
+            out.append(f"| [{title}]({href}) | {lines} | {src} |")
+        out.append("")
     return "\n".join(out) + "\n"
 
 
@@ -176,15 +208,16 @@ def main() -> int:
     (demos_dir / "index.md").unlink(missing_ok=True)
 
     # First pass: highlight everything (also primes the converter's palette).
-    rendered: list[tuple[Path, str, str, str, int]] = []  # path, slug, title, fragment, lines
+    rendered: list[tuple[Path, str, str, str, str, int]] = []  # path, slug, heading, title, fragment, lines
     for path in discover():
         rel = path.relative_to(DEMO_DIR).as_posix()
         fragment = conv.convert(highlight(bat, path), full=False)
         lines = path.read_text(encoding="utf-8").count("\n")
-        # demo/ubl/foo.xsd.unxml -> demos/ubl/foo.html
-        slug = rel.removesuffix(".unxml").replace(".xsd", "")
+        # demo/ubl/cct.xsd.unxml -> demos/schemas/ubl/cct.html
+        subdir, heading, base = categorize(rel)
+        slug = f"{subdir}/{base}"
         title = SOURCES.get(rel, (Path(rel).stem, None))[0]
-        rendered.append((path, slug, title, fragment, lines))
+        rendered.append((path, slug, heading, title, fragment, lines))
 
     # Created-once shared stylesheet: ansi2html's colour palette plus the page
     # chrome. Only (re)written when missing or explicitly requested.
@@ -205,19 +238,19 @@ def main() -> int:
         # Tripwire: warn if any page references a class the committed css lacks
         # (i.e. the tooling changed and the palette is stale).
         defined = set(re.findall(r"\.([A-Za-z0-9_-]+)", css_path.read_text(encoding="utf-8")))
-        used = {c for _, _, _, frag, _ in rendered
+        used = {c for *_, frag, _ in rendered
                 for attr in re.findall(r'class="([^"]+)"', frag) for c in attr.split()}
         if missing := used - defined:
             print(f"  WARNING: {css_path.name} is missing {len(missing)} class(es) "
                   f"e.g. {sorted(missing)[:3]} — rerun with --regen-css")
 
     # Write each standalone full-page document linking the shared css.
-    entries: list[tuple[str, str, str, int]] = []  # href, title, source, lines
-    for path, slug, title, fragment, lines in rendered:
+    entries: list[tuple[str, str, str, str, int]] = []  # heading, href, title, source, lines
+    for path, slug, heading, title, fragment, lines in rendered:
         out_path = demos_dir / f"{slug}.html"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         # Path back up to demos/ (where the index and ansi.css live) from this
-        # page's nesting depth: "./" at the top, "../" per level down.
+        # page's nesting depth: "../" per level below demos/.
         back = "../" * slug.count("/") or "./"
         out_path.write_text(
             PAGE.format(title=title, css_href=f"{back}ansi.css", fragment=fragment, back=back),
@@ -225,7 +258,7 @@ def main() -> int:
         )
         rel = path.relative_to(DEMO_DIR).as_posix()
         source = SOURCES.get(rel, (None, None))[1]
-        entries.append((f"{slug}.html", title, source, lines))
+        entries.append((heading, f"{slug}.html", title, source, lines))
         print(f"  rendered {rel} -> {out_path.relative_to(site)} ({lines} lines)")
 
     (demos_dir / "index.md").write_text(index_markdown(entries), encoding="utf-8")
