@@ -47,6 +47,7 @@ UNXML_BIN = REPO_ROOT / "target" / "release" / (
 
 UBL = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xsd"
 UBL_XML = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xml"
+W3SCHOOLS = "https://www.w3schools.com/xml"
 DOCBOOK = "https://cdn.docbook.org/release/xsl/current"
 SCHEMATRON = "https://raw.githubusercontent.com/Schematron/schematron/master/trunk/schematron/code"
 EN16931 = ("https://raw.githubusercontent.com/ConnectingEurope/"
@@ -68,6 +69,10 @@ DEMOS: list[tuple[str, str, str, str]] = [
     ("xsd", "ubl/cac", "UBL — Common Aggregate Components", f"{UBL}/common/UBL-CommonAggregateComponents-2.1.xsd"),
     ("xsd", "ubl/cec", "UBL — Common Extension Components", f"{UBL}/common/UBL-CommonExtensionComponents-2.1.xsd"),
     ("xsd", "ubl/invoice", "UBL — Invoice", f"{UBL}/maindoc/UBL-Invoice-2.1.xsd"),
+    ("xslt", "intro/cd-catalog", "CD catalog → HTML table", f"{W3SCHOOLS}/cdcatalog.xsl"),
+    ("xslt", "intro/cd-catalog-choose", "CD catalog with choose/when", f"{W3SCHOOLS}/cdcatalog_choose.xsl"),
+    ("xslt", "intro/cd-catalog-templates", "CD catalog with named templates", f"{W3SCHOOLS}/cdcatalog_apply.xsl"),
+    ("xslt", "intro/breakfast-menu", "Breakfast menu (literal result)", f"{W3SCHOOLS}/simple.xsl"),
     ("xslt", "docbook/html-driver", "DocBook XSL — HTML driver", f"{DOCBOOK}/html/docbook.xsl"),
     ("xslt", "docbook/inline", "DocBook XSL — inline elements", f"{DOCBOOK}/html/inline.xsl"),
     ("xslt", "schematron/iso-svrl", "ISO Schematron — SVRL skeleton", f"{SCHEMATRON}/iso_svrl_for_xslt1.xsl"),
