@@ -47,7 +47,6 @@ UNXML_BIN = REPO_ROOT / "target" / "release" / (
 
 UBL = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xsd"
 UBL_XML = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xml"
-W3SCHOOLS = "https://www.w3schools.com/xml"
 DOCBOOK = "https://cdn.docbook.org/release/xsl/current"
 SCHEMATRON = "https://raw.githubusercontent.com/Schematron/schematron/master/trunk/schematron/code"
 EN16931 = ("https://raw.githubusercontent.com/ConnectingEurope/"
@@ -69,10 +68,6 @@ DEMOS: list[tuple[str, str, str, str]] = [
     ("xsd", "ubl/cac", "UBL — Common Aggregate Components", f"{UBL}/common/UBL-CommonAggregateComponents-2.1.xsd"),
     ("xsd", "ubl/cec", "UBL — Common Extension Components", f"{UBL}/common/UBL-CommonExtensionComponents-2.1.xsd"),
     ("xsd", "ubl/invoice", "UBL — Invoice", f"{UBL}/maindoc/UBL-Invoice-2.1.xsd"),
-    ("xslt", "intro/cd-catalog", "CD catalog → HTML table", f"{W3SCHOOLS}/cdcatalog.xsl"),
-    ("xslt", "intro/cd-catalog-choose", "CD catalog with choose/when", f"{W3SCHOOLS}/cdcatalog_choose.xsl"),
-    ("xslt", "intro/cd-catalog-templates", "CD catalog with named templates", f"{W3SCHOOLS}/cdcatalog_apply.xsl"),
-    ("xslt", "intro/breakfast-menu", "Breakfast menu (literal result)", f"{W3SCHOOLS}/simple.xsl"),
     ("xslt", "docbook/html-driver", "DocBook XSL — HTML driver", f"{DOCBOOK}/html/docbook.xsl"),
     ("xslt", "docbook/inline", "DocBook XSL — inline elements", f"{DOCBOOK}/html/inline.xsl"),
     ("xslt", "schematron/iso-svrl", "ISO Schematron — SVRL skeleton", f"{SCHEMATRON}/iso_svrl_for_xslt1.xsl"),
@@ -88,6 +83,20 @@ MODE_CATEGORY = {
     "schematron": ("schematron", "Schematron"),
 }
 SECTION_ORDER = ["XML documents", "Schemas", "XSLT", "Schematron"]
+
+# Small, self-hosted samples rendered *inline* on the gallery page — source
+# beside output, so the transformation is visible at a glance without opening a
+# full page. Sources are vendored in this (the unxml-demos) repo under
+# examples/, so the site doesn't depend on a third-party host for them.
+# tuple: (section heading, unxml mode, title, repo-relative source path)
+INLINE_DEMOS: list[tuple[str, str, str, str]] = [
+    ("XSLT basics", "xslt", "Build an HTML table with for-each", "examples/xslt/cdcatalog.xsl"),
+    ("XSLT basics", "xslt", "Branch with choose / when / otherwise", "examples/xslt/cdcatalog-choose.xsl"),
+    ("XSLT basics", "xslt", "Named templates + apply-templates", "examples/xslt/cdcatalog-templates.xsl"),
+    ("XSLT basics", "xslt", "Literal-result-element stylesheet", "examples/xslt/breakfast-menu.xsl"),
+]
+INLINE_ORDER = ["XSLT basics"]
+SITE_REPO_BLOB = "https://github.com/vivainio/unxml-demos/blob/main"
 
 # Page chrome shared by every standalone demo: a dark, edge-to-edge,
 # horizontally-scrolling code surface plus the floating "back" link. Appended
@@ -109,6 +118,33 @@ pre.unxml {
   font: 12px/1 ui-monospace, monospace; text-decoration: none;
 }
 .unxml-back:hover { color: #c9d1d9; }
+"""
+
+# Layout for the inline side-by-side samples on the (light-themed) gallery
+# page. The ansi2html colour palette is scoped under `.unxml-demo` and injected
+# alongside this so it can't bleed into the surrounding theme.
+INLINE_CSS = """
+.unxml-demo { margin: 1rem 0 0; }
+.unxml-demo .unxml-sample { margin: 0 0 1.75rem; }
+.unxml-demo h3 { margin: 0 0 .15rem; }
+.unxml-demo .unxml-cap { margin: 0 0 .5rem; font-size: .8em; color: #8b949e; }
+.unxml-demo .unxml-cap a { color: inherit; text-decoration: underline; }
+.unxml-demo .unxml-cols {
+  display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; align-items: start;
+}
+.unxml-demo .unxml-col { min-width: 0; }
+.unxml-demo .unxml-col-label {
+  font: 12px/1.4 ui-monospace, monospace; color: #8b949e; margin: 0 0 .25rem;
+}
+.unxml-demo pre.unxml {
+  margin: 0; padding: .9rem 1rem; border-radius: 6px;
+  background: #0d1117; color: #c9d1d9;
+  font: 12px/1.5 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre; tab-size: 2; overflow-x: auto; max-width: 100%;
+}
+@media (max-width: 820px) {
+  .unxml-demo .unxml-cols { grid-template-columns: 1fr; }
+}
 """
 
 # Standalone full-page template; links the shared stylesheet via a depth-
@@ -162,13 +198,35 @@ def render(mode: str, src: Path) -> str:
     ).stdout
 
 
-def highlight(bat: str, text: str) -> str:
-    """ANSI-highlight rendered text via bat using the unxml grammar."""
+def highlight(bat: str, text: str, lang: str = "unxml") -> str:
+    """ANSI-highlight text via bat. Defaults to the unxml grammar; pass e.g.
+    lang="xml" to highlight an original source document."""
     return subprocess.run(
         [bat, "--color=always", "--paging=never", "--style=plain",
-         "--wrap=never", "-l", "unxml"],
+         "--wrap=never", "-l", lang],
         input=text, capture_output=True, text=True, check=True,
     ).stdout
+
+
+def compact(text: str) -> str:
+    """Drop blank/whitespace-only lines so a highlighted fragment can live in a
+    raw-HTML block inside Markdown without a blank line ending the block."""
+    return "\n".join(ln for ln in text.splitlines() if ln.strip())
+
+
+def scope_css(css: str, prefix: str) -> str:
+    """Prefix every rule's selectors with `prefix` so a flat stylesheet (e.g.
+    ansi2html's colour palette) can't leak into the surrounding page."""
+    out = []
+    for line in css.splitlines():
+        s = line.strip()
+        if not s or s.startswith("@") or "{" not in s:
+            out.append(line)
+            continue
+        sels, _, rest = s.partition("{")
+        scoped = ", ".join(f"{prefix} {sel.strip()}" for sel in sels.split(","))
+        out.append(f"{scoped} {{{rest}")
+    return "\n".join(out)
 
 
 def human_bytes(n: int) -> str:
@@ -180,33 +238,82 @@ def human_bytes(n: int) -> str:
     return f"{n / (1024 * 1024):.1f} MB"
 
 
-def index_markdown(entries: list[tuple[str, str, str, str, int, int, int, int]]) -> str:
+def inline_section_html(samples: list[tuple]) -> str:
+    """One raw-HTML block for a group of inline side-by-side samples. Kept free
+    of blank lines so Markdown passes it through verbatim."""
+    html = ['<div class="unxml-demo">']
+    for _section, mode, title, blob, src_frag, out_frag, sl, ol in samples:
+        fname = blob.rsplit("/", 1)[-1]
+        html += [
+            '<div class="unxml-sample">',
+            f"<h3>{title}</h3>",
+            f'<p class="unxml-cap"><a href="{blob}">{fname}</a> · '
+            f"{sl} → {ol} lines</p>",
+            '<div class="unxml-cols">',
+            '<div class="unxml-col"><div class="unxml-col-label">XSLT source</div>'
+            f'<pre class="unxml"><span class="ansi2html-content">{src_frag}</span></pre></div>',
+            f'<div class="unxml-col"><div class="unxml-col-label">unxml --{mode}</div>'
+            f'<pre class="unxml"><span class="ansi2html-content">{out_frag}</span></pre></div>',
+            "</div></div>",
+        ]
+    html.append("</div>")
+    return "\n".join(html)
+
+
+def index_markdown(
+    entries: list[tuple[str, str, str, str, int, int, int, int]],
+    inline: list[tuple],
+    inline_style: str,
+) -> str:
     # entries: (heading, href, title, source, src_lines, src_bytes, out_lines, out_bytes)
-    out = [
-        "# Gallery\n",
+    # inline: (section, mode, title, blob_url, src_frag, out_frag, src_lines, out_lines)
+    # Each element of `blocks` is a complete block with no internal blank lines;
+    # joining with a blank line keeps tables and raw-HTML blocks intact.
+    blocks = [
+        "# Gallery",
         "Real-world XML documents rendered with [`unxml`]"
         "(https://github.com/vivainio/unxml-rs), syntax-highlighted with the "
-        "same grammar `unxml` ships for `bat`. Each link opens the full "
-        "rendered output edge-to-edge.\n",
-        "The **Original** and **Rendered** columns compare the source XML "
-        "against the `unxml` output (lines · bytes), so you can see how much "
-        "the rendering compresses each document.\n",
+        "same grammar `unxml` ships for `bat`.",
     ]
+
+    if inline:
+        blocks.append(
+            "The **basics** below are shown inline — original source on the "
+            "left, `unxml` output on the right. The **gallery** further down "
+            "links full-page renders of larger real-world documents, with "
+            "original-vs-rendered size comparisons."
+        )
+        blocks.append(inline_style)
+        for section in INLINE_ORDER:
+            samples = [s for s in inline if s[0] == section]
+            if not samples:
+                continue
+            blocks.append(f"## {section}")
+            blocks.append(inline_section_html(samples))
+    else:
+        blocks.append(
+            "The **Original** and **Rendered** columns compare the source XML "
+            "against the `unxml` output (lines · bytes)."
+        )
+
     for heading in SECTION_ORDER:
         rows = [e for e in entries if e[0] == heading]
         if not rows:
             continue
-        out += [
-            f"## {heading}\n",
+        table = [
+            f"## {heading}",
             "| Document | Original | Rendered | Source |",
             "| --- | --- | --- | --- |",
         ]
         for _, href, title, source, sl, sb, ol, ob in rows:
             original = f"{sl:,} lines · {human_bytes(sb)}"
             rendered = f"{ol:,} lines · {human_bytes(ob)}"
-            out.append(f"| [{title}]({href}) | {original} | {rendered} | [source]({source}) |")
-        out.append("")
-    return "\n".join(out) + "\n"
+            table.append(
+                f"| [{title}]({href}) | {original} | {rendered} | [source]({source}) |"
+            )
+        blocks.append("\n".join(table))
+
+    return "\n\n".join(blocks) + "\n"
 
 
 def main() -> int:
@@ -265,17 +372,40 @@ def main() -> int:
         print(f"  {'cached' if was_cached else 'fetched'} + rendered {slug} "
               f"({src_lines}->{out_lines} lines)")
 
-    # Created-once shared stylesheet: ansi2html's colour palette plus chrome.
+    # Inline samples: render source + output (both highlighted) for the
+    # side-by-side gallery section. Sources are vendored in the site repo, so
+    # this also primes the palette with the XML highlighting classes.
+    # tuple: section, mode, title, blob_url, src_frag, out_frag, src_lines, out_lines
+    inline_rendered: list[tuple] = []
+    for section, mode, title, rel in INLINE_DEMOS:
+        src_path = site / rel
+        if not src_path.exists():
+            print(f"  WARNING: inline source {rel} not found under {site}")
+            continue
+        src_text = src_path.read_text(encoding="utf-8")
+        out_text = render(mode, src_path)
+        src_frag = conv.convert(highlight(bat, compact(src_text), lang="xml"), full=False)
+        out_frag = conv.convert(highlight(bat, compact(out_text)), full=False)
+        inline_rendered.append((
+            section, mode, title, f"{SITE_REPO_BLOB}/{rel}", src_frag, out_frag,
+            src_text.count("\n"), out_text.count("\n"),
+        ))
+        print(f"  inline + rendered {rel} "
+              f"({src_text.count(chr(10))}->{out_text.count(chr(10))} lines)")
+
+    # Colour palette from ansi2html (deduped to the ~260-rule set), shared by
+    # the full-page ansi.css and the scoped inline <style>. produce_headers()
+    # emits one rule line per span *occurrence*; dedupe order-preserving.
+    headers = conv.produce_headers().replace('<style type="text/css">', "").replace("</style>", "")
+    seen: set[str] = set()
+    palette = "\n".join(
+        ln for ln in headers.splitlines()
+        if ln.strip() and not (ln in seen or seen.add(ln))
+    )
+
+    # Created-once shared stylesheet for full-page demos: palette plus chrome.
     if args.regen_css or not css_path.exists():
         existed = css_path.exists()
-        headers = conv.produce_headers().replace('<style type="text/css">', "").replace("</style>", "")
-        # produce_headers() emits one rule line per span *occurrence*; dedupe by
-        # line (order-preserving) to collapse it to the ~260-colour palette.
-        seen: set[str] = set()
-        palette = "\n".join(
-            ln for ln in headers.splitlines()
-            if ln.strip() and not (ln in seen or seen.add(ln))
-        )
         css_path.write_text(palette + "\n" + CHROME_CSS, encoding="utf-8")
         print(f"  {'regenerated' if existed else 'generated'} {css_path.relative_to(site)}")
     else:
@@ -301,8 +431,17 @@ def main() -> int:
         )
         entries.append((heading, f"{out_slug}.html", title, url, sl, sb, ol, ob))
 
-    (demos_dir / "index.md").write_text(index_markdown(entries), encoding="utf-8")
-    print(f"\nDone. {len(entries)} full-page demos written to {demos_dir.relative_to(site)}/.")
+    # Scoped palette + layout for the inline side-by-side samples, injected as
+    # a self-contained <style> so it can't bleed into the surrounding theme.
+    inline_style = ""
+    if inline_rendered:
+        inline_style = ("<style>\n" + scope_css(palette, ".unxml-demo").strip()
+                        + "\n" + INLINE_CSS.strip() + "\n</style>")
+
+    (demos_dir / "index.md").write_text(
+        index_markdown(entries, inline_rendered, inline_style), encoding="utf-8")
+    print(f"\nDone. {len(entries)} full-page + {len(inline_rendered)} inline "
+          f"demos written to {demos_dir.relative_to(site)}/.")
     return 0
 
 
