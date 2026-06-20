@@ -37,7 +37,7 @@ xsl:stylesheet(
           xsl:merge-key(select="@id")
         xsl:merge-action
           merged(id="{@id}")
-            xsl:sequence(select="current-merge-group()")
+            <-- current-merge-group()
       xsl:where-populated
         notes
           xsl:on-non-empty
@@ -48,9 +48,9 @@ xsl:stylesheet(
       xsl:source-document(href="extra.xml", streamable="yes")
         apply *
       xsl:fork
-        xsl:sequence(select="'one'")
-        xsl:sequence(select="'two'")
+        <-- 'one'
+        <-- 'two'
       xsl:assert(error-code="my:empty", test="count(item) gt 0") = no items present
   template init:
     xsl:context-item(as="element()", use="required")
-    xsl:sequence(select=".")
+    <-- .

@@ -23,9 +23,10 @@ stylesheet shows both its control flow and the markup it emits.
 
 A trailing colon (`:`) marks a line that opens an indented block, the way `:`
 opens a suite in Python. Every construct that introduces a body — `match`,
-`template`, `if`, `choose`, `when`, `else`, `foreach` — ends in `:`. `element`
-and `call` take the colon only when they actually have a body; childless
-constructs (`apply`, `<-`, `copy`, assignments) never do.
+`template`, `function`, `if`, `choose`, `when`, `else`, `foreach` — ends in `:`.
+`element`, `call`, `copy`, `next-match`, and `apply-imports` take the colon only
+when they actually have a body; childless constructs (`apply`, `<-`, `<--`,
+`copy X`, assignments) never do.
 
 ## Quick reference
 
@@ -35,7 +36,11 @@ constructs (`apply`, `<-`, `copy`, assignments) never do.
 | `xsl:template name="X"` | `template X:` |
 | `xsl:apply-templates select="X"` | `apply X` |
 | `xsl:value-of select="X"` | `<- X` |
+| `xsl:sequence select="X"` | `<-- X` |
 | `xsl:copy-of select="X"` | `copy X` |
+| `xsl:copy` | `copy:` |
+| `xsl:function name="f" as="T"` | `function f -> T:` |
+| `xsl:next-match` / `xsl:apply-imports` | `next-match` / `apply-imports` |
 | `xsl:if test="X"` | `if X:` |
 | `xsl:choose` | `choose:` |
 | `xsl:when test="X"` | `when X:` |
@@ -166,6 +171,21 @@ The `<-` arrow reads as "emit the value of":
 <- $total
 ```
 
+### `xsl:sequence select="X"` → `<-- X`
+
+`xsl:sequence` (XSLT 2.0+) also emits, but its result is a *sequence* of nodes or
+atomic values rather than the atomized string `value-of` produces. The doubled
+arrow `<--` mirrors `<-` while marking that distinction:
+
+```xml
+<xsl:sequence select="concat($first, ' ', $last)"/>
+```
+```text
+<-- concat($first, ' ', $last)
+```
+
+A bodied sequence constructor (no `select`) nests its body beneath a bare `<--`.
+
 ### `xsl:copy-of select="X"` → `copy X`
 
 ```xml
@@ -173,6 +193,70 @@ The `<-` arrow reads as "emit the value of":
 ```
 ```text
 copy details/*
+```
+
+### `xsl:copy` → `copy:`
+
+`xsl:copy` makes a shallow copy of the current node; its body supplies the copy's
+content. It opens a block (`copy:`) when it has one, and renders as a bare `copy`
+when empty. Any attributes (`select`, `copy-namespaces`, …) stay in parentheses,
+which keeps it distinct from `copy-of`'s `copy X`:
+
+```xml
+<xsl:copy>
+  <xsl:apply-templates select="@* | node()"/>
+</xsl:copy>
+```
+```text
+copy:
+  apply @* | node()
+```
+
+## User-defined functions
+
+### `xsl:function name="f" as="T"` → `function f -> T:`
+
+An `xsl:function` (XSLT 2.0+) is a callable invoked from XPath expressions. It
+leads with `function`, and its declared result type follows a `->` arrow. The
+`xsl:param` children render as the usual `param` lines, and the body — typically
+an `xsl:sequence` — supplies the return value:
+
+```xml
+<xsl:function name="my:full-name" as="xs:string">
+  <xsl:param name="first" as="xs:string"/>
+  <xsl:param name="last" as="xs:string"/>
+  <xsl:sequence select="concat($first, ' ', $last)"/>
+</xsl:function>
+```
+```text
+function my:full-name -> xs:string:
+  param first
+  param last
+  <-- concat($first, ' ', $last)
+```
+
+A function with no `as` renders as `function f:`. Any other attribute (e.g.
+`visibility="public"` in a 3.0 package) is preserved in parentheses before the
+colon, the way `mode` is on a `match` template.
+
+## Re-dispatch
+
+### `xsl:next-match` / `xsl:apply-imports`
+
+Both re-apply template rules to the current node — `next-match` fires the
+next-best-matching rule, `apply-imports` the imported one. Each renders as a bare
+keyword, taking a colon only when it carries `xsl:with-param` / `xsl:fallback`
+children:
+
+```xml
+<xsl:template match="order[@priority='high']">
+  <urgent><xsl:next-match/></urgent>
+</xsl:template>
+```
+```text
+match order[@priority='high']:
+  urgent
+    next-match
 ```
 
 ## Control flow
@@ -437,3 +521,17 @@ their attributes in parentheses.
 For a stylesheet exercising every construct end-to-end, see
 [`test-input/xslt-constructs.xsl`](../test-input/xslt-constructs.xsl) and run
 `unxml --xslt test-input/xslt-constructs.xsl`.
+
+## XSLT 2.0 / 3.0 coverage
+
+The dialect targets XSLT 1.0 plus the most common 2.0/3.0 instructions
+(`xsl:sequence`, `xsl:function`, `xsl:copy`, `xsl:next-match`,
+`xsl:apply-imports`). Other 2.0/3.0 instructions — `xsl:for-each-group`,
+`xsl:analyze-string`, `xsl:iterate`, `xsl:try`/`xsl:catch`, `xsl:map`,
+`xsl:merge`, `xsl:package`, and so on — are not yet given dedicated keywords;
+they fall through to the generic formatter (rendered as `xsl:name(attrs…)` with
+their children nested), so a stylesheet still reads top-to-bottom, just without
+the terser dialect for those constructs. The fixtures
+[`test-input/xslt2-constructs.xsl`](../test-input/xslt2-constructs.xsl) and
+[`test-input/xslt3-constructs.xsl`](../test-input/xslt3-constructs.xsl) exercise
+this surface.

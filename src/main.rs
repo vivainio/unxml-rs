@@ -989,6 +989,89 @@ impl XmlElement {
                     None
                 }
             }
+            "xsl:sequence" => {
+                // xsl:sequence(select="X") → <-- X. The doubled arrow mirrors
+                // value-of's `<-` but marks a *sequence* result (nodes/values),
+                // not an atomized string. A bodied sequence constructor nests.
+                if let Some(select) = self.attributes.get("select") {
+                    result.push_str(&format!("{indent_str}<-- {select}\n"));
+                    Some(result)
+                } else if !self.nodes.is_empty() {
+                    result.push_str(&format!("{indent_str}<--\n"));
+                    result.push_str(&self.render_mixed_body(
+                        indent + 1,
+                        &FormatOpts::XSLT,
+                        registry,
+                    ));
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:function" => {
+                // xsl:function(name="f", as="T") → function f -> T:
+                // (no `as` → `function f:`). Params render as the usual `param`
+                // lines; any other attribute (e.g. visibility) stays in parens.
+                if let Some(name) = self.attributes.get("name") {
+                    result.push_str(&format!("{indent_str}function {name}"));
+                    if let Some(as_type) = self.attributes.get("as") {
+                        result.push_str(&format!(" -> {as_type}"));
+                    }
+                    let extra_attrs: Vec<_> = self
+                        .attributes
+                        .iter()
+                        .filter(|(k, _)| *k != "name" && *k != "as")
+                        .collect();
+                    if !extra_attrs.is_empty() {
+                        let mut sorted_attrs: Vec<_> = extra_attrs.into_iter().collect();
+                        sorted_attrs.sort_by_key(|(k, _)| *k);
+                        let attr_str: Vec<String> = sorted_attrs
+                            .iter()
+                            .map(|(k, v)| format!("{k}=\"{v}\""))
+                            .collect();
+                        let col = current_col(&result);
+                        result.push_str(&render_attrs(&attr_str, col, indent, true));
+                    }
+                    result.push_str(":\n");
+                    result.push_str(&self.render_mixed_body(
+                        indent + 1,
+                        &FormatOpts::XSLT,
+                        registry,
+                    ));
+                    Some(result)
+                } else {
+                    None
+                }
+            }
+            "xsl:next-match" | "xsl:apply-imports" => {
+                // Re-dispatch instructions: bare keyword, taking a colon only
+                // when they carry a body (with-param / fallback).
+                let kw = self.name.strip_prefix("xsl:").unwrap_or(&self.name);
+                let colon = if self.has_renderable_body() { ":" } else { "" };
+                result.push_str(&format!("{indent_str}{kw}{colon}\n"));
+                result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
+                Some(result)
+            }
+            "xsl:copy" => {
+                // xsl:copy → copy (shallow copy of the current node). Distinct
+                // from copy-of's `copy X`; any attributes (select, namespaces)
+                // stay in parens to avoid colliding with that form.
+                result.push_str(&format!("{indent_str}copy"));
+                if !self.attributes.is_empty() {
+                    let mut sorted_attrs: Vec<_> = self.attributes.iter().collect();
+                    sorted_attrs.sort_by_key(|(k, _)| *k);
+                    let attr_str: Vec<String> = sorted_attrs
+                        .iter()
+                        .map(|(k, v)| format!("{k}=\"{v}\""))
+                        .collect();
+                    let col = current_col(&result);
+                    result.push_str(&render_attrs(&attr_str, col, indent, true));
+                }
+                let colon = if self.has_renderable_body() { ":" } else { "" };
+                result.push_str(&format!("{colon}\n"));
+                result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
+                Some(result)
+            }
             _ => None,
         }
     }

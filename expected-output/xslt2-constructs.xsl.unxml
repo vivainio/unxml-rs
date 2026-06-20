@@ -6,10 +6,10 @@ xsl:stylesheet(
   xsl:output(indent="yes", method="xml")
   xsl:character-map(name="entities")
     xsl:output-character(character=" ", string="&nbsp;")
-  xsl:function(as="xs:string", name="my:full-name")
+  function my:full-name -> xs:string:
     param first
     param last
-    xsl:sequence(select="concat($first, ' ', $last)")
+    <-- concat($first, ' ', $last)
   threshold := 10
   match /orders:
     report
@@ -38,6 +38,6 @@ xsl:stylesheet(
         summary(total="{sum(order/@total)}")
   match order[@priority='high']:
     urgent
-      xsl:next-match
+      next-match
   match order:
     entry(name="{my:full-name(@first, @last)}")
