@@ -624,6 +624,20 @@ impl XmlElement {
         result
     }
 
+    /// Loose literal text directly inside an `xsl:*` container (mixed content,
+    /// e.g. `<xsl:template>Title: <span>…`) is semantically an `xsl:text` —
+    /// render it the same way, as a quoted line. Returns "" when there is none.
+    /// Position relative to child elements is not preserved by the model, so it
+    /// is emitted ahead of the children.
+    fn xslt_text_line(&self, indent: usize) -> String {
+        let text = self.text_content.trim();
+        if text.is_empty() {
+            String::new()
+        } else {
+            format!("{}\"{}\"\n", "  ".repeat(indent), text)
+        }
+    }
+
     fn format_xslt_element(
         &self,
         indent: usize,
@@ -662,6 +676,7 @@ impl XmlElement {
                 }
 
                 result.push('\n');
+                result.push_str(&self.xslt_text_line(indent + 1));
                 for child in &self.children {
                     result.push_str(&child.format_yaml_like(
                         indent + 1,
@@ -719,6 +734,7 @@ impl XmlElement {
                 // xsl:if(test="X") → if X
                 if let Some(test) = self.attributes.get("test") {
                     result.push_str(&format!("{indent_str}if {test}\n"));
+                    result.push_str(&self.xslt_text_line(indent + 1));
                     for child in &self.children {
                         result.push_str(&child.format_yaml_like(
                             indent + 1,
@@ -747,6 +763,7 @@ impl XmlElement {
                 // xsl:when(test="X") → when X
                 if let Some(test) = self.attributes.get("test") {
                     result.push_str(&format!("{indent_str}when {test}\n"));
+                    result.push_str(&self.xslt_text_line(indent + 1));
                     for child in &self.children {
                         result.push_str(&child.format_yaml_like(
                             indent + 1,
@@ -762,6 +779,7 @@ impl XmlElement {
             "xsl:otherwise" => {
                 // xsl:otherwise → else
                 result.push_str(&format!("{indent_str}else\n"));
+                result.push_str(&self.xslt_text_line(indent + 1));
                 for child in &self.children {
                     result.push_str(&child.format_yaml_like(
                         indent + 1,
@@ -829,6 +847,7 @@ impl XmlElement {
                 // xsl:call-template(name="X") → call X
                 if let Some(name) = self.attributes.get("name") {
                     result.push_str(&format!("{indent_str}call {name}\n"));
+                    result.push_str(&self.xslt_text_line(indent + 1));
                     for child in &self.children {
                         result.push_str(&child.format_yaml_like(
                             indent + 1,
@@ -845,6 +864,7 @@ impl XmlElement {
                 // xsl:for-each(select="X") → foreach X
                 if let Some(select) = self.attributes.get("select") {
                     result.push_str(&format!("{indent_str}foreach {select}\n"));
+                    result.push_str(&self.xslt_text_line(indent + 1));
                     for child in &self.children {
                         result.push_str(&child.format_yaml_like(
                             indent + 1,
@@ -871,6 +891,7 @@ impl XmlElement {
                 // xsl:element(name="X") → element X
                 if let Some(name) = self.attributes.get("name") {
                     result.push_str(&format!("{indent_str}element {name}\n"));
+                    result.push_str(&self.xslt_text_line(indent + 1));
                     for child in &self.children {
                         result.push_str(&child.format_yaml_like(
                             indent + 1,
