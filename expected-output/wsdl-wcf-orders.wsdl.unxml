@@ -1,0 +1,29 @@
+wsdl OrderService http://tempuri.org/
+  ns q1 = http://schemas.datacontract.org/2004/07/Orders
+  ns tns = http://tempuri.org/
+  // WCF order-processing endpoint (SOAP 1.2, document/literal).
+  types
+    schema http://tempuri.org/Imports
+      import http://tempuri.org/ from http://localhost/OrderService.svc?xsd=xsd0
+      import http://schemas.datacontract.org/2004/07/Orders from http://localhost/OrderService.svc?xsd=xsd1
+  message SubmitOrderRequest
+    part parameters : tns:SubmitOrder
+  message SubmitOrderResponse
+    part parameters : tns:SubmitOrderResponse
+  message SubmitOrder_ValidationFault_FaultMessage
+    part detail : q1:ValidationFault
+  portType IOrderService
+    op SubmitOrder
+      // Submit a purchase order and return its confirmation.
+      in : tns:SubmitOrderRequest
+      out : tns:SubmitOrderResponse
+      fault ValidationFault : tns:SubmitOrder_ValidationFault_FaultMessage
+  binding BasicHttpBinding_IOrderService : tns:IOrderService
+    soap12 document
+    op SubmitOrder  action http://tempuri.org/IOrderService/SubmitOrder
+      in : literal
+      out : literal
+      fault ValidationFault : literal
+  service OrderService
+    port BasicHttpBinding_IOrderService : tns:BasicHttpBinding_IOrderService
+      address http://localhost/OrderService.svc

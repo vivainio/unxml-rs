@@ -1,0 +1,29 @@
+wsdl StockQuote http://example.com/stockquote.wsdl
+  ns tns = http://example.com/stockquote.wsdl
+  ns xsd1 = http://example.com/stockquote.xsd
+  // Stock quote service: returns the last trade price for a ticker symbol.
+  types
+    schema http://example.com/stockquote.xsd
+      element TradePriceRequest
+        tickerSymbol : xsd:string
+      element TradePrice
+        price : xsd:float
+        currency : xsd:string ?
+  message GetLastTradePriceInput
+    part body : xsd1:TradePriceRequest
+  message GetLastTradePriceOutput
+    part body : xsd1:TradePrice
+  portType StockQuotePortType
+    op GetLastTradePrice
+      // Return the last trade price for the given symbol.
+      in : tns:GetLastTradePriceInput
+      out : tns:GetLastTradePriceOutput
+  binding StockQuoteSoapBinding : tns:StockQuotePortType
+    soap document
+    op GetLastTradePrice  action http://example.com/GetLastTradePrice
+      in : literal
+      out : literal
+  service StockQuoteService
+    // My first service
+    port StockQuotePort : tns:StockQuoteSoapBinding
+      address http://example.com/stockquote

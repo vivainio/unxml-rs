@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- WCF-style metadata: WSDL 1.1 over SOAP 1.2, document/literal, with the
+     typical import-split <types> (xsd:import only, no inline schema) and a
+     declared fault. Mirrors what a basicHttpBinding/?wsdl endpoint emits. -->
+<wsdl:definitions name="OrderService"
+    targetNamespace="http://tempuri.org/"
+    xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+    xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/"
+    xmlns:tns="http://tempuri.org/"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+    xmlns:q1="http://schemas.datacontract.org/2004/07/Orders">
+  <wsdl:documentation>WCF order-processing endpoint (SOAP 1.2, document/literal).</wsdl:documentation>
+
+  <wsdl:types>
+    <xsd:schema targetNamespace="http://tempuri.org/Imports"
+                xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+      <xsd:import namespace="http://tempuri.org/"
+                  schemaLocation="http://localhost/OrderService.svc?xsd=xsd0"/>
+      <xsd:import namespace="http://schemas.datacontract.org/2004/07/Orders"
+                  schemaLocation="http://localhost/OrderService.svc?xsd=xsd1"/>
+    </xsd:schema>
+  </wsdl:types>
+
+  <wsdl:message name="SubmitOrderRequest">
+    <wsdl:part name="parameters" element="tns:SubmitOrder"/>
+  </wsdl:message>
+  <wsdl:message name="SubmitOrderResponse">
+    <wsdl:part name="parameters" element="tns:SubmitOrderResponse"/>
+  </wsdl:message>
+  <wsdl:message name="SubmitOrder_ValidationFault_FaultMessage">
+    <wsdl:part name="detail" element="q1:ValidationFault"/>
+  </wsdl:message>
+
+  <wsdl:portType name="IOrderService">
+    <wsdl:operation name="SubmitOrder">
+      <wsdl:documentation>Submit a purchase order and return its confirmation.</wsdl:documentation>
+      <wsdl:input message="tns:SubmitOrderRequest"/>
+      <wsdl:output message="tns:SubmitOrderResponse"/>
+      <wsdl:fault name="ValidationFault" message="tns:SubmitOrder_ValidationFault_FaultMessage"/>
+    </wsdl:operation>
+  </wsdl:portType>
+
+  <wsdl:binding name="BasicHttpBinding_IOrderService" type="tns:IOrderService">
+    <soap12:binding transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="SubmitOrder">
+      <soap12:operation soapAction="http://tempuri.org/IOrderService/SubmitOrder" style="document"/>
+      <wsdl:input>
+        <soap12:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap12:body use="literal"/>
+      </wsdl:output>
+      <wsdl:fault name="ValidationFault">
+        <soap12:fault name="ValidationFault" use="literal"/>
+      </wsdl:fault>
+    </wsdl:operation>
+  </wsdl:binding>
+
+  <wsdl:service name="OrderService">
+    <wsdl:port name="BasicHttpBinding_IOrderService" binding="tns:BasicHttpBinding_IOrderService">
+      <soap12:address location="http://localhost/OrderService.svc"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>

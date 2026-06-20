@@ -47,7 +47,7 @@ class TestRunner:
     
     def find_test_files(self) -> List[Path]:
         """Find all XML and HTML files in the sample directory"""
-        extensions = ['*.xml', '*.html', '*.htm', '*.xsl', '*.sch', '*.xsd']
+        extensions = ['*.xml', '*.html', '*.htm', '*.xsl', '*.sch', '*.xsd', '*.wsdl']
         files = []
         
         for ext in extensions:
@@ -142,6 +142,10 @@ class TestRunner:
             # Add --xsd flag for .xsd files
             if file_path.suffix == ".xsd":
                 cmd.append("--xsd")
+
+            # Add --wsdl flag for .wsdl files
+            if file_path.suffix == ".wsdl":
+                cmd.append("--wsdl")
 
             # Exercise --select (Tier-A subtree selection by tag name) for files
             # named select-*: render only the `item` subtrees as top-level

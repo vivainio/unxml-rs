@@ -35,13 +35,15 @@ contexts:
       push: xpath-tail
 
     # Block-opening keywords: their header line may end with ':' (block marker).
-    - match: '^\s*(else|choose|call|foreach|element|template|match)\b'
+    # `function`/`copy` open blocks; `next-match`/`apply-imports` are re-dispatch
+    # instructions that take a ':' only when they carry a with-param body.
+    - match: '^\s*(else|choose|call|foreach|element|template|match|function|copy|next-match|apply-imports)\b'
       captures:
         1: keyword.control.unxml
       push: block-tail
 
     # Other control / structural keywords that lead a line (no block colon).
-    - match: '^\s*(apply|copy|import|param|rule|pattern|phase|schema|active|notation|list|union|type|ns|title|mixin)\b'
+    - match: '^\s*(apply|import|param|rule|pattern|phase|schema|active|notation|list|union|type|ns|title|mixin|wsdl|types|message|part|portType|binding|service|port|op|fault|soap12|soap|address)\b'
       captures:
         1: keyword.control.unxml
       push: line-tail
@@ -94,6 +96,19 @@ contexts:
       scope: keyword.operator.assignment.unxml
       push: value-tail
 
+    # XSLT type annotations: a `-> T` function return type, or an `as T`
+    # binding/param type (e.g. `threshold as integer := 10`). The occurrence
+    # indicator (?/*/+) sticks to the type; a parametric type like `map(...)`
+    # scopes its head here and lets its '(' open the usual paren list.
+    - match: '(->)\s*([\w][\w.:-]*[?*+]?)'
+      captures:
+        1: keyword.operator.unxml
+        2: storage.type.unxml
+    - match: '\b(as)\s+([\w][\w.:-]*[?*+]?)'
+      captures:
+        1: keyword.control.unxml
+        2: storage.type.unxml
+
     # XSD: a type reference after a colon ( name : Type ).
     - match: '(:)\s+([\w][\w.:-]*)'
       captures:
@@ -116,7 +131,12 @@ contexts:
     - match: '(?<=\s)[?*+](?=\s|$)'
       scope: keyword.operator.cardinality.unxml
 
-    # "<- xpath" maps-from operator (xsl:value-of): highlight the XPath.
+    # "<-- xpath" maps-from-sequence (xsl:sequence) and "<- xpath"
+    # maps-from-value (xsl:value-of): highlight the trailing XPath. The doubled
+    # arrow must be tried first so it isn't split into `<-` plus a stray `-`.
+    - match: '<--'
+      scope: keyword.operator.unxml
+      push: xpath-tail
     - match: '<-'
       scope: keyword.operator.unxml
       push: xpath-tail
@@ -197,6 +217,17 @@ contexts:
       pop: true
     - match: ','
       scope: punctuation.separator.unxml
+    # Folded function/template signature params: `name as T`, `name := default`.
+    # The ':=' rule must precede the 'name=' rule below, since ':' is a valid
+    # name char and would otherwise split ':=' into a name ':' plus '='.
+    - match: ':='
+      scope: keyword.operator.assignment.unxml
+    - match: '\b(as)\s+([\w][\w.:-]*[?*+]?)'
+      captures:
+        1: keyword.control.unxml
+        2: storage.type.unxml
+    - match: "'[^']*'"
+      scope: string.quoted.single.unxml
     # name="..."  — the attribute name up to the '='
     - match: '([\w.:*-]+)\s*(=)'
       captures:

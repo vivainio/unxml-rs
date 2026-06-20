@@ -1,0 +1,39 @@
+wsdl http://example.org/tasks/TaskAccessPoint
+  ns tns = http://example.org/tasks/TaskAccessPoint
+  types
+    schema http://example.org/tasks/TaskAccessPoint (elementFormDefault=qualified)
+      element StartTask
+        EntryPointName : s:string ?
+        InputParameters : tns:ArrayOfParameter ?
+      type ArrayOfParameter
+        Parameter : tns:Parameter *
+      type Parameter
+        Name : s:string ?
+        Value : s:string ?
+      element StartTaskResponse
+        Status : s:string
+        CompletedAt : s:dateTime
+  message StartTaskSoapIn
+    part parameters : tns:StartTask
+  message StartTaskSoapOut
+    part parameters : tns:StartTaskResponse
+  portType TaskAccessPointSoap
+    op StartTask
+      // Start a task at the named entry point and await its result.
+      in : tns:StartTaskSoapIn
+      out : tns:StartTaskSoapOut
+  binding TaskAccessPointSoap : tns:TaskAccessPointSoap
+    soap document
+    op StartTask  action http://example.org/tasks/TaskAccessPoint/StartTask
+      in : literal
+      out : literal
+  binding TaskAccessPointSoap12 : tns:TaskAccessPointSoap
+    soap12 document
+    op StartTask  action http://example.org/tasks/TaskAccessPoint/StartTask
+      in : literal
+      out : literal
+  service TaskAccessPoint
+    port TaskAccessPointSoap : tns:TaskAccessPointSoap
+      address http://localhost/tasks/TaskAccessPoint.asmx
+    port TaskAccessPointSoap12 : tns:TaskAccessPointSoap12
+      address http://localhost/tasks/TaskAccessPoint.asmx
