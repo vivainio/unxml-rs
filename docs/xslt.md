@@ -21,25 +21,31 @@ Anything that is *not* an `xsl:*` element (literal result elements, `cbc:`/`cac:
 output, comments, etc.) is rendered with the normal `unxml` rules, so a
 stylesheet shows both its control flow and the markup it emits.
 
+A trailing colon (`:`) marks a line that opens an indented block, the way `:`
+opens a suite in Python. Every construct that introduces a body — `match`,
+`template`, `if`, `choose`, `when`, `else`, `foreach` — ends in `:`. `element`
+and `call` take the colon only when they actually have a body; childless
+constructs (`apply`, `<-`, `copy`, assignments) never do.
+
 ## Quick reference
 
 | XSLT construct | unxml output |
 | --- | --- |
-| `xsl:template match="X"` | `match X` |
-| `xsl:template name="X"` | `template X` |
+| `xsl:template match="X"` | `match X:` |
+| `xsl:template name="X"` | `template X:` |
 | `xsl:apply-templates select="X"` | `apply X` |
 | `xsl:value-of select="X"` | `<- X` |
 | `xsl:copy-of select="X"` | `copy X` |
-| `xsl:if test="X"` | `if X` |
-| `xsl:choose` | `choose` |
-| `xsl:when test="X"` | `when X` |
-| `xsl:otherwise` | `else` |
-| `xsl:for-each select="X"` | `foreach X` |
+| `xsl:if test="X"` | `if X:` |
+| `xsl:choose` | `choose:` |
+| `xsl:when test="X"` | `when X:` |
+| `xsl:otherwise` | `else:` |
+| `xsl:for-each select="X"` | `foreach X:` |
 | `xsl:variable name="x" select="…"` | `x := …` |
 | `xsl:param name="x" select="…"` | `param x := …` |
 | `xsl:with-param name="x" select="…"` | `x := …` |
-| `xsl:call-template name="X"` | `call X` |
-| `xsl:element name="X"` | `element X` |
+| `xsl:call-template name="X"` | `call X:` (`call X` if no params) |
+| `xsl:element name="X"` | `element X:` (`element X` if empty) |
 | `xsl:attribute name="X"` | `@X = …` |
 | `xsl:text` | `"…"` (quoted literal) |
 
@@ -47,7 +53,22 @@ Each construct is detailed below.
 
 ## Templates
 
-### `xsl:template` with `match` → `match X`
+An `xsl:template` is the unit of an XSLT stylesheet, and it comes in two
+flavours that `unxml` deliberately renders differently:
+
+- **`match` templates** are *declarative rules*. You don't call them by name;
+  the XSLT processor walks the source tree and, for each node, fires whichever
+  template's `match` pattern fits. This is the rule-based half of XSLT — you
+  describe what to do with a kind of node and trust the engine to apply it
+  wherever that node appears. These are triggered by `apply` (see below).
+- **`name` templates** are *procedures*. They have no match pattern and never
+  fire on their own; you invoke one explicitly by name with `call`, optionally
+  passing parameters. This is the subroutine half of XSLT.
+
+`unxml` gives each its own keyword so you can tell at a glance whether a block
+is a rule the engine fires for you or a routine something else calls.
+
+### `xsl:template` with `match` → `match X:`
 
 A match template is a declarative rule, fired by `apply`. It leads with
 `match` to mirror that — and to pair with the `apply` that triggers it:
@@ -58,12 +79,12 @@ A match template is a declarative rule, fired by `apply`. It leads with
 </xsl:template>
 ```
 ```text
-match item
+match item:
   ...
 ```
 
 A `mode` (or any attribute other than `match`/`name`) is preserved in
-parentheses:
+parentheses, before the colon:
 
 ```xml
 <xsl:template match="item" mode="summary">
@@ -71,11 +92,11 @@ parentheses:
 </xsl:template>
 ```
 ```text
-match item (mode="summary")
+match item (mode="summary"):
   ...
 ```
 
-### `xsl:template` with `name` → `template X`
+### `xsl:template` with `name` → `template X:`
 
 A named template is a procedure, invoked by `call`. It leads with `template`
 (no sigil needed — the keyword alone distinguishes it from a `match` rule):
@@ -86,13 +107,19 @@ A named template is a procedure, invoked by `call`. It leads with `template`
 </xsl:template>
 ```
 ```text
-template formatDate
+template formatDate:
   param date
 ```
 
 ## Applying and calling templates
 
 ### `xsl:apply-templates select="X"` → `apply X`
+
+`apply-templates` is how the rule engine is set in motion. It selects a set of
+nodes (`select="X"`) and, for each one, hands it to whichever `match` template
+fits — so `apply` is the call site that triggers `match` rules without naming
+them. With no `select` it processes the current node's children, which is what
+drives the recursive descent typical of XSLT.
 
 ```xml
 <xsl:apply-templates select="root/items"/>
@@ -101,12 +128,15 @@ template formatDate
 apply root/items
 ```
 
-With no `select`, it renders as a bare `apply`.
+With no `select`, it renders as a bare `apply`. `apply` never takes a colon — it
+delegates to other templates rather than opening a body of its own.
 
 ### `xsl:call-template` + `xsl:with-param`
 
-`call-template` becomes `call`, and each `with-param` becomes an assignment
-(`name := value`) — the same `:=` form used for variables:
+`call-template` is the procedure call that invokes a named `template` by name.
+It becomes `call`, and each `with-param` becomes an assignment (`name := value`)
+— the same `:=` form used for variables. With parameters, `call` opens a block
+and takes a colon:
 
 ```xml
 <xsl:call-template name="formatDate">
@@ -114,9 +144,11 @@ With no `select`, it renders as a bare `apply`.
 </xsl:call-template>
 ```
 ```text
-call formatDate
+call formatDate:
   date := @created
 ```
+
+A parameterless `<xsl:call-template name="X"/>` renders as a bare `call X`.
 
 `with-param` accepts both the `select="…"` form (above) and the element-body
 form (`<xsl:with-param>literal</xsl:with-param>`); both collapse to `:=`.
@@ -153,7 +185,7 @@ copy details/*
 </xsl:if>
 ```
 ```text
-if count(item) > 0
+if count(item) > 0:
   hasItems = true
 ```
 
@@ -173,10 +205,10 @@ becomes `else`:
 </xsl:choose>
 ```
 ```text
-choose
-  when @type = 'A'
+choose:
+  when @type = 'A':
     type = Type A
-  else
+  else:
     type = Unknown
 ```
 
@@ -188,7 +220,7 @@ choose
 </xsl:for-each>
 ```
 ```text
-foreach item
+foreach item:
   ...
 ```
 
@@ -245,9 +277,11 @@ param date
 </xsl:element>
 ```
 ```text
-element dynamic
+element dynamic:
   ...
 ```
+
+An empty `<xsl:element name="X"/>` renders as a bare `element X`.
 
 ### `xsl:attribute name="X"` → `@X = …`
 
@@ -350,7 +384,7 @@ xsl:stylesheet(
     xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
     xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
-  template /Invoice
+  match /Invoice:
     cac:Party
       cbc:Name
         <- cbc:Name
