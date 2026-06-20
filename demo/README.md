@@ -53,3 +53,34 @@ cct.xsd.unxml:      type IdentifierType extends xsd:string   (the actual primiti
 ```sh
 unxml --xsd PATH/TO/source.xsd > demo/<name>.xsd.unxml
 ```
+
+## Publishing the demo site
+
+The `.unxml` files here are also published as a syntax-highlighted
+[Zensical](https://zensical.org/) site at
+<https://vivainio.github.io/unxml-demos/> (sources in the sibling
+[`unxml-demos`](https://github.com/vivainio/unxml-demos) repo, cloned
+next to this one as `../unxml-demos`).
+
+`publish-to-demo-site.py` renders every `.unxml` file to class-based HTML
+and writes one Markdown page per file (plus a shared stylesheet) into that
+repo's `docs/`. Highlighting goes through `bat` (using the `unxml` grammar)
+piped to `ansi2html`, so the colours match the terminal exactly.
+
+Prerequisites:
+
+```sh
+python3 editor/install-editor-support.py   # install the unxml grammar into bat
+pip install ansi2html
+```
+
+Then, from the repo root:
+
+```sh
+python3 demo/publish-to-demo-site.py            # writes to ../unxml-demos
+python3 demo/publish-to-demo-site.py PATH/TO/unxml-demos   # or an explicit path
+```
+
+Commit and push `unxml-demos` afterwards — its GitHub Actions workflow
+rebuilds and deploys the site. The generated stylesheet is wired in via
+`extra_css = ["stylesheets/unxml.css"]` in `unxml-demos/zensical.toml`.
