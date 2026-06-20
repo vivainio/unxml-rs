@@ -88,6 +88,11 @@ contexts:
       scope: keyword.operator.assignment.unxml
       push: value-tail
 
+    # A bare trailing ':' marks a block-opening keyword line
+    # (template X:, choose:, foreach X:, call X:, element X:, else:).
+    - match: ':(?=\s*$)'
+      scope: punctuation.section.block.unxml
+
     # XSD: a type reference after a colon ( name : Type ).
     - match: '(:)\s+([\w][\w.:-]*)'
       captures:
@@ -145,6 +150,9 @@ contexts:
   xpath-tail:
     - match: '$'
       pop: true
+    # Trailing ':' from an `if X:` / `when X:` block header.
+    - match: ':(?=\s*$)'
+      scope: punctuation.section.block.unxml
     - include: xpath-body
 
   # XPath token rules, shared by the contexts above.
