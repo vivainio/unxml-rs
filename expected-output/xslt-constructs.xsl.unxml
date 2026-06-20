@@ -3,17 +3,17 @@ xsl:stylesheet(version="1.0", xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
   xsl:strip-space(elements="*")
   globalVar := /root/config/value
   literalVar := literal value
-  template /:
+  match /:
     apply root/items
-  template item (mode="summary"):
+  match item (mode="summary"):
     summary
       <- @name
-  template #formatDate:
+  template formatDate:
     param date
     param format := 'YYYY-MM-DD'
     formatted
       <- $date
-  template items:
+  match items:
     output
       if count(item) > 0:
         hasItems = true

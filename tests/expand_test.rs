@@ -48,6 +48,6 @@ fn test_expand_preserves_local_templates() {
     let output = run_unxml(&["--xslt", "--expand", "tests/fixtures/main.xsl"]);
 
     // Body template is defined locally, should still work
-    assert!(output.contains("template Body"));
+    assert!(output.contains("match Body"));
     assert!(output.contains("<- Text"));
 }

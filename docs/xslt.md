@@ -25,8 +25,8 @@ stylesheet shows both its control flow and the markup it emits.
 
 | XSLT construct | unxml output |
 | --- | --- |
-| `xsl:template match="X"` | `template X` |
-| `xsl:template name="X"` | `template #X` |
+| `xsl:template match="X"` | `match X` |
+| `xsl:template name="X"` | `template X` |
 | `xsl:apply-templates select="X"` | `apply X` |
 | `xsl:value-of select="X"` | `<- X` |
 | `xsl:copy-of select="X"` | `copy X` |
@@ -47,7 +47,10 @@ Each construct is detailed below.
 
 ## Templates
 
-### `xsl:template` with `match` → `template X`
+### `xsl:template` with `match` → `match X`
+
+A match template is a declarative rule, fired by `apply`. It leads with
+`match` to mirror that — and to pair with the `apply` that triggers it:
 
 ```xml
 <xsl:template match="item">
@@ -55,7 +58,7 @@ Each construct is detailed below.
 </xsl:template>
 ```
 ```text
-template item
+match item
   ...
 ```
 
@@ -68,13 +71,14 @@ parentheses:
 </xsl:template>
 ```
 ```text
-template item (mode="summary")
+match item (mode="summary")
   ...
 ```
 
-### `xsl:template` with `name` → `template #X`
+### `xsl:template` with `name` → `template X`
 
-A named template is prefixed with `#` to distinguish it from a match pattern:
+A named template is a procedure, invoked by `call`. It leads with `template`
+(no sigil needed — the keyword alone distinguishes it from a `match` rule):
 
 ```xml
 <xsl:template name="formatDate">
@@ -82,7 +86,7 @@ A named template is prefixed with `#` to distinguish it from a match pattern:
 </xsl:template>
 ```
 ```text
-template #formatDate
+template formatDate
   param date
 ```
 

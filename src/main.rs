@@ -708,12 +708,12 @@ impl XmlElement {
 
         match self.name.as_str() {
             "xsl:template" => {
-                // xsl:template(match="X") → template X
-                // xsl:template(name="X") → template #X
+                // xsl:template(match="X") → match X   (declarative rule)
+                // xsl:template(name="X")  → template X (named def, invoked via `call`)
                 if let Some(match_val) = self.attributes.get("match") {
-                    result.push_str(&format!("{indent_str}template {match_val}"));
+                    result.push_str(&format!("{indent_str}match {match_val}"));
                 } else if let Some(name_val) = self.attributes.get("name") {
-                    result.push_str(&format!("{indent_str}template #{name_val}"));
+                    result.push_str(&format!("{indent_str}template {name_val}"));
                 } else {
                     return None;
                 }

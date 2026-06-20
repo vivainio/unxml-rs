@@ -35,7 +35,7 @@ contexts:
       push: xpath-tail
 
     # Block-opening keywords: their header line may end with ':' (block marker).
-    - match: '^\s*(else|choose|call|foreach|element|template)\b'
+    - match: '^\s*(else|choose|call|foreach|element|template|match)\b'
       captures:
         1: keyword.control.unxml
       push: block-tail
