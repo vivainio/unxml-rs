@@ -226,6 +226,46 @@ foreach item:
 
 ## Variables and parameters
 
+XSLT has two ways to name a value, and they look almost identical but mean
+different things:
+
+- **A variable (`xsl:variable`)** is a fixed binding. You set it once, where it
+  is declared, and it never changes — XSLT has no assignment, so a variable is
+  closer to a `const` than to a mutable local. It exists to give a name to a
+  value (or a computed node-set) so you don't repeat the expression.
+- **A parameter (`xsl:param`)** is an *input*. It is declared the same way, with
+  a name and an optional default, but the value can be supplied **from outside**
+  the place it is declared — the default is only a fallback. Parameters are how a
+  template (or the whole stylesheet) receives data.
+
+Think of a named `template` as a function: its `xsl:param` declarations are its
+arguments, and the `xsl:with-param` entries on a `call` are the arguments you
+pass in. The default on a `param` is the value used when the caller doesn't
+supply that argument — exactly like a default argument in most languages.
+
+```text
+template formatDate:            # function definition…
+  param date                    #   …with one argument, `date` (no default)
+  param format := 'YYYY-MM-DD'  #   …and one with a default
+  ...
+
+call formatDate:                # the call site
+  date := @created              #   binds the `date` argument
+```
+
+Because `unxml` prefixes inputs with `param`, you can scan a template and read
+off its signature: every `param` line is an argument the template expects, and
+everything else is its body. Top-level `xsl:param` declarations (direct children
+of `xsl:stylesheet`) work the same way but for the stylesheet as a whole — they
+are the values the caller of the *transformation* can set, typically from the
+command line or host application.
+
+Scope follows the nesting: a variable or parameter is visible to the block it is
+declared in and everything indented under it, and a name declared deeper shadows
+an outer one. This is why the same `:=` form is reused for variables,
+parameters, and `with-param` — at the point of use they are all just a name
+bound to a value; only *where the value comes from* differs.
+
 ### `xsl:variable` → `x := …`
 
 A variable with `select` collapses to a one-liner:
