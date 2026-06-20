@@ -48,6 +48,10 @@ UNXML_BIN = REPO_ROOT / "target" / "release" / (
 UBL = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xsd"
 UBL_XML = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xml"
 DOCBOOK = "https://cdn.docbook.org/release/xsl/current"
+# DocBook xslTNG: the modern, MIT-licensed XSLT 3.0 reimplementation of the
+# DocBook stylesheets. Real-world code exercising xsl:function, maps, xsl:iterate,
+# xsl:try/catch and friends — a counterpoint to the classic XSLT 1.0 DOCBOOK above.
+XSLTNG = "https://raw.githubusercontent.com/docbook/xslTNG/main/src/main/xslt"
 SCHEMATRON = "https://raw.githubusercontent.com/Schematron/schematron/master/trunk/schematron/code"
 EN16931 = ("https://raw.githubusercontent.com/ConnectingEurope/"
            "eInvoicing-EN16931/master/ubl/schematron")
@@ -79,6 +83,10 @@ DEMOS: list[tuple[str, str, str, str]] = [
     ("xsd", "ubl/invoice", "UBL — Invoice", f"{UBL}/maindoc/UBL-Invoice-2.1.xsd"),
     ("xslt", "docbook/html-driver", "DocBook XSL — HTML driver", f"{DOCBOOK}/html/docbook.xsl"),
     ("xslt", "docbook/inline", "DocBook XSL — inline elements", f"{DOCBOOK}/html/inline.xsl"),
+    ("xslt", "docbook/xsltng-functions", "DocBook xslTNG 3.0 — function library", f"{XSLTNG}/modules/functions.xsl"),
+    ("xslt", "docbook/xsltng-variable", "DocBook xslTNG 3.0 — variables & maps", f"{XSLTNG}/modules/variable.xsl"),
+    ("xslt", "docbook/xsltng-l10n", "DocBook xslTNG 3.0 — localization (try/catch, iterate)", f"{XSLTNG}/modules/l10n.xsl"),
+    ("xslt", "docbook/xsltng-profile", "DocBook xslTNG 3.0 — profiling transform", f"{XSLTNG}/transforms/40-profile.xsl"),
     ("xslt", "schematron/iso-svrl", "ISO Schematron — SVRL skeleton", f"{SCHEMATRON}/iso_svrl_for_xslt1.xsl"),
     ("schematron", "en16931/ubl-validation", "EN16931 — UBL validation (driver)", f"{EN16931}/EN16931-UBL-validation.sch"),
     ("schematron", "en16931/model", "EN16931 — abstract model rules", f"{EN16931}/abstract/EN16931-model.sch"),
