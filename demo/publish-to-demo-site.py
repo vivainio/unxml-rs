@@ -159,22 +159,40 @@ def highlight(bat: str, text: str) -> str:
     ).stdout
 
 
-def index_markdown(entries: list[tuple[str, str, str, str, int]]) -> str:
-    # entries: (heading, href, title, source, lines)
+def human_bytes(n: int) -> str:
+    """Compact size label: B / KB / MB with one decimal where it helps."""
+    if n < 1024:
+        return f"{n} B"
+    if n < 1024 * 1024:
+        return f"{n / 1024:.1f} KB"
+    return f"{n / (1024 * 1024):.1f} MB"
+
+
+def index_markdown(entries: list[tuple[str, str, str, str, int, int, int, int]]) -> str:
+    # entries: (heading, href, title, source, src_lines, src_bytes, out_lines, out_bytes)
     out = [
         "# Gallery\n",
         "Real-world XML documents rendered with [`unxml`]"
         "(https://github.com/vivainio/unxml-rs), syntax-highlighted with the "
         "same grammar `unxml` ships for `bat`. Each link opens the full "
         "rendered output edge-to-edge.\n",
+        "The **Original** and **Rendered** columns compare the source XML "
+        "against the `unxml` output (lines · bytes), so you can see how much "
+        "the rendering compresses each document.\n",
     ]
     for heading in SECTION_ORDER:
         rows = [e for e in entries if e[0] == heading]
         if not rows:
             continue
-        out += [f"## {heading}\n", "| Document | Lines | Source |", "| --- | --- | --- |"]
-        for _, href, title, source, lines in rows:
-            out.append(f"| [{title}]({href}) | {lines} | [source]({source}) |")
+        out += [
+            f"## {heading}\n",
+            "| Document | Original | Rendered | Source |",
+            "| --- | --- | --- | --- |",
+        ]
+        for _, href, title, source, sl, sb, ol, ob in rows:
+            original = f"{sl:,} lines · {human_bytes(sb)}"
+            rendered = f"{ol:,} lines · {human_bytes(ob)}"
+            out.append(f"| [{title}]({href}) | {original} | {rendered} | [source]({source}) |")
         out.append("")
     return "\n".join(out) + "\n"
 
@@ -214,7 +232,8 @@ def main() -> int:
     (demos_dir / "index.md").unlink(missing_ok=True)
 
     # First pass: fetch + render each demo (also primes the converter palette).
-    rendered: list[tuple[str, str, str, str, str, int]] = []  # out_slug, heading, title, url, fragment, lines
+    # tuple: out_slug, heading, title, url, fragment, src_lines, src_bytes, out_lines, out_bytes
+    rendered: list[tuple[str, str, str, str, str, int, int, int, int]] = []
     for mode, slug, title, url in DEMOS:
         subdir, heading = MODE_CATEGORY[mode]
         ext = Path(urlsplit(url).path).suffix or f".{mode}"
@@ -222,11 +241,17 @@ def main() -> int:
         was_cached = cache_path.exists()
         if not fetch(url, cache_path):
             continue
+        src_bytes = cache_path.read_bytes()
+        src_lines = src_bytes.count(b"\n")
         text = render(mode, cache_path)
         fragment = conv.convert(highlight(bat, text), full=False)
         out_slug = f"{subdir}/{slug}"
-        rendered.append((out_slug, heading, title, url, fragment, text.count("\n")))
-        print(f"  {'cached' if was_cached else 'fetched'} + rendered {slug} ({text.count(chr(10))} lines)")
+        out_lines = text.count("\n")
+        out_bytes = len(text.encode("utf-8"))
+        rendered.append((out_slug, heading, title, url, fragment,
+                         src_lines, len(src_bytes), out_lines, out_bytes))
+        print(f"  {'cached' if was_cached else 'fetched'} + rendered {slug} "
+              f"({src_lines}->{out_lines} lines)")
 
     # Created-once shared stylesheet: ansi2html's colour palette plus chrome.
     if args.regen_css or not css_path.exists():
@@ -244,15 +269,16 @@ def main() -> int:
     else:
         # Tripwire: warn if a page references a class the committed css lacks.
         defined = set(re.findall(r"\.([A-Za-z0-9_-]+)", css_path.read_text(encoding="utf-8")))
-        used = {c for *_, frag, _ in rendered
-                for attr in re.findall(r'class="([^"]+)"', frag) for c in attr.split()}
+        used = {c for r in rendered
+                for attr in re.findall(r'class="([^"]+)"', r[4]) for c in attr.split()}
         if missing := used - defined:
             print(f"  WARNING: {css_path.name} is missing {len(missing)} class(es) "
                   f"e.g. {sorted(missing)[:3]} — rerun with --regen-css")
 
     # Second pass: write each standalone full-page document linking the css.
-    entries: list[tuple[str, str, str, str, int]] = []  # heading, href, title, source, lines
-    for out_slug, heading, title, url, fragment, lines in rendered:
+    # entries: heading, href, title, source, src_lines, src_bytes, out_lines, out_bytes
+    entries: list[tuple[str, str, str, str, int, int, int, int]] = []
+    for out_slug, heading, title, url, fragment, sl, sb, ol, ob in rendered:
         out_path = demos_dir / f"{out_slug}.html"
         out_path.parent.mkdir(parents=True, exist_ok=True)
         # "../" per level below demos/ (where the index and ansi.css live).
@@ -261,7 +287,7 @@ def main() -> int:
             PAGE.format(title=title, css_href=f"{back}ansi.css", fragment=fragment, back=back),
             encoding="utf-8",
         )
-        entries.append((heading, f"{out_slug}.html", title, url, lines))
+        entries.append((heading, f"{out_slug}.html", title, url, sl, sb, ol, ob))
 
     (demos_dir / "index.md").write_text(index_markdown(entries), encoding="utf-8")
     print(f"\nDone. {len(entries)} full-page demos written to {demos_dir.relative_to(site)}/.")
