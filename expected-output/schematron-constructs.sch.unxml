@@ -9,7 +9,7 @@ schema
     rule cac:AccountingCustomerParty/cac:Party
       assert SAMPLE-R001 [fatal] cbc:EndpointID
         = Buyer electronic address MUST be provided.
-      assert SAMPLE-R002 [warning] count(cac:Contact) &lt;= 1
+      assert SAMPLE-R002 [warning] count(cac:Contact) <= 1
         = No more than one contact may be provided.
     rule cbc:Amount
       report SAMPLE-R010 not(@currencyID)

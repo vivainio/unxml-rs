@@ -2088,23 +2088,59 @@ fn is_ubl_document(root: &XmlElement) -> bool {
             .is_some_and(|uri| uri.contains(UBL_NS))
 }
 
+/// The UN/CEFACT Cross Industry document roots (CII / Factur-X / ZUGFeRD).
+/// `CrossIndustryInvoice` is the current (D16B) root; `CrossIndustryDocument`
+/// is the older ZUGFeRD 1.0 root.
+const CII_ROOTS: [&str; 2] = ["CrossIndustryInvoice", "CrossIndustryDocument"];
+
+/// True if `root` is a genuine CII *instance* document — a `CrossIndustryInvoice`
+/// / `CrossIndustryDocument` document element (the root is itself prefixed, e.g.
+/// `rsm:CrossIndustryInvoice`) bound to the matching UN/CEFACT namespace. As with
+/// UBL, this excludes files that merely *reference* CII: a stylesheet converting
+/// to/from CII has a prefixed root (`xsl:stylesheet`) and carries literal
+/// `ram:`/`rsm:` result elements that must keep their prefixes.
+fn is_cii_document(root: &XmlElement) -> bool {
+    let local = root.name.rsplit(':').next().unwrap_or(&root.name);
+    CII_ROOTS.contains(&local)
+        && root
+            .attributes
+            .values()
+            .any(|uri| uri.contains("uncefact") && CII_ROOTS.iter().any(|r| uri.contains(r)))
+}
+
 /// Sniff well-known document types from the root elements' namespace bindings
-/// and return the set of prefixes worth hiding. Currently recognises the UBL
-/// family: for a genuine UBL instance document, any prefix bound to the
-/// CommonBasicComponents or CommonAggregateComponents namespace is returned
-/// (matched by URI, so it works regardless of the actual prefix the document
-/// chose). Non-UBL documents, and stylesheets/schemas that merely reference UBL,
-/// contribute nothing.
+/// and return the set of prefixes worth hiding. Recognises two families:
+/// - UBL: for a genuine UBL instance document, prefixes bound to the
+///   CommonBasicComponents / CommonAggregateComponents namespaces.
+/// - CII (UN/CEFACT Cross Industry Invoice, incl. Factur-X / ZUGFeRD): for a
+///   genuine CII instance, prefixes bound to the Cross Industry document, the
+///   ReusableAggregateBusinessInformationEntity (`ram:`), and the un/qualified
+///   data type namespaces (`udt:`/`qdt:`).
+///
+/// Prefixes are matched by URI, so it works regardless of the actual prefix the
+/// document chose. Non-matching documents, and stylesheets/schemas that merely
+/// reference these vocabularies, contribute nothing.
 fn sniff_hidden_prefixes(elements: &[XmlElement]) -> HashSet<String> {
     const UBL_MARKERS: [&str; 2] = ["CommonBasicComponents", "CommonAggregateComponents"];
+    const CII_MARKERS: [&str; 5] = [
+        "CrossIndustryInvoice",
+        "CrossIndustryDocument",
+        "ReusableAggregateBusinessInformationEntity",
+        "UnqualifiedDataType",
+        "QualifiedDataType",
+    ];
     let mut hidden = HashSet::new();
     for root in elements {
-        if !is_ubl_document(root) {
+        let markers: &[&str] = if is_ubl_document(root) {
+            &UBL_MARKERS
+        } else if is_cii_document(root) {
+            &CII_MARKERS
+        } else {
             continue;
-        }
+        };
         for (key, value) in &root.attributes {
             if let Some(pfx) = key.strip_prefix("xmlns:")
-                && UBL_MARKERS.iter().any(|m| value.contains(m))
+                && markers.iter().any(|m| value.contains(m))
             {
                 hidden.insert(pfx.to_string());
             }
@@ -2269,7 +2305,13 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                 for attr in e.attributes() {
                     let attr = attr.context("Failed to parse attribute")?;
                     let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-                    let value = String::from_utf8_lossy(&attr.value).to_string();
+                    // Decode XML entities (e.g. &lt; &gt; &amp;) so comparison
+                    // operators in XSLT/XPath expressions render as < > & rather
+                    // than their escaped source form.
+                    let value = attr
+                        .unescape_value()
+                        .map(|v| v.to_string())
+                        .unwrap_or_else(|_| String::from_utf8_lossy(&attr.value).to_string());
                     element.attributes.insert(key, value);
                 }
 
@@ -2309,7 +2351,13 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                 for attr in e.attributes() {
                     let attr = attr.context("Failed to parse attribute")?;
                     let key = String::from_utf8_lossy(attr.key.as_ref()).to_string();
-                    let value = String::from_utf8_lossy(&attr.value).to_string();
+                    // Decode XML entities (e.g. &lt; &gt; &amp;) so comparison
+                    // operators in XSLT/XPath expressions render as < > & rather
+                    // than their escaped source form.
+                    let value = attr
+                        .unescape_value()
+                        .map(|v| v.to_string())
+                        .unwrap_or_else(|_| String::from_utf8_lossy(&attr.value).to_string());
                     element.attributes.insert(key, value);
                 }
 

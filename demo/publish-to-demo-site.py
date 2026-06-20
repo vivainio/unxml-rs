@@ -51,6 +51,13 @@ DOCBOOK = "https://cdn.docbook.org/release/xsl/current"
 SCHEMATRON = "https://raw.githubusercontent.com/Schematron/schematron/master/trunk/schematron/code"
 EN16931 = ("https://raw.githubusercontent.com/ConnectingEurope/"
            "eInvoicing-EN16931/master/ubl/schematron")
+# UN/CEFACT Cross Industry Invoice (CII) instance samples. phax's en16931-cii2ubl
+# carries a canonical EN16931 CII example; mustangproject carries Factur-X /
+# ZUGFeRD profile samples (both MIT-licensed, with clear provenance).
+CII_PHAX = ("https://raw.githubusercontent.com/phax/en16931-cii2ubl/master/"
+            "en16931-cii2ubl-cli/src/test/resources")
+MUSTANG = ("https://raw.githubusercontent.com/ZUGFeRD/mustangproject/master/"
+           "library/src/test/resources")
 
 # The single source of truth: (unxml mode, output slug, title, source URL).
 # Mode picks both the `unxml --<mode>` flag and the category subdir/section.
@@ -60,6 +67,8 @@ DEMOS: list[tuple[str, str, str, str]] = [
     ("auto", "ubl/invoice-example", "UBL — Invoice (instance)", f"{UBL_XML}/UBL-Invoice-2.1-Example.xml"),
     ("auto", "ubl/order-example", "UBL — Order (instance)", f"{UBL_XML}/UBL-Order-2.1-Example.xml"),
     ("auto", "ubl/creditnote-example", "UBL — Credit Note (instance)", f"{UBL_XML}/UBL-CreditNote-2.1-Example.xml"),
+    ("auto", "cii/invoice-example", "CII — Invoice (instance)", f"{CII_PHAX}/CII_example1.xml"),
+    ("auto", "cii/factur-x-extended", "Factur-X / ZUGFeRD — Extended (instance)", f"{MUSTANG}/factur-x-extended.xml"),
     ("xsd", "finvoice-3.0", "Finvoice 3.0", "https://file.finanssiala.fi/finvoice/Finvoice3.0.xsd"),
     ("xsd", "ubl/cct", "UBL — Core Component Types", f"{UBL}/common/CCTS_CCT_SchemaModule-2.1.xsd"),
     ("xsd", "ubl/udt", "UBL — Unqualified Data Types", f"{UBL}/common/UBL-UnqualifiedDataTypes-2.1.xsd"),
@@ -90,12 +99,15 @@ SECTION_ORDER = ["XML documents", "Schemas", "XSLT", "Schematron"]
 # examples/, so the site doesn't depend on a third-party host for them.
 # tuple: (section heading, unxml mode, title, repo-relative source path)
 INLINE_DEMOS: list[tuple[str, str, str, str]] = [
+    ("Invoice basics", "auto", "CII / Factur-X — minimal invoice", "examples/cii/factur-x-basic.xml"),
     ("XSLT basics", "xslt", "Build an HTML table with for-each", "examples/xslt/cdcatalog.xsl"),
     ("XSLT basics", "xslt", "Branch with choose / when / otherwise", "examples/xslt/cdcatalog-choose.xsl"),
     ("XSLT basics", "xslt", "Named templates + apply-templates", "examples/xslt/cdcatalog-templates.xsl"),
     ("XSLT basics", "xslt", "Literal-result-element stylesheet", "examples/xslt/breakfast-menu.xsl"),
 ]
-INLINE_ORDER = ["XSLT basics"]
+INLINE_ORDER = ["Invoice basics", "XSLT basics"]
+# Per-mode label for the left ("source") column of an inline side-by-side sample.
+SOURCE_LABEL = {"xslt": "XSLT source", "auto": "XML source"}
 SITE_REPO_BLOB = "https://github.com/vivainio/unxml-demos/blob/main"
 
 # Page chrome shared by every standalone demo: a dark, edge-to-edge,
@@ -250,7 +262,7 @@ def inline_section_html(samples: list[tuple]) -> str:
             f'<p class="unxml-cap"><a href="{blob}">{fname}</a> · '
             f"{sl} → {ol} lines</p>",
             '<div class="unxml-cols">',
-            '<div class="unxml-col"><div class="unxml-col-label">XSLT source</div>'
+            f'<div class="unxml-col"><div class="unxml-col-label">{SOURCE_LABEL.get(mode, "source")}</div>'
             f'<pre class="unxml"><span class="ansi2html-content">{src_frag}</span></pre></div>',
             f'<div class="unxml-col"><div class="unxml-col-label">unxml --{mode}</div>'
             f'<pre class="unxml"><span class="ansi2html-content">{out_frag}</span></pre></div>',

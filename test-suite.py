@@ -155,6 +155,12 @@ class TestRunner:
             if file_path.name.startswith("ubl-"):
                 cmd.append("--auto")
 
+            # Exercise --auto CII (UN/CEFACT) namespace sniffing for files named
+            # cii-*: a genuine CrossIndustryInvoice instance should have its
+            # rsm:/ram:/udt:/qdt: prefixes hidden.
+            if file_path.name.startswith("cii-"):
+                cmd.append("--auto")
+
             cmd.append(str(file_path))
             
             result = subprocess.run(

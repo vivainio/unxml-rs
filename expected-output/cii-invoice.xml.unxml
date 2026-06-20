@@ -1,0 +1,22 @@
+CrossIndustryInvoice(xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance")
+  ExchangedDocumentContext
+    GuidelineSpecifiedDocumentContextParameter
+      ID = urn:cen.eu:en16931:2017#compliant#urn:factur-x.eu:1p0:basic
+  ExchangedDocument
+    ID = 471102
+    TypeCode = 380
+    IssueDateTime
+      DateTimeString(format="102") = 20241115
+    IncludedNote
+      Content = Discount applies when qty > 10 & total <= 1000.
+  SupplyChainTradeTransaction
+    IncludedSupplyChainTradeLineItem
+      AssociatedDocumentLineDocument
+        LineID = 1
+      SpecifiedTradeProduct
+        GlobalID(schemeID="0160") = 4012345001235
+        Name = Trennblätter A4
+    ApplicableHeaderTradeSettlement
+      InvoiceCurrencyCode = EUR
+      SpecifiedTradeSettlementHeaderMonetarySummation
+        GrandTotalAmount(currencyID="EUR") = 235.62
