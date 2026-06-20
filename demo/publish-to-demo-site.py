@@ -282,6 +282,10 @@ def index_markdown(
     # Each element of `blocks` is a complete block with no internal blank lines;
     # joining with a blank line keeps tables and raw-HTML blocks intact.
     blocks = [
+        # Hide the right-hand "table of contents" sidebar on the gallery: its
+        # headings are just section names and the extra column steals width the
+        # side-by-side demos need.
+        "---\nhide:\n  - toc\n---",
         "# Gallery",
         "Real-world XML documents rendered with [`unxml`]"
         "(https://github.com/vivainio/unxml-rs), syntax-highlighted with the "
