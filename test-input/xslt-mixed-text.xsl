@@ -25,6 +25,9 @@
     <xsl:element name="note">
       Inline note <xsl:value-of select="@id"/>
     </xsl:element>
+    <price>
+      <xsl:value-of select="price">0.00</xsl:value-of>
+    </price>
   </xsl:template>
 
 </xsl:stylesheet>

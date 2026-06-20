@@ -88,10 +88,14 @@ html(lang="en")
         address
           strong = Our Company
           br
+          "123 Main Street"
           br
+          "City, State 12345"
           br
+          "Phone:"
           a(href="tel:+1234567890") = (123) 456-7890
           br
+          "Email:"
           a(href="mailto:info@example.com") = info@example.com
         details
           summary = Office Hours

@@ -79,6 +79,7 @@ html(lang="en")
             span.urgent = [URGENT] URGENT:
             span.info = [INFO] INFO:
             span.default = [NOTICE]
+            "{{notification.message}}"
             small = ({{notification.timestamp}})
         p = No new notifications.
       .login-prompt

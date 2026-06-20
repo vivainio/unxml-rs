@@ -24,52 +24,82 @@ html(lang="en")
     h1 = Angular Control Flow Constructs Test
     .section
       h2 = @if / @else-if / @else Examples
+      "@if (user.isLoggedIn) {"
       p.highlight = Welcome back, {{user.name}}!
+      "}"
+      "@if (items.length > 0) {"
       p = You have {{items.length}} items in your cart.
+      "} @else {"
       p = Your cart is empty.
+      "}"
+      "@if (user.role === 'admin') {"
       .highlight
         h3 = Admin Dashboard
         p = You have full access to all features.
+      "} @else if (user.role === 'editor') {"
       .highlight
         h3 = Editor Dashboard
         p = You can create and edit content.
+      "} @else if (user.role === 'viewer') {"
       .highlight
         h3 = Viewer Dashboard
         p = You have read-only access.
+      "} @else {"
       .highlight
         h3 = Guest Access
         p = Please log in to access more features.
+      "}"
+      "@if (user.profile.settings.startDate; as startDate) {"
       p
+        "Your account was created on:"
         strong = {{startDate}}
+      "}"
     .section
       h2 = @for / @empty Examples
       h3 = Product List:
       ul
+        "@for (product of products; track product.id) {"
         li = {{product.name}} - ${{product.price}}
+        "}"
       h3 = User Comments:
       div
+        "@for (comment of comments; track comment.id) {"
         .highlight
           strong = {{comment.author}}
+          ": {{comment.text}}"
           small = ({{comment.date}})
+        "} @empty {"
         p
           em = No comments yet. Be the first to comment!
+        "}"
       h3 = Team Members (with indices):
       ol
+        "@for (member of teamMembers; track member.id; let idx = $index, isFirst = $first, isLast = $last, isEven = $even) {"
         li.@if.(isEven).{.highlight.}
           strong = Member #{{idx + 1}}
+          ": {{member.name}} ({{member.role}}) @if (isFirst) {"
           span(style="color: green;") = - Team Lead
+          "} @if (isLast) {"
           span(style="color: blue;") = - Newest Member
+          "}"
+        "}"
       h3 = Order History:
+      "@for (order of orders; track order.orderNumber) {"
       .highlight
         h4 = Order #{{order.orderNumber}}
         p = Date: {{order.date}} | Status: {{order.status}}
         ul
+          "@for (item of order.items; track item.sku) {"
           li = {{item.name}} x{{item.quantity}} = ${{item.total}}
+          "}"
         strong = Total: ${{order.total}}
+      "} @empty {"
       p = You haven't placed any orders yet.
+      "}"
     .section
       h2 = @switch / @case / @default Examples
       h3 = User Permission Level:
+      "@switch (userPermissions) { @case ('admin') {"
       .highlight(style="background-color: #ffebee;")
         h4 = 🔧 Admin Dashboard
         p = Full system access granted.
@@ -78,6 +108,7 @@ html(lang="en")
           li = System configuration
           li = View analytics
           li = Data backup/restore
+      "} @case ('reviewer') {"
       .highlight(style="background-color: #fff3e0;")
         h4 = 👀 Reviewer Dashboard
         p = Content review and approval access.
@@ -85,6 +116,7 @@ html(lang="en")
           li = Review submissions
           li = Approve/reject content
           li = View pending items
+      "} @case ('editor') {"
       .highlight(style="background-color: #e8f5e8;")
         h4 = ✏️ Editor Dashboard
         p = Content creation and editing access.
@@ -92,63 +124,105 @@ html(lang="en")
           li = Create new content
           li = Edit existing content
           li = Upload media
+      "} @case ('contributor') {"
       .highlight(style="background-color: #e3f2fd;")
         h4 = 📝 Contributor Dashboard
         p = Limited content creation access.
         ul
           li = Submit content for review
           li = Edit own content
+      "} @default {"
       .highlight(style="background-color: #fafafa;")
         h4 = 👤 Viewer Dashboard
         p = Read-only access to public content.
         ul
           li = Browse public content
           li = View your profile
+      "} }"
       h3 = Subscription Status:
+      "@switch (subscription.status) { @case ('active') {"
       p(style="color: green;") = ✅ Your subscription is active until {{subscription.expiryDate}}
+      "} @case ('expired') {"
       p(style="color: red;") = ❌ Your subscription expired on {{subscription.expiryDate}}
+      "} @case ('cancelled') {"
       p(style="color: orange;") = 🚫 Your subscription was cancelled
+      "} @case ('pending') {"
       p(style="color: blue;") = ⏳ Your subscription is pending activation
+      "} @default {"
       p(style="color: gray;") = ❔ Unknown subscription status
+      "} }"
       h3 = Task Status Overview:
+      "@for (task of tasks; track task.id) {"
       .highlight
         h4 = {{task.title}}
+        "@switch (task.priority) { @case ('high') {"
         span(style="color: red; font-weight: bold;") = 🔴 HIGH PRIORITY
+        "} @case ('medium') {"
         span(style="color: orange; font-weight: bold;") = 🟡 MEDIUM PRIORITY
+        "} @case ('low') {"
         span(style="color: green;") = 🟢 Low Priority
+        "} @default {"
         span(style="color: gray;") = ⚪ No Priority Set
+        "} } @switch (task.status) { @case ('completed') {"
         p(style="color: green;") = ✅ Completed on {{task.completedDate}}
+        "} @case ('in-progress') {"
         p(style="color: blue;") = 🔄 In Progress ({{task.progress}}% complete)
+        "} @case ('pending') {"
         p(style="color: orange;") = ⏸️ Pending
+        "} @default {"
         p(style="color: gray;") = ❔ Unknown Status
+        "} }"
+      "} @empty {"
       p = No tasks found.
+      "}"
     .section
       h2 = Complex Nested Control Flow
+      "@if (currentUser) {"
       .highlight
         h3 = Welcome, {{currentUser.name}}!
+        "@switch (currentUser.accountType) { @case ('premium') {"
         h4 = 🌟 Premium Features
+        "@for (feature of premiumFeatures; track feature.id) {"
         div
           strong = {{feature.name}}
+          "@if (feature.isNew) {"
           span(style="background: gold; padding: 2px 5px; border-radius: 3px; font-size: 0.8em;") = NEW
+          "}"
           p = {{feature.description}}
+        "} @empty {"
         p = No premium features available.
+        "} } @case ('basic') {"
         h4 = 📋 Basic Features
+        "@for (feature of basicFeatures; track feature.id) {"
         div
           strong = {{feature.name}}
+          ": {{feature.description}}"
+        "} } @default {"
         h4 = 🆓 Free Trial
         p = Upgrade to unlock more features!
+        "} } @if (currentUser.notifications && currentUser.notifications.length > 0) {"
         h4 = 🔔 Your Notifications
+        "@for (notification of currentUser.notifications; track notification.id; let isFirst = $first) {"
         .@if.(isFirst).{.highlight.}
+          "@switch (notification.type) { @case ('urgent') {"
           span(style="color: red;") = 🚨 URGENT:
+          "} @case ('info') {"
           span(style="color: blue;") = ℹ️ INFO:
+          "} @case ('success') {"
           span(style="color: green;") = ✅ SUCCESS:
+          "} @default {"
           span(style="color: gray;") = 📢
+          "} } {{notification.message}}"
           small = ({{notification.timestamp}})
+        "} } @else {"
         p = No new notifications.
+        "}"
+      "} @else {"
       .highlight
         h3 = Please log in to access your dashboard
         button = Sign In
         button = Create Account
+      "}"
     script =
       | // Sample data that would typically come from Angular component
       |         const sampleData = {

@@ -215,12 +215,27 @@ fn render_attrs(attr_parts: &[String], col: usize, indent: usize, leading_space:
     out
 }
 
+/// One item in an element's content in document order. `Text` is a literal text
+/// run; `Child` is an index into the element's `children`. This preserves the
+/// faithful interleaving of text and child elements (mixed content) that the
+/// flat `text_content` + `children` split alone cannot represent.
+#[derive(Debug, Clone)]
+enum NodeRef {
+    Text(String),
+    Child(usize),
+}
+
 #[derive(Debug, Clone)]
 struct XmlElement {
     name: String,
     attributes: HashMap<String, String>,
+    /// All text runs concatenated — kept for the common scalar case
+    /// (`<a>text</a>` → `a = text`) and for paths that don't need ordering.
     text_content: String,
     children: Vec<XmlElement>,
+    /// Document-order view of text runs and child elements. Used to render mixed
+    /// content faithfully; empty on elements built outside the parsers.
+    nodes: Vec<NodeRef>,
 }
 
 impl XmlElement {
@@ -230,7 +245,48 @@ impl XmlElement {
             attributes: HashMap::new(),
             text_content: String::new(),
             children: Vec::new(),
+            nodes: Vec::new(),
         }
+    }
+
+    /// True when this element interleaves non-empty text with child elements —
+    /// the case the scalar `name = text` form cannot represent faithfully.
+    fn is_mixed(&self) -> bool {
+        let has_text = self
+            .nodes
+            .iter()
+            .any(|n| matches!(n, NodeRef::Text(t) if !t.trim().is_empty()));
+        let has_child = self.nodes.iter().any(|n| matches!(n, NodeRef::Child(_)));
+        has_text && has_child
+    }
+
+    /// Render this element's content in document order: text runs as quoted
+    /// lines, child elements recursed. Used for mixed content in every mode so
+    /// a text run between two elements keeps its position.
+    fn render_mixed_body(
+        &self,
+        indent: usize,
+        opts: &FormatOpts,
+        registry: Option<&TemplateRegistry>,
+    ) -> String {
+        let ind = "  ".repeat(indent);
+        let mut out = String::new();
+        for node in &self.nodes {
+            match node {
+                NodeRef::Text(text) => {
+                    // Collapse internal whitespace so a run spanning several
+                    // source lines renders as one clean quoted line.
+                    let text = text.split_whitespace().collect::<Vec<_>>().join(" ");
+                    if !text.is_empty() {
+                        out.push_str(&format!("{ind}\"{text}\"\n"));
+                    }
+                }
+                NodeRef::Child(i) => {
+                    out.push_str(&self.children[*i].format_yaml_like(indent, opts, registry));
+                }
+            }
+        }
+        out
     }
 
     fn format_yaml_like(
@@ -292,6 +348,7 @@ impl XmlElement {
                 attributes: modified_attributes,
                 text_content: self.text_content.clone(),
                 children: self.children.clone(),
+                nodes: self.nodes.clone(),
             };
 
             // Always process the modified element normally (section should still appear)
@@ -314,6 +371,7 @@ impl XmlElement {
                 attributes: modified_attributes,
                 text_content: self.text_content.clone(),
                 children: self.children.clone(),
+                nodes: self.nodes.clone(),
             };
 
             // Special handling for section elements after include processing
@@ -611,31 +669,23 @@ impl XmlElement {
             result.push_str(&render_attrs(&attr_parts, col, indent, false));
         }
 
-        // Text content with = assignment
-        render_text(&mut result, &self.text_content, indent);
+        if self.is_mixed() {
+            // Mixed content: render text runs and child elements in order.
+            result.push('\n');
+            result.push_str(&self.render_mixed_body(indent + 1, opts, registry));
+        } else {
+            // Text content with = assignment
+            render_text(&mut result, &self.text_content, indent);
 
-        result.push('\n');
+            result.push('\n');
 
-        // Children elements
-        for child in &self.children {
-            result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+            // Children elements
+            for child in &self.children {
+                result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
+            }
         }
 
         result
-    }
-
-    /// Loose literal text directly inside an `xsl:*` container (mixed content,
-    /// e.g. `<xsl:template>Title: <span>…`) is semantically an `xsl:text` —
-    /// render it the same way, as a quoted line. Returns "" when there is none.
-    /// Position relative to child elements is not preserved by the model, so it
-    /// is emitted ahead of the children.
-    fn xslt_text_line(&self, indent: usize) -> String {
-        let text = self.text_content.trim();
-        if text.is_empty() {
-            String::new()
-        } else {
-            format!("{}\"{}\"\n", "  ".repeat(indent), text)
-        }
     }
 
     fn format_xslt_element(
@@ -676,14 +726,7 @@ impl XmlElement {
                 }
 
                 result.push('\n');
-                result.push_str(&self.xslt_text_line(indent + 1));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(
-                        indent + 1,
-                        &FormatOpts::XSLT,
-                        registry,
-                    ));
-                }
+                result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
                 Some(result)
             }
             "xsl:apply-templates" => {
@@ -714,12 +757,18 @@ impl XmlElement {
             }
             "xsl:value-of" => {
                 // xsl:value-of(select="X") → <- X
+                // Body content (a fallback value, or an XSLT-2.0+ sequence
+                // constructor used instead of select) is rendered beneath it.
+                let has_body = !self.nodes.is_empty();
                 if let Some(select) = self.attributes.get("select") {
                     result.push_str(&format!("{indent_str}<- {select}\n"));
-                    Some(result)
+                } else if has_body {
+                    result.push_str(&format!("{indent_str}<-\n"));
                 } else {
-                    None
+                    return None;
                 }
+                result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
+                Some(result)
             }
             "xsl:copy-of" => {
                 // xsl:copy-of(select="X") → copy X
@@ -734,14 +783,11 @@ impl XmlElement {
                 // xsl:if(test="X") → if X
                 if let Some(test) = self.attributes.get("test") {
                     result.push_str(&format!("{indent_str}if {test}\n"));
-                    result.push_str(&self.xslt_text_line(indent + 1));
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(
-                            indent + 1,
-                            &FormatOpts::XSLT,
-                            registry,
-                        ));
-                    }
+                    result.push_str(&self.render_mixed_body(
+                        indent + 1,
+                        &FormatOpts::XSLT,
+                        registry,
+                    ));
                     Some(result)
                 } else {
                     None
@@ -750,27 +796,18 @@ impl XmlElement {
             "xsl:choose" => {
                 // xsl:choose stays as choose but children get transformed
                 result.push_str(&format!("{indent_str}choose\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(
-                        indent + 1,
-                        &FormatOpts::XSLT,
-                        registry,
-                    ));
-                }
+                result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
                 Some(result)
             }
             "xsl:when" => {
                 // xsl:when(test="X") → when X
                 if let Some(test) = self.attributes.get("test") {
                     result.push_str(&format!("{indent_str}when {test}\n"));
-                    result.push_str(&self.xslt_text_line(indent + 1));
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(
-                            indent + 1,
-                            &FormatOpts::XSLT,
-                            registry,
-                        ));
-                    }
+                    result.push_str(&self.render_mixed_body(
+                        indent + 1,
+                        &FormatOpts::XSLT,
+                        registry,
+                    ));
                     Some(result)
                 } else {
                     None
@@ -779,14 +816,7 @@ impl XmlElement {
             "xsl:otherwise" => {
                 // xsl:otherwise → else
                 result.push_str(&format!("{indent_str}else\n"));
-                result.push_str(&self.xslt_text_line(indent + 1));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(
-                        indent + 1,
-                        &FormatOpts::XSLT,
-                        registry,
-                    ));
-                }
+                result.push_str(&self.render_mixed_body(indent + 1, &FormatOpts::XSLT, registry));
                 Some(result)
             }
             "xsl:variable" => {
@@ -847,14 +877,11 @@ impl XmlElement {
                 // xsl:call-template(name="X") → call X
                 if let Some(name) = self.attributes.get("name") {
                     result.push_str(&format!("{indent_str}call {name}\n"));
-                    result.push_str(&self.xslt_text_line(indent + 1));
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(
-                            indent + 1,
-                            &FormatOpts::XSLT,
-                            registry,
-                        ));
-                    }
+                    result.push_str(&self.render_mixed_body(
+                        indent + 1,
+                        &FormatOpts::XSLT,
+                        registry,
+                    ));
                     Some(result)
                 } else {
                     None
@@ -864,14 +891,11 @@ impl XmlElement {
                 // xsl:for-each(select="X") → foreach X
                 if let Some(select) = self.attributes.get("select") {
                     result.push_str(&format!("{indent_str}foreach {select}\n"));
-                    result.push_str(&self.xslt_text_line(indent + 1));
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(
-                            indent + 1,
-                            &FormatOpts::XSLT,
-                            registry,
-                        ));
-                    }
+                    result.push_str(&self.render_mixed_body(
+                        indent + 1,
+                        &FormatOpts::XSLT,
+                        registry,
+                    ));
                     Some(result)
                 } else {
                     None
@@ -891,14 +915,11 @@ impl XmlElement {
                 // xsl:element(name="X") → element X
                 if let Some(name) = self.attributes.get("name") {
                     result.push_str(&format!("{indent_str}element {name}\n"));
-                    result.push_str(&self.xslt_text_line(indent + 1));
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(
-                            indent + 1,
-                            &FormatOpts::XSLT,
-                            registry,
-                        ));
-                    }
+                    result.push_str(&self.render_mixed_body(
+                        indent + 1,
+                        &FormatOpts::XSLT,
+                        registry,
+                    ));
                     Some(result)
                 } else {
                     None
@@ -2127,17 +2148,26 @@ fn convert_element_to_xml(element: ElementRef, format: &InputFormat) -> XmlEleme
         }
     }
 
-    // Process child elements first to know if we have any
+    // Walk child nodes in document order, recording both element children and
+    // text runs so mixed content keeps its interleaving.
     for child in element.children() {
         if let Some(child_element) = ElementRef::wrap(child) {
             xml_element
+                .nodes
+                .push(NodeRef::Child(xml_element.children.len()));
+            xml_element
                 .children
                 .push(convert_element_to_xml(child_element, format));
+        } else if let Some(text) = child.value().as_text() {
+            let trimmed = text.trim();
+            if !trimmed.is_empty() {
+                xml_element.nodes.push(NodeRef::Text(trimmed.to_string()));
+            }
         }
     }
 
-    // Only get text content if this element has no child elements (leaf node)
-    // This matches XML behavior better and avoids duplicate text content
+    // Only set the flat text_content for leaf nodes (no child elements), matching
+    // XML behaviour; mixed content is rendered from `nodes` instead.
     if xml_element.children.is_empty() {
         let text_content: String = element
             .text()
@@ -2222,6 +2252,7 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
             Ok(Event::End(_)) => {
                 if let Some(completed_element) = elements_stack.pop() {
                     if let Some(parent) = elements_stack.last_mut() {
+                        parent.nodes.push(NodeRef::Child(parent.children.len()));
                         parent.children.push(completed_element);
                     } else {
                         root_elements.push(completed_element);
@@ -2239,6 +2270,9 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                         current_element.text_content.push(' ');
                     }
                     current_element.text_content.push_str(text_content);
+                    current_element
+                        .nodes
+                        .push(NodeRef::Text(text_content.to_string()));
                 }
             }
             Ok(Event::Empty(ref e)) => {
@@ -2254,6 +2288,7 @@ fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                 }
 
                 if let Some(parent) = elements_stack.last_mut() {
+                    parent.nodes.push(NodeRef::Child(parent.children.len()));
                     parent.children.push(element);
                 } else {
                     root_elements.push(element);
