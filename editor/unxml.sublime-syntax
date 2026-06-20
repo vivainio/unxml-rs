@@ -34,8 +34,14 @@ contexts:
         1: keyword.control.unxml
       push: xpath-tail
 
-    # Control / structural keywords that lead a line.
-    - match: '^\s*(else|choose|apply|call|copy|foreach|import|element|param|template|rule|pattern|phase|schema|active|notation|list|union|type|ns|title|mixin)\b'
+    # Block-opening keywords: their header line may end with ':' (block marker).
+    - match: '^\s*(else|choose|call|foreach|element|template)\b'
+      captures:
+        1: keyword.control.unxml
+      push: block-tail
+
+    # Other control / structural keywords that lead a line (no block colon).
+    - match: '^\s*(apply|copy|import|param|rule|pattern|phase|schema|active|notation|list|union|type|ns|title|mixin)\b'
       captures:
         1: keyword.control.unxml
       push: line-tail
@@ -88,11 +94,6 @@ contexts:
       scope: keyword.operator.assignment.unxml
       push: value-tail
 
-    # A bare trailing ':' marks a block-opening keyword line
-    # (template X:, choose:, foreach X:, call X:, element X:, else:).
-    - match: ':(?=\s*$)'
-      scope: punctuation.section.block.unxml
-
     # XSD: a type reference after a colon ( name : Type ).
     - match: '(:)\s+([\w][\w.:-]*)'
       captures:
@@ -129,6 +130,14 @@ contexts:
     - match: '"'
       scope: punctuation.definition.string.begin.unxml
       push: dq-string
+
+  # A block-opening keyword line (template X:, choose:, foreach X:, call X:,
+  # element X:, else:). Identical to line-tail, but a trailing ':' is the block
+  # marker — scoped here so ordinary text/element lines ending in ':' are not.
+  block-tail:
+    - match: ':(?=\s*$)'
+      scope: punctuation.section.block.unxml
+    - include: line-tail
 
   # A text value after '=' / '==': literal to end of line, no XSD/XPath rules.
   value-tail:
