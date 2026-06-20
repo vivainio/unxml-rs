@@ -1,0 +1,43 @@
+xsl:stylesheet(
+    version="2.0",
+    xmlns:my="urn:my-functions",
+    xmlns:xs="http://www.w3.org/2001/XMLSchema",
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
+  xsl:output(indent="yes", method="xml")
+  xsl:character-map(name="entities")
+    xsl:output-character(character=" ", string="&nbsp;")
+  xsl:function(as="xs:string", name="my:full-name")
+    param first
+    param last
+    xsl:sequence(select="concat($first, ' ', $last)")
+  threshold := 10
+  match /orders:
+    report
+      xsl:for-each-group(group-by="@region", select="order")
+        region(name="{current-grouping-key()}")
+          count
+            <- count(current-group())
+          xsl:perform-sort(select="current-group()")
+            xsl:sort(data-type="number", order="descending", select="@total")
+      xsl:for-each-group(group-adjacent="@status", select="line")
+        run(size="{count(current-group())}", status="{current-grouping-key()}")
+      xsl:analyze-string(regex="([A-Z]+)-([0-9]+)", select="@code")
+        xsl:matching-substring
+          prefix
+            <- regex-group(1)
+          number
+            <- regex-group(2)
+        xsl:non-matching-substring
+          raw
+            <- .
+      names
+        <- order/@customer
+      element wrapped:
+        xsl:namespace(name="ext", select="'urn:ext'")
+      xsl:result-document(href="summary.xml", method="xml")
+        summary(total="{sum(order/@total)}")
+  match order[@priority='high']:
+    urgent
+      xsl:next-match
+  match order:
+    entry(name="{my:full-name(@first, @last)}")

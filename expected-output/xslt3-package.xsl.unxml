@@ -1,0 +1,18 @@
+xsl:package(
+    name="urn:my-utils",
+    package-version="1.0",
+    version="3.0",
+    xmlns:xs="http://www.w3.org/2001/XMLSchema",
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
+  xsl:use-package(name="urn:base-lib", package-version="2.0")
+    xsl:override
+      match widget:
+        widget-v2
+          apply
+  xsl:expose(component="function", names="my:*", visibility="public")
+  xsl:expose(component="template", names="internal", visibility="private")
+  xsl:function(as="xs:integer", name="my:square", visibility="public")
+    param n
+    xsl:sequence(select="$n * $n")
+  template internal (visibility="private"):
+    xsl:sequence(select="'hidden'")

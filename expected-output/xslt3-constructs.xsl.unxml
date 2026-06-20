@@ -1,0 +1,56 @@
+xsl:stylesheet(
+    expand-text="yes",
+    version="3.0",
+    xmlns:xs="http://www.w3.org/2001/XMLSchema",
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
+  xsl:mode(name="main", on-no-match="shallow-copy", streamable="yes")
+  xsl:accumulator(as="xs:decimal", initial-value="0", name="total")
+    xsl:accumulator-rule(match="item", select="$value + xs:decimal(@amount)")
+  xsl:global-context-item(as="document-node()")
+  match /data (mode="main"):
+    result
+      greeting = Total so far: {accumulator-after('total')}
+      lookup :=
+        xsl:map
+          xsl:map-entry(key="'a'", select="'alpha'")
+          xsl:map-entry(key="'b'", select="'beta'")
+      xsl:iterate(select="item")
+        param running := 0
+        xsl:on-completion
+          grand-total
+            <- $running
+        if $running gt 1000:
+          xsl:break
+            stopped-early
+        xsl:next-iteration
+          running := $running + @amount
+      xsl:try
+        parsed
+          <- xs:integer(@count)
+        xsl:catch(errors="*:FORG0001")
+          error(code="{$err:code}") = bad number
+      xsl:evaluate(context-item=".", xpath="@expr")
+      xsl:merge
+        xsl:merge-source(for-each-source="()", name="a", select="setA/row")
+          xsl:merge-key(select="@id")
+        xsl:merge-source(name="b", select="setB/row")
+          xsl:merge-key(select="@id")
+        xsl:merge-action
+          merged(id="{@id}")
+            xsl:sequence(select="current-merge-group()")
+      xsl:where-populated
+        notes
+          xsl:on-non-empty
+            heading = Notes
+          apply note
+          xsl:on-empty
+            none
+      xsl:source-document(href="extra.xml", streamable="yes")
+        apply *
+      xsl:fork
+        xsl:sequence(select="'one'")
+        xsl:sequence(select="'two'")
+      xsl:assert(error-code="my:empty", test="count(item) gt 0") = no items present
+  template init:
+    xsl:context-item(as="element()", use="required")
+    xsl:sequence(select=".")
