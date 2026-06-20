@@ -153,7 +153,7 @@ def highlight(bat: str, text: str) -> str:
 def index_markdown(entries: list[tuple[str, str, str, str, int]]) -> str:
     # entries: (heading, href, title, source, lines)
     out = [
-        "# unxml demos\n",
+        "# Gallery\n",
         "Real-world XML documents rendered with [`unxml`]"
         "(https://github.com/vivainio/unxml-rs), syntax-highlighted with the "
         "same grammar `unxml` ships for `bat`. Each link opens the full "
