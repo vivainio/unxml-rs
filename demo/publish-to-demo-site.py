@@ -48,6 +48,8 @@ UNXML_BIN = REPO_ROOT / "target" / "release" / (
 UBL = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xsd"
 DOCBOOK = "https://cdn.docbook.org/release/xsl/current"
 SCHEMATRON = "https://raw.githubusercontent.com/Schematron/schematron/master/trunk/schematron/code"
+EN16931 = ("https://raw.githubusercontent.com/ConnectingEurope/"
+           "eInvoicing-EN16931/master/ubl/schematron")
 
 # The single source of truth: (unxml mode, output slug, title, source URL).
 # Mode picks both the `unxml --<mode>` flag and the category subdir/section.
@@ -63,10 +65,17 @@ DEMOS: list[tuple[str, str, str, str]] = [
     ("xslt", "docbook/html-driver", "DocBook XSL — HTML driver", f"{DOCBOOK}/html/docbook.xsl"),
     ("xslt", "docbook/inline", "DocBook XSL — inline elements", f"{DOCBOOK}/html/inline.xsl"),
     ("xslt", "schematron/iso-svrl", "ISO Schematron — SVRL skeleton", f"{SCHEMATRON}/iso_svrl_for_xslt1.xsl"),
+    ("schematron", "en16931/ubl-validation", "EN16931 — UBL validation (driver)", f"{EN16931}/EN16931-UBL-validation.sch"),
+    ("schematron", "en16931/model", "EN16931 — abstract model rules", f"{EN16931}/abstract/EN16931-model.sch"),
+    ("schematron", "en16931/ubl-model", "EN16931 — UBL bindings", f"{EN16931}/UBL/EN16931-UBL-model.sch"),
 ]
 # mode -> (subdir, index-section heading); SECTION_ORDER sets section order.
-MODE_CATEGORY = {"xsd": ("schemas", "Schemas"), "xslt": ("xslt", "XSLT")}
-SECTION_ORDER = ["Schemas", "XSLT"]
+MODE_CATEGORY = {
+    "xsd": ("schemas", "Schemas"),
+    "xslt": ("xslt", "XSLT"),
+    "schematron": ("schematron", "Schematron"),
+}
+SECTION_ORDER = ["Schemas", "XSLT", "Schematron"]
 
 # Page chrome shared by every standalone demo: a dark, edge-to-edge,
 # horizontally-scrolling code surface plus the floating "back" link. Appended
