@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
-"""Render the checked-in demo/*.unxml files to syntax-highlighted HTML pages
-for the Zensical demo site (https://github.com/vivainio/unxml-demos).
+"""Render real-world XML schemas / stylesheets to syntax-highlighted, full-page
+HTML for the Zensical demo site (https://github.com/vivainio/unxml-demos).
 
-Each `.unxml` file is highlighted by `bat` (using the installed `unxml`
-grammar, so colours match the terminal exactly), then the ANSI output is
-turned into class-based HTML by `ansi2html`. Every file is written as a
-self-contained, full-page HTML document under docs/demos/ — Zensical copies
-non-Markdown files through verbatim, so they render edge-to-edge with no
-site chrome. A themed Markdown index page links to them.
+Fully fetch-driven: the DEMOS manifest below lists canonical source URLs.
+Each source is downloaded into a gitignored cache (demo/.cache/) on demand,
+rendered with the local `unxml` binary, highlighted by `bat` (using the
+`unxml` grammar) piped to `ansi2html`, and written as a self-contained
+full-page HTML document under docs/demos/<category>/ in the site repo. A
+themed Markdown index links to them, grouped by category. Nothing large is
+vendored — re-running fetches anything missing from the cache.
 
 Requirements:
+  - the release binary built: `cargo build --release` (in unxml-rs)
   - `bat` on PATH with the unxml grammar installed
-    (run `python3 editor/install-editor-support.py` in unxml-rs first)
+    (run `python3 editor/install-editor-support.py` first)
   - `pip install ansi2html`
+  - network access (first run, or after clearing the cache)
 
 Usage:
-  python3 demo/publish-to-demo-site.py [PATH_TO_unxml-demos]
+  python3 demo/publish-to-demo-site.py [PATH_TO_unxml-demos] [--regen-css]
 
 PATH defaults to ../unxml-demos relative to this repo.
 """
@@ -26,61 +29,48 @@ import argparse
 import re
 import subprocess
 import sys
+import urllib.request
 from pathlib import Path
+from urllib.error import URLError
+from urllib.parse import urlsplit
 
 try:
     from ansi2html import Ansi2HTMLConverter
 except ImportError:
     sys.exit("ansi2html not installed. Run: pip install ansi2html")
 
-# Repo layout: this script lives in <repo>/demo/.
 DEMO_DIR = Path(__file__).resolve().parent
 REPO_ROOT = DEMO_DIR.parent
+CACHE_DIR = DEMO_DIR / ".cache"  # gitignored; downloaded sources live here
+UNXML_BIN = REPO_ROOT / "target" / "release" / (
+    "unxml.exe" if sys.platform == "win32" else "unxml")
 
-# Per-file metadata: relative path under demo/ -> (page title, source URL).
-# Anything not listed still renders, with a title derived from the filename.
 UBL = "https://docs.oasis-open.org/ubl/os-UBL-2.1/xsd"
-SOURCES: dict[str, tuple[str, str]] = {
-    "finvoice-3.0.xsd.unxml": (
-        "Finvoice 3.0",
-        "https://file.finanssiala.fi/finvoice/Finvoice3.0.xsd",
-    ),
-    "ubl/cct.xsd.unxml": ("UBL — Core Component Types", f"{UBL}/common/CCTS_CCT_SchemaModule-2.1.xsd"),
-    "ubl/udt.xsd.unxml": ("UBL — Unqualified Data Types", f"{UBL}/common/UBL-UnqualifiedDataTypes-2.1.xsd"),
-    "ubl/qdt.xsd.unxml": ("UBL — Qualified Data Types", f"{UBL}/common/UBL-QualifiedDataTypes-2.1.xsd"),
-    "ubl/cbc.xsd.unxml": ("UBL — Common Basic Components", f"{UBL}/common/UBL-CommonBasicComponents-2.1.xsd"),
-    "ubl/cac.xsd.unxml": ("UBL — Common Aggregate Components", f"{UBL}/common/UBL-CommonAggregateComponents-2.1.xsd"),
-    "ubl/cec.xsd.unxml": ("UBL — Common Extension Components", f"{UBL}/common/UBL-CommonExtensionComponents-2.1.xsd"),
-    "ubl/invoice.xsd.unxml": ("UBL — Invoice", f"{UBL}/maindoc/UBL-Invoice-2.1.xsd"),
-}
+DOCBOOK = "https://cdn.docbook.org/release/xsl/current"
+SCHEMATRON = "https://raw.githubusercontent.com/Schematron/schematron/master/trunk/schematron/code"
 
-# Demos are grouped into category subdirectories under demos/ based on the
-# source file type, e.g. demo/ubl/cct.xsd.unxml -> demos/schemas/ubl/cct.html.
-# Each entry maps a filename infix to (subdir, index-section heading); order
-# is the order sections appear on the index page.
-CATEGORIES: list[tuple[str, str, str]] = [
-    (".xsd", "schemas", "Schemas"),
-    (".xslt", "xslt", "XSLT"),
-    (".xsl", "xslt", "XSLT"),
+# The single source of truth: (unxml mode, output slug, title, source URL).
+# Mode picks both the `unxml --<mode>` flag and the category subdir/section.
+DEMOS: list[tuple[str, str, str, str]] = [
+    ("xsd", "finvoice-3.0", "Finvoice 3.0", "https://file.finanssiala.fi/finvoice/Finvoice3.0.xsd"),
+    ("xsd", "ubl/cct", "UBL — Core Component Types", f"{UBL}/common/CCTS_CCT_SchemaModule-2.1.xsd"),
+    ("xsd", "ubl/udt", "UBL — Unqualified Data Types", f"{UBL}/common/UBL-UnqualifiedDataTypes-2.1.xsd"),
+    ("xsd", "ubl/qdt", "UBL — Qualified Data Types", f"{UBL}/common/UBL-QualifiedDataTypes-2.1.xsd"),
+    ("xsd", "ubl/cbc", "UBL — Common Basic Components", f"{UBL}/common/UBL-CommonBasicComponents-2.1.xsd"),
+    ("xsd", "ubl/cac", "UBL — Common Aggregate Components", f"{UBL}/common/UBL-CommonAggregateComponents-2.1.xsd"),
+    ("xsd", "ubl/cec", "UBL — Common Extension Components", f"{UBL}/common/UBL-CommonExtensionComponents-2.1.xsd"),
+    ("xsd", "ubl/invoice", "UBL — Invoice", f"{UBL}/maindoc/UBL-Invoice-2.1.xsd"),
+    ("xslt", "docbook/html-driver", "DocBook XSL — HTML driver", f"{DOCBOOK}/html/docbook.xsl"),
+    ("xslt", "docbook/inline", "DocBook XSL — inline elements", f"{DOCBOOK}/html/inline.xsl"),
+    ("xslt", "schematron/iso-svrl", "ISO Schematron — SVRL skeleton", f"{SCHEMATRON}/iso_svrl_for_xslt1.xsl"),
 ]
-
-
-def categorize(rel: str) -> tuple[str, str, str]:
-    """(subdir, heading, base) for a demo-relative .unxml path.
-
-    base is the path with the .unxml and type extension stripped, e.g.
-    "ubl/cct.xsd.unxml" -> ("schemas", "Schemas", "ubl/cct").
-    """
-    stem = rel.removesuffix(".unxml")
-    for ext, subdir, heading in CATEGORIES:
-        if stem.endswith(ext):
-            return subdir, heading, stem[: -len(ext)]
-    return "other", "Other", stem
+# mode -> (subdir, index-section heading); SECTION_ORDER sets section order.
+MODE_CATEGORY = {"xsd": ("schemas", "Schemas"), "xslt": ("xslt", "XSLT")}
+SECTION_ORDER = ["Schemas", "XSLT"]
 
 # Page chrome shared by every standalone demo: a dark, edge-to-edge,
-# horizontally-scrolling code surface plus the floating "back" link. This is
-# appended to ansi2html's generated colour classes in one shared stylesheet
-# (demos/unxml.css) that every page links to.
+# horizontally-scrolling code surface plus the floating "back" link. Appended
+# to ansi2html's colour classes in one shared stylesheet (demos/ansi.css).
 CHROME_CSS = """
 html, body { margin: 0; background: #0d1117; }
 pre.unxml {
@@ -100,8 +90,8 @@ pre.unxml {
 .unxml-back:hover { color: #c9d1d9; }
 """
 
-# Standalone full-page template. Each page links the shared stylesheet via a
-# depth-relative {css_href}; the browser caches it across demos.
+# Standalone full-page template; links the shared stylesheet via a depth-
+# relative {css_href} so the browser caches it across demos.
 PAGE = """<!doctype html>
 <html lang="en">
 <head>
@@ -128,24 +118,36 @@ def find_bat() -> str:
     sys.exit("bat not found on PATH.")
 
 
-def highlight(bat: str, path: Path) -> str:
-    """Return ANSI-highlighted text for one .unxml file."""
-    result = subprocess.run(
-        [bat, "--color=always", "--paging=never", "--style=plain",
-         "--wrap=never", "-l", "unxml", str(path)],
+def fetch(url: str, dest: Path) -> bool:
+    """Download url to dest if not already cached. Returns False on failure."""
+    if dest.exists():
+        return True
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    req = urllib.request.Request(url, headers={"User-Agent": "unxml-demos"})
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            dest.write_bytes(resp.read())
+        return True
+    except (URLError, OSError) as e:
+        print(f"  WARNING: failed to fetch {url}: {e}")
+        return False
+
+
+def render(mode: str, src: Path) -> str:
+    """Run `unxml --<mode> src` and return the rendered .unxml text."""
+    return subprocess.run(
+        [str(UNXML_BIN), f"--{mode}", str(src)],
         capture_output=True, text=True, check=True,
-    )
-    return result.stdout
+    ).stdout
 
 
-def discover() -> list[Path]:
-    """All checked-in .unxml files under demo/, sorted with known ones first."""
-    files = sorted(DEMO_DIR.rglob("*.unxml"))
-    order = list(SOURCES)
-    return sorted(files, key=lambda p: (
-        order.index(rel) if (rel := p.relative_to(DEMO_DIR).as_posix()) in order
-        else len(order), p.as_posix(),
-    ))
+def highlight(bat: str, text: str) -> str:
+    """ANSI-highlight rendered text via bat using the unxml grammar."""
+    return subprocess.run(
+        [bat, "--color=always", "--paging=never", "--style=plain",
+         "--wrap=never", "-l", "unxml"],
+        input=text, capture_output=True, text=True, check=True,
+    ).stdout
 
 
 def index_markdown(entries: list[tuple[str, str, str, str, int]]) -> str:
@@ -157,18 +159,13 @@ def index_markdown(entries: list[tuple[str, str, str, str, int]]) -> str:
         "same grammar `unxml` ships for `bat`. Each link opens the full "
         "rendered output edge-to-edge.\n",
     ]
-    # Preserve the section order defined in CATEGORIES; group entries under it.
-    headings = list(dict.fromkeys(h for _, _, h in CATEGORIES)) + ["Other"]
-    for heading in headings:
+    for heading in SECTION_ORDER:
         rows = [e for e in entries if e[0] == heading]
         if not rows:
             continue
-        out.append(f"## {heading}\n")
-        out.append("| Document | Lines | Source |")
-        out.append("| --- | --- | --- |")
+        out += [f"## {heading}\n", "| Document | Lines | Source |", "| --- | --- | --- |"]
         for _, href, title, source, lines in rows:
-            src = f"[source]({source})" if source else "—"
-            out.append(f"| [{title}]({href}) | {lines} | {src} |")
+            out.append(f"| [{title}]({href}) | {lines} | [source]({source}) |")
         out.append("")
     return "\n".join(out) + "\n"
 
@@ -190,6 +187,8 @@ def main() -> int:
     docs = site / "docs"
     if not docs.is_dir():
         sys.exit(f"{docs} not found — is {site} the unxml-demos repo?")
+    if not UNXML_BIN.exists():
+        sys.exit(f"{UNXML_BIN} not found — run `cargo build --release` first.")
 
     bat = find_bat()
     # One converter for the whole run so a regenerated palette covers every
@@ -200,33 +199,32 @@ def main() -> int:
     demos_dir.mkdir(parents=True, exist_ok=True)
     css_path = demos_dir / "ansi.css"
 
-    # Clear previously generated pages, but keep the committed, created-once
-    # ansi.css (the colour palette is fixed by the bat theme x grammar, not by
-    # content — see --regen-css).
+    # Clear previously generated pages, keeping the created-once ansi.css.
     for stale in demos_dir.rglob("*.html"):
         stale.unlink()
     (demos_dir / "index.md").unlink(missing_ok=True)
 
-    # First pass: highlight everything (also primes the converter's palette).
-    rendered: list[tuple[Path, str, str, str, str, int]] = []  # path, slug, heading, title, fragment, lines
-    for path in discover():
-        rel = path.relative_to(DEMO_DIR).as_posix()
-        fragment = conv.convert(highlight(bat, path), full=False)
-        lines = path.read_text(encoding="utf-8").count("\n")
-        # demo/ubl/cct.xsd.unxml -> demos/schemas/ubl/cct.html
-        subdir, heading, base = categorize(rel)
-        slug = f"{subdir}/{base}"
-        title = SOURCES.get(rel, (Path(rel).stem, None))[0]
-        rendered.append((path, slug, heading, title, fragment, lines))
+    # First pass: fetch + render each demo (also primes the converter palette).
+    rendered: list[tuple[str, str, str, str, str, int]] = []  # out_slug, heading, title, url, fragment, lines
+    for mode, slug, title, url in DEMOS:
+        subdir, heading = MODE_CATEGORY[mode]
+        ext = Path(urlsplit(url).path).suffix or f".{mode}"
+        cache_path = CACHE_DIR / f"{slug}{ext}"
+        was_cached = cache_path.exists()
+        if not fetch(url, cache_path):
+            continue
+        text = render(mode, cache_path)
+        fragment = conv.convert(highlight(bat, text), full=False)
+        out_slug = f"{subdir}/{slug}"
+        rendered.append((out_slug, heading, title, url, fragment, text.count("\n")))
+        print(f"  {'cached' if was_cached else 'fetched'} + rendered {slug} ({text.count(chr(10))} lines)")
 
-    # Created-once shared stylesheet: ansi2html's colour palette plus the page
-    # chrome. Only (re)written when missing or explicitly requested.
+    # Created-once shared stylesheet: ansi2html's colour palette plus chrome.
     if args.regen_css or not css_path.exists():
         existed = css_path.exists()
         headers = conv.produce_headers().replace('<style type="text/css">', "").replace("</style>", "")
-        # produce_headers() emits one rule line per span *occurrence*, so the
-        # same ~260 colour rules repeat thousands of times. Dedupe by line
-        # (order-preserving) to collapse it to the actual palette.
+        # produce_headers() emits one rule line per span *occurrence*; dedupe by
+        # line (order-preserving) to collapse it to the ~260-colour palette.
         seen: set[str] = set()
         palette = "\n".join(
             ln for ln in headers.splitlines()
@@ -235,8 +233,7 @@ def main() -> int:
         css_path.write_text(palette + "\n" + CHROME_CSS, encoding="utf-8")
         print(f"  {'regenerated' if existed else 'generated'} {css_path.relative_to(site)}")
     else:
-        # Tripwire: warn if any page references a class the committed css lacks
-        # (i.e. the tooling changed and the palette is stale).
+        # Tripwire: warn if a page references a class the committed css lacks.
         defined = set(re.findall(r"\.([A-Za-z0-9_-]+)", css_path.read_text(encoding="utf-8")))
         used = {c for *_, frag, _ in rendered
                 for attr in re.findall(r'class="([^"]+)"', frag) for c in attr.split()}
@@ -244,25 +241,20 @@ def main() -> int:
             print(f"  WARNING: {css_path.name} is missing {len(missing)} class(es) "
                   f"e.g. {sorted(missing)[:3]} — rerun with --regen-css")
 
-    # Write each standalone full-page document linking the shared css.
+    # Second pass: write each standalone full-page document linking the css.
     entries: list[tuple[str, str, str, str, int]] = []  # heading, href, title, source, lines
-    for path, slug, heading, title, fragment, lines in rendered:
-        out_path = demos_dir / f"{slug}.html"
+    for out_slug, heading, title, url, fragment, lines in rendered:
+        out_path = demos_dir / f"{out_slug}.html"
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        # Path back up to demos/ (where the index and ansi.css live) from this
-        # page's nesting depth: "../" per level below demos/.
-        back = "../" * slug.count("/") or "./"
+        # "../" per level below demos/ (where the index and ansi.css live).
+        back = "../" * out_slug.count("/") or "./"
         out_path.write_text(
             PAGE.format(title=title, css_href=f"{back}ansi.css", fragment=fragment, back=back),
             encoding="utf-8",
         )
-        rel = path.relative_to(DEMO_DIR).as_posix()
-        source = SOURCES.get(rel, (None, None))[1]
-        entries.append((heading, f"{slug}.html", title, source, lines))
-        print(f"  rendered {rel} -> {out_path.relative_to(site)} ({lines} lines)")
+        entries.append((heading, f"{out_slug}.html", title, url, lines))
 
     (demos_dir / "index.md").write_text(index_markdown(entries), encoding="utf-8")
-    print(f"  wrote index -> {(demos_dir / 'index.md').relative_to(site)}")
     print(f"\nDone. {len(entries)} full-page demos written to {demos_dir.relative_to(site)}/.")
     return 0
 

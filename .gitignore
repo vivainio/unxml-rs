@@ -17,3 +17,6 @@ Thumbs.db
 
 # Debug files
 *.pdb
+
+# Demo-site publish cache (downloaded sources; see demo/publish-to-demo-site.py)
+/demo/.cache/
