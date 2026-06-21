@@ -29,7 +29,9 @@ fn test_inline_span_with_attribute_and_void() {
     let output = run_unxml(&["test-input/inline-mixed.xml"]);
 
     assert!(
-        output.contains("para = See <link href=\"install.html\">the install guide</link> for details.")
+        output.contains(
+            "para = See <link href=\"install.html\">the install guide</link> for details."
+        )
     );
     assert!(output.contains("para = A void ref <xref linkend=\"recovery\"/> mid-sentence."));
 }
