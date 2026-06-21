@@ -200,15 +200,17 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ### Creating Releases
 
-To create a new release:
+The version lives in the **git tag**, not in `Cargo.toml` (which stays at the
+`0.0.0-dev` placeholder; the release workflow injects the real version with
+`cargo set-version`). Do **not** bump `Cargo.toml` or create tags by hand.
 
-1. Update the version in `Cargo.toml` and `src/main.rs`
-2. Commit the version changes
-3. Create and push a version tag:
-   ```bash
-   git tag v1.0.1
-   git push origin v1.0.1
-   ```
-4. The GitHub Actions workflow will automatically build binaries for all platforms and create a release
+To cut a release, let `gh` create the tag:
+
+```bash
+gh release create vX.Y.Z --title "Release vX.Y.Z" --notes "…"
+```
+
+The pushed tag triggers the GitHub Actions workflow, which builds binaries and
+the PyPI wheel for all platforms and attaches them to the release.
 
 The CI workflow runs on every push to ensure code quality with formatting checks, linting, and tests. 

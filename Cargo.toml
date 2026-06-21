@@ -1,6 +1,9 @@
 [package]
 name = "unxml"
-version = "1.1.0"
+# Placeholder only — the real version is injected from the git tag at release
+# time (`cargo set-version` in release.yml). Never edit this by hand; releases
+# are cut with `gh release create vX.Y.Z`, which creates the tag.
+version = "0.0.0-dev"
 edition = "2024"
 description = "Unxml 'pretty-prints' xml and html files in light, yaml-like, readable format"
 authors = ["Ville Vainio <vivainio@gmail.com>"]
