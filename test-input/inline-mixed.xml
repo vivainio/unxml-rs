@@ -1,0 +1,10 @@
+<doc xmlns="urn:example:doc">
+  <para>The <command>widget</command> daemon keeps its state in a single
+    database. This sentence wraps across source lines on purpose.</para>
+  <para>See <link href="install.html">the install guide</link> for details.</para>
+  <para>A void ref <xref linkend="recovery"/> mid-sentence.</para>
+  <para>Nested <emphasis>the <command>x</command> flag</emphasis> here.</para>
+  <para>Run this: <programlisting>line one
+line two</programlisting></para>
+  <plain>just text, no spans at all</plain>
+</doc>

@@ -155,6 +155,33 @@ Project
 - **Text Content with Equals**: Element text content is shown as `ElementName = text content`
 - **Hierarchical Indentation**: Nested elements are properly indented
 - **Clean Format**: Easy to read and compare, great for diffing
+- **Inline mixed content**: Prose interleaved with short inline elements stays on one readable line
+
+### Mixed content (prose with inline spans)
+
+Document-style XML interleaves text with small inline elements — a paragraph
+containing a `<command>` or a `<link>`. Flattening every run onto its own line
+makes such prose hard to read, so `unxml` keeps it inline as one line of
+verbatim XML:
+
+```xml
+<para>The <command>widget</command> daemon keeps its
+  <link href="recovery.html">recoverable</link> state in one database.</para>
+```
+
+renders as:
+
+```
+para = The <command>widget</command> daemon keeps its <link href="recovery.html">recoverable</link> state in one database.
+```
+
+An element flows inline when its whole subtree is *inline-safe* — text
+interleaved with elements that are themselves inline-safe. A leaf with
+significant (multi-line) text, such as `<programlisting>` or `<screen>`, is not
+inline-safe, so its parent stays in the flattened block form and the listing
+keeps its line breaks. Nested inline markup (e.g. `<emphasis>` wrapping a
+`<command>`) collapses all the way up. This applies to the generic XML render;
+the `--xslt`/`--xsd`/`--wsdl`/`--schematron` modes use their own formatting.
 
 ## Technical Details
 

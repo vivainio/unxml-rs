@@ -185,6 +185,7 @@ impl XmlElement {
                 text_content: self.text_content.clone(),
                 children: self.children.clone(),
                 nodes: self.nodes.clone(),
+                inner_source: self.inner_source.clone(),
             };
 
             // Always process the modified element normally (section should still appear)
@@ -208,6 +209,7 @@ impl XmlElement {
                 text_content: self.text_content.clone(),
                 children: self.children.clone(),
                 nodes: self.nodes.clone(),
+                inner_source: self.inner_source.clone(),
             };
 
             // Special handling for section elements after include processing
@@ -505,7 +507,17 @@ impl XmlElement {
             result.push_str(&render_attrs(&attr_parts, col, indent, false));
         }
 
-        if self.is_mixed() {
+        // Dialect modes (XSLT/XSD/WSDL/Schematron) render inline elements through
+        // their own transforms, so the verbatim-XML inline path applies only to
+        // the generic XML/prose render.
+        let dialect = opts.xslt || opts.xsd || opts.wsdl || opts.schematron;
+
+        if !dialect && self.renders_inline() {
+            // Shallow mixed content (prose with inline spans): show the body as
+            // one line of original XML, e.g. `para = The <command>x</command> …`.
+            render_text(&mut result, &self.inline_xml_body(), indent);
+            result.push('\n');
+        } else if self.is_mixed() {
             // Mixed content: render text runs and child elements in order.
             result.push('\n');
             result.push_str(&self.render_mixed_body(indent + 1, opts, registry));

@@ -1,0 +1,11 @@
+doc(xmlns="urn:example:doc")
+  para = The <command>widget</command> daemon keeps its state in a single database. This sentence wraps across source lines on purpose.
+  para = See <link href="install.html">the install guide</link> for details.
+  para = A void ref <xref linkend="recovery"/> mid-sentence.
+  para = Nested <emphasis>the <command>x</command> flag</emphasis> here.
+  para
+    "Run this:"
+    programlisting =
+      | line one
+      | line two
+  plain = just text, no spans at all

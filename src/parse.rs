@@ -175,10 +175,17 @@ pub(crate) fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
     reader.config_mut().trim_text(true);
 
     let mut elements_stack: Vec<XmlElement> = Vec::new();
+    // Byte offset where each open element's inner content begins (just past its
+    // start tag), parallel to `elements_stack`. Used to capture verbatim inner
+    // source for inline mixed-content rendering.
+    let mut inner_start_stack: Vec<usize> = Vec::new();
     let mut root_elements: Vec<XmlElement> = Vec::new();
     let mut buf = Vec::new();
 
     loop {
+        // Position before reading this event: for an End event, this is where
+        // the `</name>` tag begins, i.e. the end of the parent's inner content.
+        let pos_before = reader.buffer_position() as usize;
         match reader.read_event_into(&mut buf) {
             Ok(Event::Start(ref e)) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
@@ -199,9 +206,17 @@ pub(crate) fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                 }
 
                 elements_stack.push(element);
+                // Inner content starts right after the start tag we just read.
+                inner_start_stack.push(reader.buffer_position() as usize);
             }
             Ok(Event::End(_)) => {
-                if let Some(completed_element) = elements_stack.pop() {
+                if let Some(mut completed_element) = elements_stack.pop() {
+                    if let Some(inner_start) = inner_start_stack.pop()
+                        && inner_start <= pos_before
+                    {
+                        completed_element.inner_source =
+                            content.get(inner_start..pos_before).map(str::to_string);
+                    }
                     if let Some(parent) = elements_stack.last_mut() {
                         parent.nodes.push(NodeRef::Child(parent.children.len()));
                         parent.children.push(completed_element);
