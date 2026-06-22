@@ -84,6 +84,15 @@ unxml --bat some.xsd      # implies --auto (detects --xsd), pipes through `bat -
 the bundled `unxml` grammar (see `editor/`) for paged, colourised display. If
 `bat` is not installed it falls back to plain stdout.
 
+### Claude Code skill (`--install-skills`)
+
+```bash
+unxml --install-skills      # writes ~/.claude/skills/unxml/SKILL.md
+```
+
+Installs a [Claude Code](https://claude.com/claude-code) skill for unxml. It
+doesn't auto-activate; invoke it with `/unxml`.
+
 ### Hiding noisy namespace prefixes (`--hide-ns`)
 
 Vocabularies like UBL bury the signal under repeated prefixes (`cbc:`, `cac:`).
