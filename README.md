@@ -97,6 +97,15 @@ unxml --hide-ns cbc,cac invoice.xml   # repeatable and comma-separated
 Signal-carrying prefixes you don't list (e.g. `ext:`, `bim:`) are kept, so an
 extension subtree still stands out.
 
+The special value `--hide-ns ALL` hides **every** prefix, reducing all element
+and attribute names to their bare local form. Useful when you don't know the
+prefixes up front — e.g. fingerprinting or clustering documents of unknown
+vocabularies with `--paths`:
+
+```bash
+unxml --paths --hide-ns ALL unknown.xml   # prefix-free structural signature
+```
+
 Under `--auto`/`--bat`, unxml also **sniffs** the document type and hides a
 sensible set automatically. Currently it recognises UBL *instance* documents
 (an unprefixed root such as `<Invoice>` in a UBL namespace) and hides whichever

@@ -247,3 +247,30 @@ fn test_canonical_preserves_order_in_dialect_mode() {
         "plain mode should sort: {plain}"
     );
 }
+
+// --hide-ns ALL hides every prefix, reducing all element and attribute names to
+// their bare local form (for fingerprinting documents of unknown vocabularies).
+#[test]
+fn test_hide_ns_all_strips_every_prefix() {
+    let dir = std::env::temp_dir().join("unxml-hidens-test");
+    std::fs::create_dir_all(&dir).unwrap();
+    let f = dir.join("multi.xml");
+    std::fs::write(
+        &f,
+        r#"<?xml version="1.0"?>
+<a:order xmlns:a="urn:o" xmlns:b="urn:b">
+  <b:line b:sku="X1"><a:qty>2</a:qty></b:line>
+</a:order>"#,
+    )
+    .unwrap();
+
+    let out = run_unxml(&["--paths", "--hide-ns", "ALL", f.to_str().unwrap()]);
+    // No prefix survives anywhere in the path tree.
+    assert!(
+        !out.lines().any(|l| l.contains(':') && !l.starts_with("//")),
+        "got: {out}"
+    );
+    assert!(out.contains("order"), "got: {out}");
+    assert!(out.contains("line(sku)"), "got: {out}");
+    assert!(out.contains("qty"), "got: {out}");
+}

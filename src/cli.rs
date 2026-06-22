@@ -51,10 +51,13 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) bat: bool,
 
-    /// Hide one or more namespace prefixes from element names to cut noise,
-    /// e.g. `--hide-ns cbc,cac`. Repeatable and comma-separated. The matching
-    /// xmlns: declarations are dropped too. Under --auto/--bat, well-known
-    /// document types (e.g. UBL) also get a sensible set hidden automatically.
+    /// Hide one or more namespace prefixes from element and attribute names to
+    /// cut noise, e.g. `--hide-ns cbc,cac`. Repeatable and comma-separated; the
+    /// matching xmlns: declarations are dropped too. The special value
+    /// `--hide-ns ALL` hides every prefix, reducing all names to their bare
+    /// local form — handy for fingerprinting documents of unknown vocabularies.
+    /// Under --auto/--bat, well-known document types (e.g. UBL) also get a
+    /// sensible set hidden automatically.
     #[arg(long, value_delimiter = ',')]
     pub(crate) hide_ns: Vec<String>,
 

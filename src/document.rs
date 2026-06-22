@@ -38,14 +38,21 @@ pub(crate) fn detect_mode_from_ext(file_path: &str) -> FormatOpts {
     }
 }
 
-/// Recursively strip the given namespace prefixes from element *and attribute*
-/// names and drop the matching `xmlns:<prefix>` declarations. Purely cosmetic:
-/// it makes a prefix-heavy vocabulary (e.g. UBL's `cbc:`/`cac:`) read as bare
-/// local names while leaving signal-carrying prefixes (e.g. `ext:`/`bim:`)
-/// untouched.
-pub(crate) fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>) {
+/// The sentinel value for `--hide-ns` that hides *every* prefix, reducing all
+/// names to their bare local form. Useful when you don't know the prefixes up
+/// front — e.g. fingerprinting documents of unknown vocabularies.
+pub(crate) const HIDE_NS_ALL: &str = "ALL";
+
+/// Recursively strip namespace prefixes from element *and attribute* names and
+/// drop the matching `xmlns:<prefix>` declarations. Purely cosmetic: it makes a
+/// prefix-heavy vocabulary (e.g. UBL's `cbc:`/`cac:`) read as bare local names.
+/// With `all` set every prefix is hidden; otherwise only those in `prefixes`,
+/// leaving signal-carrying prefixes (e.g. `ext:`/`bim:`) untouched.
+pub(crate) fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>, all: bool) {
+    let hidden = |pfx: &str| all || prefixes.contains(pfx);
+
     if let Some((pfx, local)) = elem.name.split_once(':')
-        && prefixes.contains(pfx)
+        && hidden(pfx)
     {
         let pfx = pfx.to_string();
         elem.name = local.to_string();
@@ -59,20 +66,19 @@ pub(crate) fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>)
         }
     }
     // Rebuild the attribute map: drop the now-redundant `xmlns:` declarations
-    // for the other hidden prefixes, and strip hidden prefixes from ordinary
-    // attribute names too (so `cbc:foo` reads as `foo`, consistent with element
-    // names). `xmlns` declarations themselves are matched on their own prefix
-    // (`xmlns`), never on a hidden vocabulary prefix, so they are handled only
-    // by the drop rule.
+    // for the hidden prefixes, and strip hidden prefixes from ordinary attribute
+    // names too (so `cbc:foo` reads as `foo`, consistent with element names).
+    // `xmlns` declarations themselves are matched on their own prefix (`xmlns`),
+    // never on a vocabulary prefix, so they are handled only by the drop rule.
     let attrs = std::mem::take(&mut elem.attributes);
     for (key, value) in attrs {
         match key.split_once(':') {
             Some(("xmlns", pfx)) => {
-                if !prefixes.contains(pfx) {
+                if !hidden(pfx) {
                     elem.attributes.insert(key, value);
                 }
             }
-            Some((pfx, local)) if prefixes.contains(pfx) => {
+            Some((pfx, local)) if hidden(pfx) => {
                 elem.attributes.entry(local.to_string()).or_insert(value);
             }
             _ => {
@@ -81,7 +87,7 @@ pub(crate) fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>)
         }
     }
     for child in &mut elem.children {
-        hide_namespaces(child, prefixes);
+        hide_namespaces(child, prefixes, all);
     }
 }
 

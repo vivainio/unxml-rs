@@ -7,7 +7,7 @@ use std::io::{self, Read};
 use anyhow::{Context, Result};
 
 use crate::canonical::canonicalize;
-use crate::document::{hide_namespaces, select_subtrees, sniff_hidden_prefixes};
+use crate::document::{HIDE_NS_ALL, hide_namespaces, select_subtrees, sniff_hidden_prefixes};
 use crate::model::{FormatOpts, XmlElement};
 use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_lenient};
 use crate::paths::dump_paths;
@@ -50,13 +50,15 @@ pub(crate) fn process_content(
 
     // Build the effective set of prefixes to hide: those requested explicitly,
     // plus any inferred by sniffing the document type (only under --auto/--bat).
+    // The `ALL` sentinel hides every prefix regardless of the rest of the set.
     let mut hidden = hide_ns.clone();
     if sniff {
         hidden.extend(sniff_hidden_prefixes(&elements));
     }
-    if !hidden.is_empty() {
+    let hide_all = hidden.contains(HIDE_NS_ALL);
+    if hide_all || !hidden.is_empty() {
         for element in &mut elements {
-            hide_namespaces(element, &hidden);
+            hide_namespaces(element, &hidden, hide_all);
         }
     }
 
