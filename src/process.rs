@@ -6,9 +6,11 @@ use std::io::{self, Read};
 
 use anyhow::{Context, Result};
 
+use crate::canonical::canonicalize;
 use crate::document::{hide_namespaces, select_subtrees, sniff_hidden_prefixes};
-use crate::model::FormatOpts;
+use crate::model::{FormatOpts, XmlElement};
 use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_lenient};
+use crate::paths::dump_paths;
 use crate::xslt::TemplateRegistry;
 
 #[allow(clippy::too_many_arguments)]
@@ -21,6 +23,8 @@ pub(crate) fn process_content(
     hide_ns: &HashSet<String>,
     sniff: bool,
     select: Option<&str>,
+    canonical: bool,
+    paths: bool,
 ) -> Result<String> {
     // Determine input format
     let format = if let Some(format_str) = format_override {
@@ -56,27 +60,43 @@ pub(crate) fn process_content(
         }
     }
 
-    // Format output. With --select, render each matched subtree as a top-level
-    // fragment separated by a blank line; otherwise render every root element.
-    let mut output = String::new();
-    if let Some(pattern) = select {
+    // Canonicalise for diff-friendly output: always rebind prefixes to stable
+    // names, but only sort siblings in plain XML mode — in a dialect/`--special`
+    // mode element order is significant, so sorting would misrepresent it.
+    if canonical {
+        canonicalize(&mut elements, !opts.has_mode());
+    }
+
+    // Determine the roots to emit: the whole document, or just the subtrees
+    // matched by --select.
+    let roots: Vec<&XmlElement> = if let Some(pattern) = select {
         let mut matched = Vec::new();
         select_subtrees(&elements, pattern, &mut matched);
-        for (i, elem) in matched.iter().enumerate() {
-            if i > 0 {
-                output.push('\n');
-            }
-            output.push_str(&elem.format_yaml_like(0, opts, registry));
-        }
+        matched
     } else {
-        for element in elements {
-            output.push_str(&element.format_yaml_like(0, opts, registry));
+        elements.iter().collect()
+    };
+
+    // --paths dumps the distinct element paths; otherwise render the tree. Under
+    // --select, render each matched subtree as a fragment separated by a blank
+    // line; the whole-document case emits roots back-to-back.
+    let output = if paths {
+        dump_paths(&roots)
+    } else {
+        let mut out = String::new();
+        for (i, elem) in roots.iter().enumerate() {
+            if i > 0 && select.is_some() {
+                out.push('\n');
+            }
+            out.push_str(&elem.format_yaml_like(0, opts, registry));
         }
-    }
+        out
+    };
 
     Ok(output)
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn process_file(
     file_path: &str,
     format_override: Option<&str>,
@@ -85,6 +105,8 @@ pub(crate) fn process_file(
     hide_ns: &HashSet<String>,
     sniff: bool,
     select: Option<&str>,
+    canonical: bool,
+    paths: bool,
 ) -> Result<String> {
     // Build template registry if expand mode is enabled
     let registry = if expand && opts.xslt {
@@ -105,6 +127,8 @@ pub(crate) fn process_file(
         hide_ns,
         sniff,
         select,
+        canonical,
+        paths,
     )
 }
 
@@ -114,6 +138,8 @@ pub(crate) fn process_stdin(
     hide_ns: &HashSet<String>,
     sniff: bool,
     select: Option<&str>,
+    canonical: bool,
+    paths: bool,
 ) -> Result<String> {
     // Read from stdin, tolerating non-UTF-8 input (see read_file_lenient).
     let mut bytes = Vec::new();
@@ -135,6 +161,8 @@ pub(crate) fn process_stdin(
         hide_ns,
         sniff,
         select,
+        canonical,
+        paths,
     )
 }
 

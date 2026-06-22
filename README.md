@@ -87,8 +87,8 @@ the bundled `unxml` grammar (see `editor/`) for paged, colourised display. If
 ### Hiding noisy namespace prefixes (`--hide-ns`)
 
 Vocabularies like UBL bury the signal under repeated prefixes (`cbc:`, `cac:`).
-`--hide-ns` drops the named prefixes from element names — and their `xmlns:`
-declarations — so the output reads as bare local names:
+`--hide-ns` drops the named prefixes from element **and attribute** names — and
+their `xmlns:` declarations — so the output reads as bare local names:
 
 ```bash
 unxml --hide-ns cbc,cac invoice.xml   # repeatable and comma-separated
@@ -104,54 +104,192 @@ prefixes are bound to the Common Basic/Aggregate Components namespaces. A
 stylesheet or schema that merely *references* UBL (e.g. an `xsl:stylesheet`
 translating to UBL) is left untouched, since there the prefixes are real syntax.
 
+### Canonicalising for diffs (`--canonical`)
+
+Two documents can mean the same thing yet differ byte-for-byte over things that
+carry no meaning: namespace *prefixes* are arbitrary local aliases for a URI,
+and sibling order is often incidental. `--canonical` removes both so the
+rendered output of equivalent documents diffs cleanly:
+
+- **Prefixes are rebound** to stable names. Recognised vocabularies keep their
+  conventional prefix (`xsl`, `xs`, `cac`, `ram`, …); everything else becomes
+  `ns1`, `ns2`, … in sorted-URI order. A default namespace (`xmlns="…"`) is
+  rewritten to the same explicit prefix, so `<a:Foo>` and `<Foo xmlns="…">` for
+  one URI collapse to the identical name. All `xmlns:*` declarations are
+  re-emitted, sorted, on the root.
+- **Sibling elements are sorted** by a recursive signature, so order-only
+  differences vanish. Mixed content (prose) keeps document order.
+
+```bash
+diff <(unxml --canonical a.xml) <(unxml --canonical b.xml)
+```
+
+Two documents differing only in prefix spelling, default-vs-explicit namespace,
+and sibling order produce byte-identical output:
+
+```xml
+<a:Order xmlns:a="urn:shop:order" xmlns:c="urn:shop:cust">
+  <a:Line sku="X1"><a:Qty>2</a:Qty></a:Line>
+  <c:Customer id="42">Acme</c:Customer>
+</a:Order>
+```
+
+```
+ns2:Order(xmlns:ns1="urn:shop:cust", xmlns:ns2="urn:shop:order")
+  ns1:Customer(id="42") = Acme
+  ns2:Line(sku="X1")
+    ns2:Qty = 2
+```
+
+Sibling sorting applies only to plain XML. Element order *is* significant in
+stylesheets and schemas (`xsl:*` control flow, `xs:sequence`, Schematron rule
+order), so in a dialect/`--special` mode (`--xslt`, `--xsd`, `--wsdl`,
+`--schematron`) `--canonical` normalises prefixes only and preserves document
+order.
+
+### Listing document paths (`--paths`)
+
+`--paths` dumps a compact structural summary instead of the tree: one sorted
+line per **distinct** element path, each annotated with the union of attribute
+names ever seen at that path. A leading `//` legend explains the namespace
+prefixes (recognised vocabularies on their conventional prefix are omitted as
+self-explanatory):
+
+```bash
+unxml --paths invoice.xml
+```
+
+```
+// (default) = urn:shop:order
+order
+order/customer(id)
+order/line(discount, sku)
+order/line/qty(unit)
+```
+
+It answers "what shapes exist in this document" and is handy for comparing two
+instances or formats structurally. It composes with `--select` (paths under a
+matched subtree), `--hide-ns` (shorter segments), and `--canonical` (the legend
+resolves the generated `ns1`/`ns2` names).
+
 ## Introduction
 
 This command line application was developed for comparing XML files (e.g. database/application state dumps). It takes an XML file and converts it to a YAML-like syntax that is easier to read and compare.
 
 ### Example
 
-Given this XML input:
+Take an excerpt of the standard [UBL 2.1 invoice
+example](https://docs.oasis-open.org/ubl/os-UBL-2.1/xml/UBL-Invoice-2.1-Example.xml):
 
 ```xml
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-    <PackAsTool>true</PackAsTool>
-    <Description>Unxml 'pretty-prints' xml files in light, yamly, readable format</Description>
-    <PackageVersion>1.0.0</PackageVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="FileSystemHelper.fs"/>
-    <Compile Include="MutableCol.fs"/>
-    <Compile Include="Program.fs" />
-  </ItemGroup>
-</Project>
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+	xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+	<cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+	<cbc:ID>TOSL108</cbc:ID>
+	<cbc:IssueDate>2009-12-15</cbc:IssueDate>
+	<cbc:InvoiceTypeCode listID="UN/ECE 1001 Subset" listAgencyID="6">380</cbc:InvoiceTypeCode>
+	<cbc:DocumentCurrencyCode listID="ISO 4217 Alpha" listAgencyID="6">EUR</cbc:DocumentCurrencyCode>
+	<cac:AccountingSupplierParty>
+		<cac:Party>
+			<cac:PartyName>
+				<cbc:Name>Salescompany ltd.</cbc:Name>
+			</cac:PartyName>
+			<cac:PostalAddress>
+				<cbc:StreetName>Main street</cbc:StreetName>
+				<cbc:CityName>Big city</cbc:CityName>
+				<cbc:PostalZone>54321</cbc:PostalZone>
+			</cac:PostalAddress>
+		</cac:Party>
+	</cac:AccountingSupplierParty>
+</Invoice>
 ```
 
-The output would be:
+`unxml invoice.xml` flattens it into:
 
 ```
-Project
-  [Sdk]: Microsoft.NET.Sdk
-  PropertyGroup
-    OutputType = Exe
-    TargetFramework = netcoreapp2.1
-    PackAsTool = true
-    Description = Unxml 'pretty-prints' xml files in light, yamly, readable format
-    PackageVersion = 1.0.0
-  ItemGroup
-    Compile
-      [Include]: FileSystemHelper.fs
-    Compile
-      [Include]: MutableCol.fs
-    Compile
-      [Include]: Program.fs
+Invoice(
+    xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2")
+  cbc:UBLVersionID = 2.1
+  cbc:ID = TOSL108
+  cbc:IssueDate = 2009-12-15
+  cbc:InvoiceTypeCode(listAgencyID="6", listID="UN/ECE 1001 Subset") = 380
+  cbc:DocumentCurrencyCode(listAgencyID="6", listID="ISO 4217 Alpha") = EUR
+  cac:AccountingSupplierParty
+    cac:Party
+      cac:PartyName
+        cbc:Name = Salescompany ltd.
+      cac:PostalAddress
+        cbc:StreetName = Main street
+        cbc:CityName = Big city
+        cbc:PostalZone = 54321
 ```
+
+With `--auto`, unxml sniffs the UBL instance and hides the noisy `cbc:`/`cac:`
+prefixes (along with their `xmlns:` declarations), leaving just the signal:
+
+```
+Invoice(xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2")
+  UBLVersionID = 2.1
+  ID = TOSL108
+  IssueDate = 2009-12-15
+  InvoiceTypeCode(listAgencyID="6", listID="UN/ECE 1001 Subset") = 380
+  DocumentCurrencyCode(listAgencyID="6", listID="ISO 4217 Alpha") = EUR
+  AccountingSupplierParty
+    Party
+      PartyName
+        Name = Salescompany ltd.
+      PostalAddress
+        StreetName = Main street
+        CityName = Big city
+        PostalZone = 54321
+```
+
+### Mode example: XSLT
+
+Beyond flattening, each mode rewrites its vocabulary into terser pseudocode.
+A small XSLT stylesheet:
+
+```xml
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:template match="/">
+  <table border="1">
+    <xsl:for-each select="catalog/cd">
+    <tr>
+      <td><xsl:value-of select="title"/></td>
+      <td><xsl:value-of select="artist"/></td>
+    </tr>
+    </xsl:for-each>
+  </table>
+</xsl:template>
+</xsl:stylesheet>
+```
+
+renders with `unxml --xslt` as:
+
+```
+xsl:stylesheet(version="1.0", xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
+  match /:
+    table(border="1")
+      foreach catalog/cd:
+        tr
+          td
+            <- title
+          td
+            <- artist
+```
+
+`match`, `foreach` and `<-` (for `xsl:value-of`) read like the control flow the
+stylesheet actually expresses. See [XSLT transformations](docs/xslt.md) for the
+full vocabulary, and [XSD](docs/xsd.md) / [Schematron](docs/schematron.md) for
+the other modes.
 
 ### Key Features
 
-- **Attributes in Square Brackets**: Element attributes are displayed as `[attribute]: value`
+- **Attributes in Parentheses**: Element attributes are displayed Pug-style as `element(attr="value")`
 - **Text Content with Equals**: Element text content is shown as `ElementName = text content`
 - **Hierarchical Indentation**: Nested elements are properly indented
 - **Clean Format**: Easy to read and compare, great for diffing

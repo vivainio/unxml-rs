@@ -67,6 +67,25 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) select: Option<String>,
 
+    /// Canonicalise output for diffing: rebind namespace prefixes to stable
+    /// names (well-known vocabularies keep their conventional prefix, e.g.
+    /// `cac`/`xsl`; everything else becomes `ns1`, `ns2`, … in sorted-URI
+    /// order) and sort sibling elements so prefix- and order-only differences
+    /// disappear. Mixed content (prose) keeps its order. Sibling sorting applies
+    /// only to plain XML: in a dialect/--special mode (--xslt, --xsd, --wsdl,
+    /// --schematron) element order is significant, so only prefixes are
+    /// normalised and document order is preserved.
+    #[arg(long)]
+    pub(crate) canonical: bool,
+
+    /// Dump the distinct element paths instead of the tree: one sorted line per
+    /// unique path (`order/line/qty`), each annotated with the union of
+    /// attribute names ever seen at that path (`order/line(sku)`). A compact
+    /// structural summary, useful for understanding or comparing document
+    /// shapes. Honours --select, --hide-ns and --canonical.
+    #[arg(long)]
+    pub(crate) paths: bool,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     pub(crate) stdin: bool,

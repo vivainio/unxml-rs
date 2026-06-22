@@ -1,10 +1,12 @@
 //! unxml — simplify and "flatten" XML and HTML into a light, Pug/YAML-like
 //! readable form. This file wires the modules together and drives the CLI.
 
+mod canonical;
 mod cli;
 mod document;
 mod model;
 mod parse;
+mod paths;
 mod process;
 mod render;
 mod schematron;
@@ -60,6 +62,8 @@ fn main() -> Result<()> {
             &hide_ns,
             sniff,
             cli.select.as_deref(),
+            cli.canonical,
+            cli.paths,
         ) {
             Ok(output) => emit(&output, cli.bat),
             Err(e) => {
@@ -145,6 +149,8 @@ fn main() -> Result<()> {
             &hide_ns,
             sniff,
             cli.select.as_deref(),
+            cli.canonical,
+            cli.paths,
         ) {
             Ok(output) => combined.push_str(&output),
             Err(e) => {

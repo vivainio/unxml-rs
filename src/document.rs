@@ -38,10 +38,11 @@ pub(crate) fn detect_mode_from_ext(file_path: &str) -> FormatOpts {
     }
 }
 
-/// Recursively strip the given namespace prefixes from element names and drop
-/// the matching `xmlns:<prefix>` declarations. Purely cosmetic: it makes a
-/// prefix-heavy vocabulary (e.g. UBL's `cbc:`/`cac:`) read as bare local names
-/// while leaving signal-carrying prefixes (e.g. `ext:`/`bim:`) untouched.
+/// Recursively strip the given namespace prefixes from element *and attribute*
+/// names and drop the matching `xmlns:<prefix>` declarations. Purely cosmetic:
+/// it makes a prefix-heavy vocabulary (e.g. UBL's `cbc:`/`cac:`) read as bare
+/// local names while leaving signal-carrying prefixes (e.g. `ext:`/`bim:`)
+/// untouched.
 pub(crate) fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>) {
     if let Some((pfx, local)) = elem.name.split_once(':')
         && prefixes.contains(pfx)
@@ -57,12 +58,28 @@ pub(crate) fn hide_namespaces(elem: &mut XmlElement, prefixes: &HashSet<String>)
             elem.attributes.entry("xmlns".to_string()).or_insert(uri);
         }
     }
-    // Drop the now-redundant xmlns: declarations for the other hidden prefixes.
-    elem.attributes
-        .retain(|k, _| match k.strip_prefix("xmlns:") {
-            Some(pfx) => !prefixes.contains(pfx),
-            None => true,
-        });
+    // Rebuild the attribute map: drop the now-redundant `xmlns:` declarations
+    // for the other hidden prefixes, and strip hidden prefixes from ordinary
+    // attribute names too (so `cbc:foo` reads as `foo`, consistent with element
+    // names). `xmlns` declarations themselves are matched on their own prefix
+    // (`xmlns`), never on a hidden vocabulary prefix, so they are handled only
+    // by the drop rule.
+    let attrs = std::mem::take(&mut elem.attributes);
+    for (key, value) in attrs {
+        match key.split_once(':') {
+            Some(("xmlns", pfx)) => {
+                if !prefixes.contains(pfx) {
+                    elem.attributes.insert(key, value);
+                }
+            }
+            Some((pfx, local)) if prefixes.contains(pfx) => {
+                elem.attributes.entry(local.to_string()).or_insert(value);
+            }
+            _ => {
+                elem.attributes.insert(key, value);
+            }
+        }
+    }
     for child in &mut elem.children {
         hide_namespaces(child, prefixes);
     }
