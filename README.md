@@ -210,6 +210,36 @@ over a directory and `sort | uniq -c` to see how many distinct formats are
 present and how many files use each. Raise `--depth` to cluster by finer
 structural variants instead.
 
+#### Folding repeated leaf groups (`--fold`)
+
+Documents often repeat the same small record under different names — a `DATE`
+broken into `CENTURY`/`DAY`/`MONTH`/… under both `DUE_DATE` and `INVOICE_DATE`,
+or a UBL `cac:PostalAddress` under several party blocks. `--fold` hoists each
+such *leaf group* (an element whose children are all leaves) that occurs more
+than once into a named `@Shape` defined once in a leading `// shapes` legend,
+and replaces every occurrence in the tree with a reference:
+
+```bash
+unxml --paths --fold invoice.xml
+```
+
+```
+// shapes
+//   @DATE = DATE { CENTURY, DAY, DECADE_AND_YEAR, MONTH }
+
+INVOICE
+  DUE_DATE
+    @DATE
+  INVOICE_DATE
+    @DATE
+```
+
+Each shape definition is a single line — braces wrap the child list, while
+parens stay reserved for attributes (so `cbc:ID(schemeID)` inside a shape is
+still unambiguous). Only flat one-level groups fold, so definitions never nest
+or cross-reference each other. Shapes are named after their root element's local
+name (`@DATE`), with a numeric suffix on collision. Only affects `--paths`.
+
 ## Introduction
 
 This command line application was developed for comparing XML files (e.g. database/application state dumps). It takes an XML file and converts it to a YAML-like syntax that is easier to read and compare.

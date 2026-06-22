@@ -65,6 +65,7 @@ fn main() -> Result<()> {
         paths: cli.paths,
         depth: cli.depth.unwrap_or(0),
         no_attrs: cli.no_attrs,
+        fold: cli.fold,
         expand: cli.expand,
     };
 

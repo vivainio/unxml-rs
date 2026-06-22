@@ -105,6 +105,14 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) no_attrs: bool,
 
+    /// In `--paths`, fold repeated subtree shapes into named `@Shape`
+    /// definitions listed in a leading `// shapes` legend, replacing each
+    /// occurrence with a reference. Collapses structural repetition (e.g. many
+    /// date fields sharing the same subtree) so each distinct shape is shown
+    /// once. Only affects `--paths`.
+    #[arg(long)]
+    pub(crate) fold: bool,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     pub(crate) stdin: bool,
