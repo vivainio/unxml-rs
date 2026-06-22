@@ -85,7 +85,13 @@ fn main() -> Result<()> {
 
     // Expand glob patterns and collect all files
     for pattern in &cli.files {
-        if pattern.contains('*') || pattern.contains('?') || pattern.contains('[') {
+        // An existing file takes precedence over glob interpretation: real
+        // filenames can contain glob metacharacters (e.g. `Invoice-[uuid].xml`),
+        // and an explicitly-passed file that exists should be read verbatim
+        // rather than treated as a (likely non-matching) pattern.
+        if std::path::Path::new(pattern).is_file() {
+            all_files.push(pattern.clone());
+        } else if pattern.contains('*') || pattern.contains('?') || pattern.contains('[') {
             // This is a glob pattern
             match glob(pattern) {
                 Ok(paths) => {

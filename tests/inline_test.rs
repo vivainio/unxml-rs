@@ -274,3 +274,17 @@ fn test_hide_ns_all_strips_every_prefix() {
     assert!(out.contains("line(sku)"), "got: {out}");
     assert!(out.contains("qty"), "got: {out}");
 }
+
+// A real file whose name contains glob metacharacters (e.g. `[uuid]`) is read
+// verbatim, not mis-parsed as a (non-matching) glob pattern.
+#[test]
+fn test_literal_filename_with_glob_metachars() {
+    let dir = std::env::temp_dir().join("unxml-glob-test");
+    std::fs::create_dir_all(&dir).unwrap();
+    let f = dir.join("Invoice-[abc-123].xml");
+    std::fs::write(&f, r#"<?xml version="1.0"?><Invoice><ID>7</ID></Invoice>"#).unwrap();
+
+    let out = run_unxml(&[f.to_str().unwrap()]);
+    assert!(out.contains("Invoice"), "got: {out}");
+    assert!(out.contains("ID = 7"), "got: {out}");
+}
