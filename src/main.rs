@@ -4,6 +4,7 @@
 mod canonical;
 mod cli;
 mod document;
+mod install;
 mod model;
 mod parse;
 mod paths;
@@ -28,6 +29,13 @@ use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
+
+    // Side-channel action: install the bundled skill and exit before any
+    // input handling (no files required).
+    if cli.install_skills {
+        return install::install_skills();
+    }
+
     let opts = FormatOpts {
         special: cli.special,
         xslt: cli.xslt,

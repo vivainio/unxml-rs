@@ -108,4 +108,9 @@ pub(crate) struct Cli {
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     pub(crate) stdin: bool,
+
+    /// Install the bundled Claude Code skills into `~/.claude/skills/` and exit
+    /// (e.g. `unxml/SKILL.md`). Overwrites any existing copies.
+    #[arg(long)]
+    pub(crate) install_skills: bool,
 }
