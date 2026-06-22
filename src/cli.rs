@@ -97,6 +97,14 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) depth: Option<usize>,
 
+    /// In `--paths`, drop ordinary attribute names from each node, keeping only
+    /// namespaces (the format identity). Yields a coarser signature for
+    /// clustering — incidental per-document attributes (schemaLocation, version,
+    /// timestamps) stop fragmenting otherwise-identical formats. Only affects
+    /// `--paths`.
+    #[arg(long)]
+    pub(crate) no_attrs: bool,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     pub(crate) stdin: bool,

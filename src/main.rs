@@ -56,6 +56,7 @@ fn main() -> Result<()> {
         canonical: cli.canonical,
         paths: cli.paths,
         depth: cli.depth.unwrap_or(0),
+        no_attrs: cli.no_attrs,
         expand: cli.expand,
     };
 

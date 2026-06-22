@@ -25,6 +25,7 @@ pub(crate) struct ProcessOptions<'a> {
     pub(crate) canonical: bool,
     pub(crate) paths: bool,
     pub(crate) depth: usize,
+    pub(crate) no_attrs: bool,
     pub(crate) expand: bool,
 }
 
@@ -92,7 +93,7 @@ pub(crate) fn process_content(
     // --select, render each matched subtree as a fragment separated by a blank
     // line; the whole-document case emits roots back-to-back.
     let output = if cfg.paths {
-        dump_paths(&roots, cfg.depth)
+        dump_paths(&roots, cfg.depth, cfg.no_attrs)
     } else {
         let mut out = String::new();
         for (i, elem) in roots.iter().enumerate() {

@@ -289,3 +289,28 @@ fn test_literal_filename_with_glob_metachars() {
     assert!(out.contains("Invoice"), "got: {out}");
     assert!(out.contains("ID = 7"), "got: {out}");
 }
+
+// --no-attrs drops ordinary attribute names from --paths but keeps namespaces,
+// for coarser format-identity signatures.
+#[test]
+fn test_paths_no_attrs_keeps_namespaces() {
+    let dir = std::env::temp_dir().join("unxml-paths-test");
+    std::fs::create_dir_all(&dir).unwrap();
+    let f = dir.join("na.xml");
+    std::fs::write(
+        &f,
+        r#"<?xml version="1.0"?>
+<order xmlns="urn:shop" id="7" version="2">
+  <line sku="X1"><qty unit="ea">2</qty></line>
+</order>"#,
+    )
+    .unwrap();
+
+    let out = run_unxml(&["--paths", "--no-attrs", f.to_str().unwrap()]);
+    // Namespace identity is kept; ordinary attributes (id, version, sku, unit) gone.
+    assert!(out.contains(r#"order(xmlns="urn:shop")"#), "got: {out}");
+    assert!(!out.contains("id"), "attrs should be dropped: {out}");
+    assert!(!out.contains("sku"), "attrs should be dropped: {out}");
+    assert!(out.lines().any(|l| l.trim() == "line"), "got: {out}");
+    assert!(out.lines().any(|l| l.trim() == "qty"), "got: {out}");
+}

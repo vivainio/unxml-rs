@@ -185,6 +185,22 @@ or comparing document shapes. It composes with `--select` (subtree under a
 match), `--hide-ns` (shorter segments), and `--canonical` (the legend resolves
 the generated `ns1`/`ns2` names).
 
+Two further knobs make `--paths` a fuzzable fingerprint for clustering files by
+structure — coarsen the signature so documents of the same format collapse
+together despite incidental differences:
+
+- `--depth N` limits the tree to N nesting levels (root = level 1), dropping
+  deeper subtrees. Lower N → coarser.
+- `--no-attrs` drops ordinary attribute names from each node, keeping only
+  namespaces. Incidental per-document attributes (`schemaLocation`, `version`,
+  timestamps) stop fragmenting otherwise-identical formats.
+
+Combined with `--hide-ns ALL`, `--paths --depth 1 --no-attrs` reduces each file
+to a single root-element + namespace line — a *format census* signature: run it
+over a directory and `sort | uniq -c` to see how many distinct formats are
+present and how many files use each. Raise `--depth` to cluster by finer
+structural variants instead.
+
 ## Introduction
 
 This command line application was developed for comparing XML files (e.g. database/application state dumps). It takes an XML file and converts it to a YAML-like syntax that is easier to read and compare.

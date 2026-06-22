@@ -79,13 +79,16 @@ fn collect(
 
 /// The parenthesised annotation for a node: its default namespace (with URI)
 /// first, then ordinary attribute names — both sorted. Empty when the node has
-/// neither.
-fn annotation(info: &NodeInfo) -> String {
+/// neither. With `no_attrs` the ordinary attribute names are dropped, keeping
+/// only the namespace (the format identity), for coarser clustering signatures.
+fn annotation(info: &NodeInfo, no_attrs: bool) -> String {
     let mut parts = Vec::new();
     if let Some(uri) = &info.default_ns {
         parts.push(format!("xmlns=\"{}\"", uri.replace('"', "&quot;")));
     }
-    parts.extend(info.attrs.iter().cloned());
+    if !no_attrs {
+        parts.extend(info.attrs.iter().cloned());
+    }
     if parts.is_empty() {
         String::new()
     } else {
@@ -95,8 +98,9 @@ fn annotation(info: &NodeInfo) -> String {
 
 /// Render the distinct element paths of `roots` as an indented tree under a `//`
 /// legend of the prefixed namespaces. `max_depth` (0 = unlimited) caps the
-/// nesting levels emitted, root being level 1.
-pub(crate) fn dump_paths(roots: &[&XmlElement], max_depth: usize) -> String {
+/// nesting levels emitted, root being level 1; `no_attrs` drops ordinary
+/// attribute names from each node, keeping only namespaces.
+pub(crate) fn dump_paths(roots: &[&XmlElement], max_depth: usize, no_attrs: bool) -> String {
     let mut acc = BTreeMap::new();
     let mut legend = BTreeSet::new();
     for root in roots {
@@ -129,7 +133,7 @@ pub(crate) fn dump_paths(roots: &[&XmlElement], max_depth: usize) -> String {
         for (depth, seg) in segs.iter().enumerate().skip(shared) {
             let indent = "  ".repeat(depth);
             if depth + 1 == segs.len() {
-                out.push_str(&format!("{indent}{seg}{}\n", annotation(info)));
+                out.push_str(&format!("{indent}{seg}{}\n", annotation(info, no_attrs)));
             } else {
                 out.push_str(&format!("{indent}{seg}\n"));
             }
