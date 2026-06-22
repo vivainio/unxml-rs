@@ -78,11 +78,12 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) canonical: bool,
 
-    /// Dump the distinct element paths instead of the tree: one sorted line per
-    /// unique path (`order/line/qty`), each annotated with the union of
-    /// attribute names ever seen at that path (`order/line(sku)`). A compact
-    /// structural summary, useful for understanding or comparing document
-    /// shapes. Honours --select, --hide-ns and --canonical.
+    /// Dump the distinct element paths as an indented tree instead of the full
+    /// document: each element path is shown once (repeated siblings collapse),
+    /// annotated with the union of attribute names ever seen at that path, under
+    /// a `//` legend of the namespace prefixes. A compact structural summary,
+    /// useful for understanding or comparing document shapes. Honours --select,
+    /// --hide-ns and --canonical.
     #[arg(long)]
     pub(crate) paths: bool,
 

@@ -149,10 +149,11 @@ order.
 
 ### Listing document paths (`--paths`)
 
-`--paths` dumps a compact structural summary instead of the tree: one sorted
-line per **distinct** element path, each annotated with the union of attribute
-names ever seen at that path. A leading `//` legend explains the namespace
-prefixes (recognised vocabularies on their conventional prefix are omitted as
+`--paths` dumps a compact structural summary instead of the full document: the
+set of **distinct** element paths as an indented tree, each node shown once
+(repeated siblings collapse) and annotated with the union of attribute names
+ever seen at that path. A leading `//` legend explains the namespace prefixes
+(recognised vocabularies on their conventional prefix are omitted as
 self-explanatory):
 
 ```bash
@@ -162,15 +163,15 @@ unxml --paths invoice.xml
 ```
 // (default) = urn:shop:order
 order
-order/customer(id)
-order/line(discount, sku)
-order/line/qty(unit)
+  customer(id)
+  line(discount, sku)
+    qty(unit)
 ```
 
-It answers "what shapes exist in this document" and is handy for comparing two
-instances or formats structurally. It composes with `--select` (paths under a
-matched subtree), `--hide-ns` (shorter segments), and `--canonical` (the legend
-resolves the generated `ns1`/`ns2` names).
+It answers "what shapes exist in this document" and is handy for understanding
+or comparing document shapes. It composes with `--select` (subtree under a
+match), `--hide-ns` (shorter segments), and `--canonical` (the legend resolves
+the generated `ns1`/`ns2` names).
 
 ## Introduction
 

@@ -145,16 +145,17 @@ fn test_paths_dump_with_attribute_union() {
     let out = run_unxml(&["--paths", f.to_str().unwrap()]);
     let lines: Vec<&str> = out.lines().collect();
 
-    // Distinct, sorted paths; attribute names unioned across occurrences
-    // (discount appears on only one <line> but still shows up).
+    // Distinct paths as an indented tree; repeated <line> collapses to one node,
+    // and attribute names are unioned across occurrences (discount appears on
+    // only one <line> but still shows up).
     assert_eq!(
         lines,
         vec![
             "order(date, id)",
-            "order/customer(id)",
-            "order/customer/name",
-            "order/line(discount, sku)",
-            "order/line/qty(unit)",
+            "  customer(id)",
+            "    name",
+            "  line(discount, sku)",
+            "    qty(unit)",
         ]
     );
 
@@ -162,7 +163,7 @@ fn test_paths_dump_with_attribute_union() {
     let scoped = run_unxml(&["--paths", "--select", "line", f.to_str().unwrap()]);
     assert_eq!(
         scoped.lines().collect::<Vec<_>>(),
-        vec!["line(discount, sku)", "line/qty(unit)"]
+        vec!["line(discount, sku)", "  qty(unit)"]
     );
 }
 
@@ -186,7 +187,7 @@ fn test_paths_namespace_legend() {
     let out = run_unxml(&["--paths", f.to_str().unwrap()]);
     assert!(out.contains("// a = urn:shop:order"), "got: {out}");
     assert!(out.contains("// c = urn:shop:cust"), "got: {out}");
-    assert!(out.contains("a:order/c:customer(id)"), "got: {out}");
+    assert!(out.contains("\n  c:customer(id)"), "got: {out}");
 
     // Under --canonical the legend resolves the generated ns1/ns2 names.
     let canon = run_unxml(&["--paths", "--canonical", f.to_str().unwrap()]);
