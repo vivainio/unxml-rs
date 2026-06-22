@@ -24,7 +24,7 @@ use glob::glob;
 use crate::cli::Cli;
 use crate::document::detect_mode_from_ext;
 use crate::model::FormatOpts;
-use crate::process::{emit, process_file, process_stdin};
+use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
     let cli = Cli::parse();
@@ -46,6 +46,19 @@ fn main() -> Result<()> {
     let hide_ns: HashSet<String> = cli.hide_ns.iter().cloned().collect();
     let sniff = cli.auto || cli.bat;
 
+    // The cross-cutting options shared by every input. The per-file mode
+    // (`file_opts`) is passed separately because it can vary under `--auto`.
+    let cfg = ProcessOptions {
+        format_override: cli.format.as_deref(),
+        hide_ns: &hide_ns,
+        sniff,
+        select: cli.select.as_deref(),
+        canonical: cli.canonical,
+        paths: cli.paths,
+        depth: cli.depth.unwrap_or(0),
+        expand: cli.expand,
+    };
+
     // Handle stdin input
     if cli.stdin {
         // When using stdin, files should be empty
@@ -56,16 +69,7 @@ fn main() -> Result<()> {
         }
 
         // Process stdin input (no path, so nothing to autodetect from).
-        match process_stdin(
-            cli.format.as_deref(),
-            &opts,
-            &hide_ns,
-            sniff,
-            cli.select.as_deref(),
-            cli.canonical,
-            cli.paths,
-            cli.depth.unwrap_or(0),
-        ) {
+        match process_stdin(&opts, &cfg) {
             Ok(output) => emit(&output, cli.bat),
             Err(e) => {
                 eprintln!("Error processing stdin: {e}");
@@ -148,18 +152,7 @@ fn main() -> Result<()> {
             opts
         };
 
-        match process_file(
-            file_path,
-            cli.format.as_deref(),
-            &file_opts,
-            cli.expand,
-            &hide_ns,
-            sniff,
-            cli.select.as_deref(),
-            cli.canonical,
-            cli.paths,
-            cli.depth.unwrap_or(0),
-        ) {
+        match process_file(file_path, &file_opts, &cfg) {
             Ok(output) => combined.push_str(&output),
             Err(e) => {
                 eprintln!("Error processing file '{file_path}': {e}");

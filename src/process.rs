@@ -13,22 +13,30 @@ use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_
 use crate::paths::dump_paths;
 use crate::xslt::TemplateRegistry;
 
-#[allow(clippy::too_many_arguments)]
+/// The cross-cutting, CLI-derived options shared by every input. Built once and
+/// passed by reference, so the process functions stay narrow even as flags grow.
+/// The per-file processing *mode* (`FormatOpts`) is passed separately because it
+/// can vary per file under `--auto`.
+pub(crate) struct ProcessOptions<'a> {
+    pub(crate) format_override: Option<&'a str>,
+    pub(crate) hide_ns: &'a HashSet<String>,
+    pub(crate) sniff: bool,
+    pub(crate) select: Option<&'a str>,
+    pub(crate) canonical: bool,
+    pub(crate) paths: bool,
+    pub(crate) depth: usize,
+    pub(crate) expand: bool,
+}
+
 pub(crate) fn process_content(
     content: &str,
     file_path: &str,
-    format_override: Option<&str>,
     opts: &FormatOpts,
     registry: Option<&TemplateRegistry>,
-    hide_ns: &HashSet<String>,
-    sniff: bool,
-    select: Option<&str>,
-    canonical: bool,
-    paths: bool,
-    depth: usize,
+    cfg: &ProcessOptions,
 ) -> Result<String> {
     // Determine input format
-    let format = if let Some(format_str) = format_override {
+    let format = if let Some(format_str) = cfg.format_override {
         match format_str.to_lowercase().as_str() {
             "html" => InputFormat::Html,
             "xml" => InputFormat::Xml,
@@ -52,8 +60,8 @@ pub(crate) fn process_content(
     // Build the effective set of prefixes to hide: those requested explicitly,
     // plus any inferred by sniffing the document type (only under --auto/--bat).
     // The `ALL` sentinel hides every prefix regardless of the rest of the set.
-    let mut hidden = hide_ns.clone();
-    if sniff {
+    let mut hidden = cfg.hide_ns.clone();
+    if cfg.sniff {
         hidden.extend(sniff_hidden_prefixes(&elements));
     }
     let hide_all = hidden.contains(HIDE_NS_ALL);
@@ -66,13 +74,13 @@ pub(crate) fn process_content(
     // Canonicalise for diff-friendly output: always rebind prefixes to stable
     // names, but only sort siblings in plain XML mode — in a dialect/`--special`
     // mode element order is significant, so sorting would misrepresent it.
-    if canonical {
+    if cfg.canonical {
         canonicalize(&mut elements, !opts.has_mode());
     }
 
     // Determine the roots to emit: the whole document, or just the subtrees
     // matched by --select.
-    let roots: Vec<&XmlElement> = if let Some(pattern) = select {
+    let roots: Vec<&XmlElement> = if let Some(pattern) = cfg.select {
         let mut matched = Vec::new();
         select_subtrees(&elements, pattern, &mut matched);
         matched
@@ -83,12 +91,12 @@ pub(crate) fn process_content(
     // --paths dumps the distinct element paths; otherwise render the tree. Under
     // --select, render each matched subtree as a fragment separated by a blank
     // line; the whole-document case emits roots back-to-back.
-    let output = if paths {
-        dump_paths(&roots, depth)
+    let output = if cfg.paths {
+        dump_paths(&roots, cfg.depth)
     } else {
         let mut out = String::new();
         for (i, elem) in roots.iter().enumerate() {
-            if i > 0 && select.is_some() {
+            if i > 0 && cfg.select.is_some() {
                 out.push('\n');
             }
             out.push_str(&elem.format_yaml_like(0, opts, registry));
@@ -99,21 +107,13 @@ pub(crate) fn process_content(
     Ok(output)
 }
 
-#[allow(clippy::too_many_arguments)]
 pub(crate) fn process_file(
     file_path: &str,
-    format_override: Option<&str>,
     opts: &FormatOpts,
-    expand: bool,
-    hide_ns: &HashSet<String>,
-    sniff: bool,
-    select: Option<&str>,
-    canonical: bool,
-    paths: bool,
-    depth: usize,
+    cfg: &ProcessOptions,
 ) -> Result<String> {
     // Build template registry if expand mode is enabled
-    let registry = if expand && opts.xslt {
+    let registry = if cfg.expand && opts.xslt {
         Some(TemplateRegistry::build_from_file(file_path)?)
     } else {
         None
@@ -122,32 +122,10 @@ pub(crate) fn process_file(
     // Read the file
     let content = read_file_lenient(file_path)?;
 
-    process_content(
-        &content,
-        file_path,
-        format_override,
-        opts,
-        registry.as_ref(),
-        hide_ns,
-        sniff,
-        select,
-        canonical,
-        paths,
-        depth,
-    )
+    process_content(&content, file_path, opts, registry.as_ref(), cfg)
 }
 
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn process_stdin(
-    format_override: Option<&str>,
-    opts: &FormatOpts,
-    hide_ns: &HashSet<String>,
-    sniff: bool,
-    select: Option<&str>,
-    canonical: bool,
-    paths: bool,
-    depth: usize,
-) -> Result<String> {
+pub(crate) fn process_stdin(opts: &FormatOpts, cfg: &ProcessOptions) -> Result<String> {
     // Read from stdin, tolerating non-UTF-8 input (see read_file_lenient).
     let mut bytes = Vec::new();
     io::stdin()
@@ -159,19 +137,7 @@ pub(crate) fn process_stdin(
     };
 
     // Note: expand mode not supported for stdin since we need file paths for imports
-    process_content(
-        &content,
-        "stdin",
-        format_override,
-        opts,
-        None,
-        hide_ns,
-        sniff,
-        select,
-        canonical,
-        paths,
-        depth,
-    )
+    process_content(&content, "stdin", opts, None, cfg)
 }
 
 /// Emit rendered output, optionally through `bat` for syntax highlighting.
