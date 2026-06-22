@@ -265,12 +265,13 @@ fn test_hide_ns_all_strips_every_prefix() {
     .unwrap();
 
     let out = run_unxml(&["--paths", "--hide-ns", "ALL", f.to_str().unwrap()]);
-    // No prefix survives anywhere in the path tree.
-    assert!(
-        !out.lines().any(|l| l.contains(':') && !l.starts_with("//")),
-        "got: {out}"
-    );
-    assert!(out.contains("order"), "got: {out}");
+    // No prefix survives on any element name (the default-namespace URI a:order's
+    // xmlns folds to may itself contain ':', so check the name, not the line).
+    for line in out.lines().filter(|l| !l.starts_with("//")) {
+        let name = line.split('(').next().unwrap().trim();
+        assert!(!name.contains(':'), "prefix in name: {line}");
+    }
+    assert!(out.contains("order(xmlns="), "got: {out}");
     assert!(out.contains("line(sku)"), "got: {out}");
     assert!(out.contains("qty"), "got: {out}");
 }

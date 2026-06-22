@@ -90,6 +90,13 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) paths: bool,
 
+    /// Limit `--paths` output to N nesting levels (root = level 1); deeper
+    /// subtrees are dropped. Useful for coarser structural signatures when
+    /// clustering, or for skimming the top-level shape of a large document.
+    /// Only affects `--paths`.
+    #[arg(long)]
+    pub(crate) depth: Option<usize>,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     pub(crate) stdin: bool,

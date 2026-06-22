@@ -170,12 +170,15 @@ unxml --paths invoice.xml
 ```
 
 ```
-// (default) = urn:shop:order
-order
+order(xmlns="urn:shop:order")
   customer(id)
   line(discount, sku)
     qty(unit)
 ```
+
+Prefixed namespaces (`xmlns:ext`) go into a leading `//` legend; the default
+namespace (`xmlns`) is shown inline on the element that sets it, since several
+nested redefinitions would collide under one `(default)` legend key.
 
 It answers "what shapes exist in this document" and is handy for understanding
 or comparing document shapes. It composes with `--select` (subtree under a

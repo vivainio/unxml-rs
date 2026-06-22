@@ -25,6 +25,7 @@ pub(crate) fn process_content(
     select: Option<&str>,
     canonical: bool,
     paths: bool,
+    depth: usize,
 ) -> Result<String> {
     // Determine input format
     let format = if let Some(format_str) = format_override {
@@ -83,7 +84,7 @@ pub(crate) fn process_content(
     // --select, render each matched subtree as a fragment separated by a blank
     // line; the whole-document case emits roots back-to-back.
     let output = if paths {
-        dump_paths(&roots)
+        dump_paths(&roots, depth)
     } else {
         let mut out = String::new();
         for (i, elem) in roots.iter().enumerate() {
@@ -109,6 +110,7 @@ pub(crate) fn process_file(
     select: Option<&str>,
     canonical: bool,
     paths: bool,
+    depth: usize,
 ) -> Result<String> {
     // Build template registry if expand mode is enabled
     let registry = if expand && opts.xslt {
@@ -131,9 +133,11 @@ pub(crate) fn process_file(
         select,
         canonical,
         paths,
+        depth,
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) fn process_stdin(
     format_override: Option<&str>,
     opts: &FormatOpts,
@@ -142,6 +146,7 @@ pub(crate) fn process_stdin(
     select: Option<&str>,
     canonical: bool,
     paths: bool,
+    depth: usize,
 ) -> Result<String> {
     // Read from stdin, tolerating non-UTF-8 input (see read_file_lenient).
     let mut bytes = Vec::new();
@@ -165,6 +170,7 @@ pub(crate) fn process_stdin(
         select,
         canonical,
         paths,
+        depth,
     )
 }
 

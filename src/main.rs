@@ -64,6 +64,7 @@ fn main() -> Result<()> {
             cli.select.as_deref(),
             cli.canonical,
             cli.paths,
+            cli.depth.unwrap_or(0),
         ) {
             Ok(output) => emit(&output, cli.bat),
             Err(e) => {
@@ -157,6 +158,7 @@ fn main() -> Result<()> {
             cli.select.as_deref(),
             cli.canonical,
             cli.paths,
+            cli.depth.unwrap_or(0),
         ) {
             Ok(output) => combined.push_str(&output),
             Err(e) => {
