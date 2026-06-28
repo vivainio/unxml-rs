@@ -36,6 +36,12 @@ fn main() -> Result<()> {
         return install::install_skills();
     }
 
+    // Side-channel action: wire unxml in as the current repo's XML/HTML diff
+    // driver and exit (no input files required).
+    if cli.init_git {
+        return install::init_git();
+    }
+
     // `--collapse` is orthogonal to the processing mode, so it is applied to
     // every file's opts below (after --auto picks a mode), not baked in here.
     let collapse = match cli.collapse {

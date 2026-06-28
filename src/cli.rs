@@ -135,4 +135,14 @@ pub(crate) struct Cli {
     /// (e.g. `unxml/SKILL.md`). Overwrites any existing copies.
     #[arg(long)]
     pub(crate) install_skills: bool,
+
+    /// Configure the current git repository to diff XML/HTML through unxml, then
+    /// exit. Registers a `textconv` diff driver (`unxml --canonical --auto`) in
+    /// repo-local config and binds the usual XML/HTML globs in
+    /// `.git/info/attributes`, so `git diff`, `git log -p` and `git show` render
+    /// the canonicalised flattened form and prefix- or order-only churn drops
+    /// out. Everything lives inside `.git/` — the working tree is untouched and
+    /// nothing is committed. Idempotent; re-run safely.
+    #[arg(long)]
+    pub(crate) init_git: bool,
 }
