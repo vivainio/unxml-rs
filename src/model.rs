@@ -1,16 +1,33 @@
 //! Core data model: the parsed-element tree and formatting options.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use crate::xslt::TemplateRegistry;
 
-#[derive(Debug, Clone, Copy, Default)]
+/// How `--collapse` folds single-child wrapper chains onto one `/`-joined line.
+/// The variant decides only where a chain may *start*; the descent through
+/// pass-through descendants is always structural (see `XmlElement::is_chain_link`).
+#[derive(Debug, Clone, Default)]
+pub(crate) enum Collapse {
+    /// `--collapse` absent: never collapse.
+    #[default]
+    Off,
+    /// `--collapse` with no value: collapse any pass-through wrapper, whatever
+    /// its name.
+    All,
+    /// `--collapse=a,b`: a chain may only start at an element whose name matches
+    /// one of these (local-name or prefixed, like `--select`).
+    Only(HashSet<String>),
+}
+
+#[derive(Debug, Clone, Default)]
 pub(crate) struct FormatOpts {
     pub(crate) special: bool,
     pub(crate) xslt: bool,
     pub(crate) schematron: bool,
     pub(crate) xsd: bool,
     pub(crate) wsdl: bool,
+    pub(crate) collapse: Collapse,
 }
 
 impl FormatOpts {
@@ -20,6 +37,7 @@ impl FormatOpts {
         schematron: false,
         xsd: false,
         wsdl: false,
+        collapse: Collapse::Off,
     };
 
     /// True if the user explicitly selected any processing mode. When none is
@@ -78,6 +96,16 @@ impl XmlElement {
             .any(|n| matches!(n, NodeRef::Text(t) if !t.trim().is_empty()));
         let has_child = self.nodes.iter().any(|n| matches!(n, NodeRef::Child(_)));
         has_text && has_child
+    }
+
+    /// A pass-through wrapper: exactly one child, no attributes, and no own
+    /// text — pure nesting that carries no information of its own. `--collapse`
+    /// folds runs of these onto a single `parent/child/grandchild` line.
+    pub(crate) fn is_chain_link(&self) -> bool {
+        self.children.len() == 1
+            && self.attributes.is_empty()
+            && self.text_content.trim().is_empty()
+            && !self.is_mixed()
     }
 
     /// True when this element's whole subtree can sit inside a flowing line of

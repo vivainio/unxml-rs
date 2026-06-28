@@ -1,7 +1,8 @@
 //! Generic Pug-like rendering: width-aware attributes, text blocks, and the
 //! central `format_yaml_like` dispatcher that routes to each dialect.
 
-use crate::model::{FormatOpts, XmlElement};
+use crate::document::name_matches_select;
+use crate::model::{Collapse, FormatOpts, XmlElement};
 use crate::xslt::TemplateRegistry;
 
 /// Maximum line width before a parenthesised list (attributes, or a folded
@@ -436,11 +437,40 @@ impl XmlElement {
             }
         }
 
+        // Dialect modes (XSLT/XSD/WSDL/Schematron) render through their own
+        // transforms above and treat element order as significant, so chain
+        // collapsing and the verbatim-XML inline path apply only here.
+        let dialect = opts.xslt || opts.xsd || opts.wsdl || opts.schematron;
+
+        // `--collapse`: fold a run of single-child, attr/text-free wrapper
+        // elements onto one `parent/child/grandchild` line. The variant decides
+        // only where a chain may *start* (any wrapper, or one whose name is
+        // listed); the descent then walks structurally through every pass-through
+        // descendant regardless of name. `el` ends at the first node carrying
+        // real content — it renders normally, so no information is dropped.
+        let may_start = !dialect
+            && !opts.special
+            && self.is_chain_link()
+            && match &opts.collapse {
+                Collapse::Off => false,
+                Collapse::All => true,
+                Collapse::Only(names) => names.iter().any(|n| name_matches_select(&self.name, n)),
+            };
+        let mut el = self;
+        let mut prefix = String::new();
+        if may_start {
+            while el.is_chain_link() {
+                prefix.push_str(&el.name);
+                prefix.push('/');
+                el = &el.children[0];
+            }
+        }
+
         // Element name
-        result.push_str(&format!("{}{}", indent_str, self.name));
+        result.push_str(&format!("{indent_str}{prefix}{}", el.name));
 
         // Attributes in Pug-style parentheses
-        if !self.attributes.is_empty() {
+        if !el.attributes.is_empty() {
             // Separate boolean attributes from others
             // Boolean attributes are any empty-valued attributes EXCEPT those commonly used with empty values
             let non_boolean_empty_attrs = [
@@ -455,7 +485,7 @@ impl XmlElement {
                 "src",
             ];
 
-            let mut boolean_attrs: Vec<_> = self
+            let mut boolean_attrs: Vec<_> = el
                 .attributes
                 .iter()
                 .filter(|(key, value)| {
@@ -469,7 +499,7 @@ impl XmlElement {
                         })
                 })
                 .collect();
-            let mut non_boolean_attrs: Vec<_> = self
+            let mut non_boolean_attrs: Vec<_> = el
                 .attributes
                 .iter()
                 .filter(|(key, value)| {
@@ -507,28 +537,23 @@ impl XmlElement {
             result.push_str(&render_attrs(&attr_parts, col, indent, false));
         }
 
-        // Dialect modes (XSLT/XSD/WSDL/Schematron) render inline elements through
-        // their own transforms, so the verbatim-XML inline path applies only to
-        // the generic XML/prose render.
-        let dialect = opts.xslt || opts.xsd || opts.wsdl || opts.schematron;
-
-        if !dialect && self.renders_inline() {
+        if !dialect && el.renders_inline() {
             // Shallow mixed content (prose with inline spans): show the body as
             // one line of original XML, e.g. `para = The <command>x</command> …`.
-            render_text(&mut result, &self.inline_xml_body(), indent);
+            render_text(&mut result, &el.inline_xml_body(), indent);
             result.push('\n');
-        } else if self.is_mixed() {
+        } else if el.is_mixed() {
             // Mixed content: render text runs and child elements in order.
             result.push('\n');
-            result.push_str(&self.render_mixed_body(indent + 1, opts, registry));
+            result.push_str(&el.render_mixed_body(indent + 1, opts, registry));
         } else {
             // Text content with = assignment
-            render_text(&mut result, &self.text_content, indent);
+            render_text(&mut result, &el.text_content, indent);
 
             result.push('\n');
 
             // Children elements
-            for child in &self.children {
+            for child in &el.children {
                 result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
             }
         }

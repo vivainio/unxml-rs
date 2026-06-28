@@ -108,12 +108,13 @@ SECTION_ORDER = ["XML documents", "Schemas", "XSLT", "Schematron"]
 # tuple: (section heading, unxml mode, title, repo-relative source path)
 INLINE_DEMOS: list[tuple[str, str, str, str]] = [
     ("Invoice basics", "auto", "CII / Factur-X — minimal invoice", "examples/cii/factur-x-basic.xml"),
+    ("Folding boilerplate", "auto", "UBL — ext:UBLExtensions collapsed under --auto", "examples/ubl/invoice-with-extensions.xml"),
     ("XSLT basics", "xslt", "Build an HTML table with for-each", "examples/xslt/cdcatalog.xsl"),
     ("XSLT basics", "xslt", "Branch with choose / when / otherwise", "examples/xslt/cdcatalog-choose.xsl"),
     ("XSLT basics", "xslt", "Named templates + apply-templates", "examples/xslt/cdcatalog-templates.xsl"),
     ("XSLT basics", "xslt", "Literal-result-element stylesheet", "examples/xslt/breakfast-menu.xsl"),
 ]
-INLINE_ORDER = ["Invoice basics", "XSLT basics"]
+INLINE_ORDER = ["Invoice basics", "Folding boilerplate", "XSLT basics"]
 # Per-mode label for the left ("source") column of an inline side-by-side sample.
 SOURCE_LABEL = {"xslt": "XSLT source", "auto": "XML source"}
 SITE_REPO_BLOB = "https://github.com/vivainio/unxml-demos/blob/main"

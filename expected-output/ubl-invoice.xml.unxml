@@ -1,9 +1,7 @@
 Invoice(
     xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
     xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2")
-  ext:UBLExtensions
-    ext:UBLExtension
-      ID = ext-1
+  ext:UBLExtensions/ext:UBLExtension/ID = ext-1
   ID = INV-1
   IssueDate = 2026-01-01
   AccountingSupplierParty

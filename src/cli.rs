@@ -113,6 +113,20 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) fold: bool,
 
+    /// Collapse single-child wrapper chains (one child, no attributes, no text)
+    /// onto a single `parent/child/grandchild` line, cutting the vertical noise
+    /// of boilerplate scaffolding like UBL's `ext:UBLExtensions`. With no value
+    /// every such wrapper folds; with a comma-separated list of names (e.g.
+    /// `--collapse=ext:UBLExtensions`) a chain only *starts* at a listed element,
+    /// then descends through its pass-through sub-elements automatically. Names
+    /// match like --select (bare = local name, prefixed = full). A list must be
+    /// joined with `=` so it is not mistaken for a file argument. Under --auto a
+    /// sniffed UBL instance folds `ext:UBLExtensions` automatically unless this is
+    /// given. Plain XML only; ignored in
+    /// --xslt/--xsd/--wsdl/--schematron/--special and --paths modes.
+    #[arg(long, require_equals = true, value_delimiter = ',', num_args = 0..)]
+    pub(crate) collapse: Option<Vec<String>>,
+
     /// Read input from stdin (assumes XML format)
     #[arg(long)]
     pub(crate) stdin: bool,

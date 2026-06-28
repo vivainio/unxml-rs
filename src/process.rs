@@ -7,8 +7,10 @@ use std::io::{self, Read};
 use anyhow::{Context, Result};
 
 use crate::canonical::canonicalize;
-use crate::document::{HIDE_NS_ALL, hide_namespaces, select_subtrees, sniff_hidden_prefixes};
-use crate::model::{FormatOpts, XmlElement};
+use crate::document::{
+    HIDE_NS_ALL, hide_namespaces, is_ubl_document, select_subtrees, sniff_hidden_prefixes,
+};
+use crate::model::{Collapse, FormatOpts, XmlElement};
 use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_lenient};
 use crate::paths::dump_paths;
 use crate::xslt::TemplateRegistry;
@@ -89,6 +91,17 @@ pub(crate) fn process_content(
     } else {
         elements.iter().collect()
     };
+
+    // Under --auto/--bat, a genuine UBL instance gets its `ext:UBLExtensions`
+    // scaffolding folded automatically (the same vocabularies whose prefixes we
+    // hide), unless the user already chose a --collapse mode. Scoped to the
+    // extension wrapper by name rather than folding every single-child chain, so
+    // meaningful UBL structure is left intact.
+    let mut effective = opts.clone();
+    if cfg.sniff && matches!(opts.collapse, Collapse::Off) && elements.iter().any(is_ubl_document) {
+        effective.collapse = Collapse::Only(HashSet::from(["UBLExtensions".to_string()]));
+    }
+    let opts = &effective;
 
     // --paths dumps the distinct element paths; otherwise render the tree. Under
     // --select, render each matched subtree as a fragment separated by a blank

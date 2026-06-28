@@ -1,0 +1,20 @@
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+         xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2">
+  <!-- Only chains starting at ext:UBLExtensions fold (gated by the name list);
+       descent through ext:UBLExtension/ext:ExtensionContent is automatic. -->
+  <ext:UBLExtensions>
+    <ext:UBLExtension>
+      <ext:ExtensionContent>
+        <cbc:Note>extension payload</cbc:Note>
+      </ext:ExtensionContent>
+    </ext:UBLExtension>
+  </ext:UBLExtensions>
+  <!-- This single-child chain is NOT listed, so it stays fully expanded. -->
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <cbc:Name>Acme</cbc:Name>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+</Invoice>

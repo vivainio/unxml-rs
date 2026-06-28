@@ -159,6 +159,14 @@ class TestRunner:
             if file_path.name.startswith("ubl-"):
                 cmd.append("--auto")
 
+            # Exercise --collapse (wrapper-chain folding) for files named
+            # collapse-*: collapse-only-* gates the fold on a name list, while
+            # plain collapse-* folds every pass-through wrapper.
+            if file_path.name.startswith("collapse-only-"):
+                cmd.append("--collapse=ext:UBLExtensions")
+            elif file_path.name.startswith("collapse-"):
+                cmd.append("--collapse")
+
             # Exercise --auto CII (UN/CEFACT) namespace sniffing for files named
             # cii-*: a genuine CrossIndustryInvoice instance should have its
             # rsm:/ram:/udt:/qdt: prefixes hidden.

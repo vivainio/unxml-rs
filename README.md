@@ -67,6 +67,9 @@ from each file's extension:
 An explicit mode flag (`--xslt`, `--schematron`, `--xsd`, `--special`) always
 overrides autodetection.
 
+For a tour of every way unxml shortens a document — base syntax plus which flag
+to reach for — see the **[simplification reference](docs/reference.md)**.
+
 Each mode rewrites its vocabulary into a terser pseudocode. The full set of
 transformations, with side-by-side samples, is documented per format:
 
@@ -164,6 +167,54 @@ stylesheets and schemas (`xsl:*` control flow, `xs:sequence`, Schematron rule
 order), so in a dialect/`--special` mode (`--xslt`, `--xsd`, `--wsdl`,
 `--schematron`) `--canonical` normalises prefixes only and preserves document
 order.
+
+### Collapsing wrapper chains (`--collapse`)
+
+Some vocabularies bury content under deep boilerplate scaffolding. UBL's
+`ext:UBLExtensions` is the canonical example: four nested wrappers that carry no
+information of their own before any real payload appears. `--collapse` folds a
+run of such **pass-through wrappers** — an element with exactly one child, no
+attributes, and no text of its own — onto a single `parent/child/grandchild`
+line, stopping at the first node that carries real content (an attribute,
+multiple children, or text):
+
+```bash
+unxml --collapse invoice.xml
+```
+
+```
+ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/sig:UBLDocumentSignatures/sig:SignatureInformation
+  cbc:ID = signature-id
+  cbc:ReferencedSignatureID = signature
+```
+
+No information is dropped: the terminal element renders normally, and a wrapper
+that *does* carry an attribute ends the chain and shows it
+(`ext:UBLExtension(id="X1")`).
+
+With no value every pass-through wrapper folds. Pass a comma-separated list to
+fold **only** chains that *start* at a named element — the descent through its
+sub-wrappers is then automatic, so you name just the outer container:
+
+```bash
+unxml --collapse=ext:UBLExtensions invoice.xml   # join the list with =
+```
+
+Names match like `--select` (a bare `UBLExtensions` matches the local name, a
+prefixed `ext:UBLExtensions` matches the full name). The list must be joined to
+the flag with `=` so it is not mistaken for a file argument.
+
+Under `--auto`/`--bat`, a sniffed UBL instance folds its `ext:UBLExtensions`
+scaffolding automatically (the same documents that get `cbc:`/`cac:` hidden),
+unless you pass an explicit `--collapse`. The auto behaviour is scoped to the
+extension wrapper by name rather than folding every single-child chain, so the
+rest of the UBL structure is left intact.
+
+This is distinct from `--fold`: `--collapse` flattens *vertical* wrapper noise
+in the full render, while `--fold` dedups *repeated* records in the `--paths`
+view. `--collapse` affects plain XML only — it is ignored in the dialect modes
+(`--xslt`/`--xsd`/`--wsdl`/`--schematron`/`--special`), where element nesting is
+significant, and in `--paths`.
 
 ### Listing document paths (`--paths`)
 

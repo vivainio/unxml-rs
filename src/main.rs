@@ -24,7 +24,7 @@ use glob::glob;
 
 use crate::cli::Cli;
 use crate::document::detect_mode_from_ext;
-use crate::model::FormatOpts;
+use crate::model::{Collapse, FormatOpts};
 use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
@@ -36,12 +36,21 @@ fn main() -> Result<()> {
         return install::install_skills();
     }
 
+    // `--collapse` is orthogonal to the processing mode, so it is applied to
+    // every file's opts below (after --auto picks a mode), not baked in here.
+    let collapse = match cli.collapse {
+        None => Collapse::Off,
+        Some(names) if names.is_empty() => Collapse::All,
+        Some(names) => Collapse::Only(names.into_iter().collect()),
+    };
+
     let opts = FormatOpts {
         special: cli.special,
         xslt: cli.xslt,
         schematron: cli.schematron,
         xsd: cli.xsd,
         wsdl: cli.wsdl,
+        collapse: Collapse::Off,
     };
 
     // Plain XML rendering is the default. Suffix-based mode autodetection is
@@ -79,7 +88,9 @@ fn main() -> Result<()> {
         }
 
         // Process stdin input (no path, so nothing to autodetect from).
-        match process_stdin(&opts, &cfg) {
+        let mut stdin_opts = opts.clone();
+        stdin_opts.collapse = collapse.clone();
+        match process_stdin(&stdin_opts, &cfg) {
             Ok(output) => emit(&output, cli.bat),
             Err(e) => {
                 eprintln!("Error processing stdin: {e}");
@@ -156,11 +167,12 @@ fn main() -> Result<()> {
 
         // When the user didn't force a mode, pick one from this file's
         // extension; otherwise honour the explicit flags for every file.
-        let file_opts = if autodetect {
+        let mut file_opts = if autodetect {
             detect_mode_from_ext(file_path)
         } else {
-            opts
+            opts.clone()
         };
+        file_opts.collapse = collapse.clone();
 
         match process_file(file_path, &file_opts, &cfg) {
             Ok(output) => combined.push_str(&output),
