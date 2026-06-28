@@ -32,6 +32,7 @@ catalog(
         chapter(number="1") = Introduction
         chapter(number="2") = Basic Concepts
         chapter(number="3") = Advanced Topics
+  // This is a comment
   metadata
     created = 2024-01-15T10:30:00Z
     modified = 2024-01-20T14:45:00Z

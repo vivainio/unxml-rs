@@ -266,6 +266,22 @@ pub(crate) fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                     root_elements.push(element);
                 }
             }
+            Ok(Event::Comment(ref e)) => {
+                // Comments are content: keep them in document order on the
+                // enclosing element so they render and diff. Top-level comments
+                // (no open element — e.g. a licence header before the root) have
+                // no node list to attach to, so they are not captured.
+                let text = e
+                    .unescape()
+                    .map(|c| c.into_owned())
+                    .unwrap_or_else(|_| String::from_utf8_lossy(e.as_ref()).into_owned());
+                let text = text.trim();
+                if !text.is_empty()
+                    && let Some(current) = elements_stack.last_mut()
+                {
+                    current.nodes.push(NodeRef::Comment(text.to_string()));
+                }
+            }
             Ok(Event::Eof) => break,
             Err(e) => {
                 return Err(anyhow::anyhow!(

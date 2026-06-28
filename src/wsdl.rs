@@ -103,9 +103,7 @@ impl XmlElement {
                     }
                 }
 
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "types" => {
@@ -113,9 +111,7 @@ impl XmlElement {
                 // Children are xs:schema (or xsd:import) — format_wsdl_element
                 // returns None for them, so render.rs routes them to the XSD
                 // renderer.
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "import" => {
@@ -139,9 +135,7 @@ impl XmlElement {
             "message" => {
                 let n = self.attributes.get("name")?;
                 result.push_str(&format!("{indent_str}message {n}\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "part" => {
@@ -160,9 +154,7 @@ impl XmlElement {
             "portType" => {
                 let n = self.attributes.get("name")?;
                 result.push_str(&format!("{indent_str}portType {n}\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "operation" => {
@@ -224,9 +216,7 @@ impl XmlElement {
                     return Some(result);
                 }
                 result.push_str(&format!("{indent_str}{kw}\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "fault" => {
@@ -304,17 +294,13 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}binding {n}\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "service" => {
                 let n = self.attributes.get("name")?;
                 result.push_str(&format!("{indent_str}service {n}\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "port" | "endpoint" => {
@@ -324,9 +310,7 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}port {n}\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "address" if is_soap(&self.name) => {
@@ -370,9 +354,7 @@ impl XmlElement {
                     result.push_str(&format!("{indent_str}// {clean}\n"));
                 } else {
                     // Prose may be buried in nested markup — recurse so it isn't lost.
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent, opts, registry));
-                    }
+                    result.push_str(&self.render_children(indent, opts, registry));
                 }
                 Some(result)
             }

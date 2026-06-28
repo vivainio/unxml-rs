@@ -1,0 +1,12 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <!-- top-level element declaration -->
+  <xs:element name="Order" type="OrderType"/>
+  <xs:complexType name="OrderType">
+    <!-- the order body -->
+    <xs:sequence>
+      <!-- the id field -->
+      <xs:element name="id" type="xs:string"/>
+      <xs:element name="total" type="xs:decimal"/>
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>

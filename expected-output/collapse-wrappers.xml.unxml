@@ -3,9 +3,13 @@ Invoice(
     xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2",
     xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2",
     xmlns:sig="urn:oasis:names:specification:ubl:schema:xsd:CommonSignatureComponents-2")
+  // A pure wrapper chain ending in a multi-child terminal: the whole stack
+  // folds onto one line, the terminal renders normally.
   ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent/sig:UBLDocumentSignatures/sig:SignatureInformation
     cbc:ID = signature-id
     cbc:ReferencedSignatureID = signature
+  // A chain interrupted by an attribute: collapsing stops at the attributed
+  // node, which then renders its attribute.
   ext:UBLExtensions/ext:UBLExtension(id="X1")
     ext:ExtensionContent/cbc:Note = hi
   cbc:ID = INV-001

@@ -3,7 +3,8 @@
 
 use std::collections::HashMap;
 
-use crate::model::{FormatOpts, XmlElement};
+use crate::model::{FormatOpts, NodeRef, XmlElement};
+use crate::render::render_comment;
 use crate::types::{is_true, xsd_local};
 use crate::xslt::TemplateRegistry;
 
@@ -83,9 +84,7 @@ impl XmlElement {
                     }
                 }
 
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "import" => {
@@ -107,9 +106,7 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}{local}\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "element" => {
@@ -203,9 +200,7 @@ impl XmlElement {
                     }
                 }
                 result.push_str(&format!("{indent_str}{prefix}element {n}{occurs}{tail}\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "attribute" => {
@@ -222,17 +217,13 @@ impl XmlElement {
                 };
                 if let Some(r) = self.attributes.get("ref") {
                     result.push_str(&format!("{indent_str}@ref {r}{suffix}\n"));
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                    }
+                    result.push_str(&self.render_children(indent + 1, opts, registry));
                     return Some(result);
                 }
                 let n = self.attributes.get("name")?;
                 if let Some(t) = self.attributes.get("type") {
                     result.push_str(&format!("{indent_str}@{n} : {t}{suffix}\n"));
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                    }
+                    result.push_str(&self.render_children(indent + 1, opts, registry));
                     return Some(result);
                 }
                 // Anonymous nested type — inline a simpleType the same way
@@ -257,9 +248,7 @@ impl XmlElement {
                     return Some(result);
                 }
                 result.push_str(&format!("{indent_str}@{n}{suffix}\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "complexType" => {
@@ -323,30 +312,10 @@ impl XmlElement {
                     result.push_str(&format!(
                         "{indent_str}{prefix}type{name_part} {kw} {base}{tail}\n"
                     ));
-                    let inner_indent = "  ".repeat(indent + 1);
-                    for child in &der.children {
-                        emit_complextype_child(
-                            child,
-                            indent + 1,
-                            &inner_indent,
-                            opts,
-                            registry,
-                            &mut result,
-                        );
-                    }
+                    emit_complextype_body(der, indent + 1, opts, registry, &mut result);
                 } else {
                     result.push_str(&format!("{indent_str}{prefix}type{name_part}{tail}\n"));
-                    let inner_indent = "  ".repeat(indent + 1);
-                    for child in &self.children {
-                        emit_complextype_child(
-                            child,
-                            indent + 1,
-                            &inner_indent,
-                            opts,
-                            registry,
-                            &mut result,
-                        );
-                    }
+                    emit_complextype_body(self, indent + 1, opts, registry, &mut result);
                 }
                 Some(result)
             }
@@ -361,9 +330,7 @@ impl XmlElement {
                     result.push_str(&body);
                 } else {
                     result.push_str(&format!("{indent_str}type{name_part}\n"));
-                    for child in &self.children {
-                        result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                    }
+                    result.push_str(&self.render_children(indent + 1, opts, registry));
                 }
                 Some(result)
             }
@@ -385,16 +352,12 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}{local}\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "complexContent" | "simpleContent" => {
                 result.push_str(&format!("{indent_str}{local}\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "enumeration" => {
@@ -403,9 +366,7 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}|\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "pattern" | "minLength" | "maxLength" | "length" | "minInclusive" | "maxInclusive"
@@ -415,15 +376,11 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}{local}\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "annotation" => {
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent, opts, registry));
-                }
+                result.push_str(&self.render_children(indent, opts, registry));
                 Some(result)
             }
             "documentation" | "appinfo" => {
@@ -469,9 +426,7 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}union\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "list" => {
@@ -480,9 +435,7 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}list\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "any" => {
@@ -519,9 +472,7 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}{local}\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "selector" | "field" => {
@@ -627,9 +578,7 @@ impl XmlElement {
 
         // Fall back: emit name and recurse for nested type/complex content.
         result.push_str(&format!("{indent_str}{prefix}{n}{occurs}{tail}\n"));
-        for child in &self.children {
-            result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-        }
+        result.push_str(&self.render_children(indent + 1, opts, registry));
         Some(result)
     }
 }
@@ -652,6 +601,43 @@ pub(crate) fn extract_doc_prose(elem: &XmlElement, out: &mut Vec<String>) {
     }
 }
 
+/// Emit a complexType (or extension/restriction) body in document order,
+/// interleaving any XML comments with the structural children. Falls back to
+/// the plain child list for synthetic elements whose `nodes` is empty.
+pub(crate) fn emit_complextype_body(
+    container: &XmlElement,
+    indent: usize,
+    opts: &FormatOpts,
+    registry: Option<&TemplateRegistry>,
+    out: &mut String,
+) {
+    let indent_str = "  ".repeat(indent);
+    if container
+        .nodes
+        .iter()
+        .any(|n| matches!(n, NodeRef::Comment(_)))
+    {
+        for node in &container.nodes {
+            match node {
+                NodeRef::Comment(c) => render_comment(out, c, indent),
+                NodeRef::Child(i) => emit_complextype_child(
+                    &container.children[*i],
+                    indent,
+                    &indent_str,
+                    opts,
+                    registry,
+                    out,
+                ),
+                NodeRef::Text(_) => {}
+            }
+        }
+    } else {
+        for child in &container.children {
+            emit_complextype_child(child, indent, &indent_str, opts, registry, out);
+        }
+    }
+}
+
 /// Inside a complexType (or extension/restriction body), emit a child:
 ///   - a transparent xs:sequence (no occurs constraints) is folded; its members are
 ///     emitted at this level via format_xsd_member (which drops the 'element' keyword)
@@ -669,11 +655,20 @@ pub(crate) fn emit_complextype_child(
         && !child.attributes.contains_key("minOccurs")
         && !child.attributes.contains_key("maxOccurs");
     if is_transparent {
-        for grandchild in &child.children {
-            if let Some(s) = grandchild.format_xsd_member(indent, indent_str, registry) {
-                out.push_str(&s);
-            } else {
-                out.push_str(&grandchild.format_yaml_like(indent, opts, registry));
+        // Walk in document order so comments inside the sequence interleave with
+        // the hoisted members; `format_xsd_member` drops the `element` keyword.
+        for node in &child.nodes {
+            match node {
+                NodeRef::Comment(c) => render_comment(out, c, indent),
+                NodeRef::Child(i) => {
+                    let grandchild = &child.children[*i];
+                    if let Some(s) = grandchild.format_xsd_member(indent, indent_str, registry) {
+                        out.push_str(&s);
+                    } else {
+                        out.push_str(&grandchild.format_yaml_like(indent, opts, registry));
+                    }
+                }
+                NodeRef::Text(_) => {}
             }
         }
     } else if let Some(s) = child.format_xsd_member(indent, indent_str, registry) {

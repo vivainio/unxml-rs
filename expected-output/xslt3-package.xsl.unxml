@@ -4,13 +4,16 @@ xsl:package(
     version="3.0",
     xmlns:xs="http://www.w3.org/2001/XMLSchema",
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
+  // Consume another package, overriding one component
   xsl:use-package(name="urn:base-lib", package-version="2.0")
     xsl:override
       match widget:
         widget-v2
           apply
+  // Control component visibility
   xsl:expose(component="function", names="my:*", visibility="public")
   xsl:expose(component="template", names="internal", visibility="private")
+  // A public function this package offers
   function my:square(n as integer) -> integer (visibility="public"):
     <-- $n * $n
   template internal (visibility="private"):

@@ -3,17 +3,23 @@ xsl:stylesheet(
     version="3.0",
     xmlns:xs="http://www.w3.org/2001/XMLSchema",
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
+  // Mode declaration with streaming + no-match behaviour
   xsl:mode(name="main", on-no-match="shallow-copy", streamable="yes")
+  // Accumulator (3.0)
   xsl:accumulator(as="xs:decimal", initial-value="0", name="total")
     xsl:accumulator-rule(match="item", select="$value + xs:decimal(@amount)")
+  // Global context item declaration
   xsl:global-context-item(as="document-node()")
   match /data (mode="main"):
     result
+      // Text value template (expand-text)
       greeting = Total so far: {accumulator-after('total')}
+      // xsl:map / xsl:map-entry
       lookup as map(xs:string, xs:string) :=
         xsl:map
           xsl:map-entry(key="'a'", select="'alpha'")
           xsl:map-entry(key="'b'", select="'beta'")
+      // xsl:iterate with running parameter, break and on-completion
       xsl:iterate(select="item")
         param running := 0
         xsl:on-completion
@@ -24,12 +30,15 @@ xsl:stylesheet(
             stopped-early
         xsl:next-iteration
           running := $running + @amount
+      // xsl:try / xsl:catch
       xsl:try
         parsed
           <- xs:integer(@count)
         xsl:catch(errors="*:FORG0001")
           error(code="{$err:code}") = bad number
+      // xsl:evaluate dynamic XPath
       xsl:evaluate(context-item=".", xpath="@expr")
+      // xsl:merge across sources
       xsl:merge
         xsl:merge-source(for-each-source="()", name="a", select="setA/row")
           xsl:merge-key(select="@id")
@@ -38,6 +47,7 @@ xsl:stylesheet(
         xsl:merge-action
           merged(id="{@id}")
             <-- current-merge-group()
+      // xsl:where-populated / xsl:on-empty / xsl:on-non-empty
       xsl:where-populated
         notes
           xsl:on-non-empty
@@ -45,12 +55,16 @@ xsl:stylesheet(
           apply note
           xsl:on-empty
             none
+      // xsl:source-document (3.0 streaming-friendly input)
       xsl:source-document(href="extra.xml", streamable="yes")
         apply *
+      // xsl:fork
       xsl:fork
         <-- 'one'
         <-- 'two'
+      // xsl:assert
       xsl:assert(error-code="my:empty", test="count(item) gt 0") = no items present
+  // Context-item declaration on a named template
   template init:
     xsl:context-item(as="element()", use="required")
     <-- .

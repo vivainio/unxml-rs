@@ -1,0 +1,7 @@
+schema
+  // currency rules
+  pattern
+    // the main rule
+    rule Invoice
+      assert @id
+        = needs id

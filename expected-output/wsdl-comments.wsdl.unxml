@@ -1,0 +1,5 @@
+wsdl S urn:x
+  // the request message
+  message Req
+    // the payload part
+    part body : xsd:string

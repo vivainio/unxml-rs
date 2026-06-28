@@ -55,6 +55,11 @@ impl FormatOpts {
 pub(crate) enum NodeRef {
     Text(String),
     Child(usize),
+    /// An XML comment's inner text (trimmed), kept in document order so it
+    /// renders as a `// …` line where it stood. Comments are content — dropping
+    /// them silently hides real edits from a diff — so they survive parsing,
+    /// rendering, and canonicalisation.
+    Comment(String),
 }
 
 #[derive(Debug, Clone)]
@@ -106,6 +111,12 @@ impl XmlElement {
             && self.attributes.is_empty()
             && self.text_content.trim().is_empty()
             && !self.is_mixed()
+            // A wrapper carrying a comment is not pure scaffolding: folding it
+            // away would drop the comment, so leave such a wrapper expanded.
+            && !self
+                .nodes
+                .iter()
+                .any(|n| matches!(n, NodeRef::Comment(_)))
     }
 
     /// True when this element's whole subtree can sit inside a flowing line of
@@ -153,6 +164,9 @@ impl XmlElement {
         self.nodes.iter().any(|n| match n {
             NodeRef::Text(t) => !t.trim().is_empty(),
             NodeRef::Child(_) => true,
+            // A comment alone is not a "body" for the keyword-colon decision in
+            // the dialect renderers; it carries no child/text to introduce.
+            NodeRef::Comment(_) => false,
         })
     }
 
@@ -180,6 +194,7 @@ impl XmlElement {
                 NodeRef::Child(i) => {
                     out.push_str(&self.children[*i].format_yaml_like(indent, opts, registry));
                 }
+                NodeRef::Comment(c) => crate::render::render_comment(&mut out, c, indent),
             }
         }
         out

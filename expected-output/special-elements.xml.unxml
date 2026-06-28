@@ -20,6 +20,7 @@ businessWorkflow
     ProcessedCount :== 0
     ErrorCount :== 0
     LastProcessedTime :== 
+  // Elements with include attributes to test the new transformation
   if development
     LogLevel :== DEBUG
     EnableTracing :== true
@@ -32,19 +33,24 @@ businessWorkflow
     testingTools(name="QualityAssurance")
       RunTests := true
       TestMode :== unit
+  // Parameter and variable elements with include attributes
+  // These should show "if foo" followed by abbreviated form
   if debug
     DebugEnabled := true
   if config
     ConfigPath :== /etc/config.xml
+  // These have extra attributes, so should NOT get abbreviated after include is removed
   if advanced
     parameter(name="AdvancedParam", type="boolean") = false
   if system
     variable(name="SystemVar", readonly="true") = system_value
+  // Method elements with jumpToXmlFile and jumpToXPath
   WorkflowEngine::ProcessWorkflow(name="ProcessWorkflowData")
     enableAutoProcess := true
     maxRetries :== 3
   ValidationService::ValidateInput()
     strictMode := false
+  // Command elements with type attribute
   command.startelement
     element := root
     attributes := xmlns="http://example.com"
@@ -52,8 +58,10 @@ businessWorkflow
     element := root
   command.textelement
     content := Some text content
+  // Command element with extra attributes (should not transform)
   command.startelement(priority="high")
     element := important
+  // loopDataSource elements with different formats
   each dataItem in /ROOT/CONTAINER/ITEMS/ITEM/ENTRIES/ENTRY
     dataProcessing
       processItem := true
@@ -62,10 +70,12 @@ businessWorkflow
     section
       id := recordId
       status :== active
+  // Simple loopDataSource without semicolon
   each item
     container
       name := itemName
       processed :== false
+  // loopDataSource with other attributes
   each entry in /data/entries
     processor(id="main", priority="high")
       mode := batch

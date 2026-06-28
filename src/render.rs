@@ -2,7 +2,7 @@
 //! central `format_yaml_like` dispatcher that routes to each dialect.
 
 use crate::document::name_matches_select;
-use crate::model::{Collapse, FormatOpts, XmlElement};
+use crate::model::{Collapse, FormatOpts, NodeRef, XmlElement};
 use crate::xslt::TemplateRegistry;
 
 /// Maximum line width before a parenthesised list (attributes, or a folded
@@ -69,6 +69,26 @@ pub(crate) fn render_text(result: &mut String, text: &str, indent: usize) {
     }
 }
 
+/// Render an XML comment as one or more `// …` lines at `indent`. A multi-line
+/// comment emits one `// ` line per source line so it stays within the
+/// indentation skeleton; an empty comment renders as a bare `//`.
+pub(crate) fn render_comment(result: &mut String, text: &str, indent: usize) {
+    let ind = "  ".repeat(indent);
+    let trimmed = text.trim();
+    if trimmed.is_empty() {
+        result.push_str(&format!("{ind}//\n"));
+        return;
+    }
+    for line in trimmed.lines() {
+        let line = line.trim();
+        if line.is_empty() {
+            result.push_str(&format!("{ind}//\n"));
+        } else {
+            result.push_str(&format!("{ind}// {line}\n"));
+        }
+    }
+}
+
 /// Render Pug-style attribute parentheses for an element at the given indent.
 ///
 /// Short lists stay on one line: `(a="1", b="2")`. A list whose single-line
@@ -115,6 +135,38 @@ pub(crate) fn render_attrs(
 }
 
 impl XmlElement {
+    /// Render this element's children together with any interleaved XML comments,
+    /// in document order, each at `indent`. When `nodes` carries a comment we
+    /// walk it so the comment renders where it stood; otherwise (comment-free, or
+    /// a synthetic element with empty `nodes`) we fall back to the plain child
+    /// list, so comment-free output stays byte-identical to a direct loop. This
+    /// is the shared chokepoint every renderer — generic and dialect — uses to
+    /// emit a container's body.
+    pub(crate) fn render_children(
+        &self,
+        indent: usize,
+        opts: &FormatOpts,
+        registry: Option<&TemplateRegistry>,
+    ) -> String {
+        let mut out = String::new();
+        if self.nodes.iter().any(|n| matches!(n, NodeRef::Comment(_))) {
+            for node in &self.nodes {
+                match node {
+                    NodeRef::Child(i) => {
+                        out.push_str(&self.children[*i].format_yaml_like(indent, opts, registry))
+                    }
+                    NodeRef::Comment(c) => render_comment(&mut out, c, indent),
+                    NodeRef::Text(_) => {}
+                }
+            }
+        } else {
+            for child in &self.children {
+                out.push_str(&child.format_yaml_like(indent, opts, registry));
+            }
+        }
+        out
+    }
+
     pub(crate) fn format_yaml_like(
         &self,
         indent: usize,
@@ -552,10 +604,8 @@ impl XmlElement {
 
             result.push('\n');
 
-            // Children elements
-            for child in &el.children {
-                result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-            }
+            // Children and interleaved comments in document order.
+            result.push_str(&el.render_children(indent + 1, opts, registry));
         }
 
         result

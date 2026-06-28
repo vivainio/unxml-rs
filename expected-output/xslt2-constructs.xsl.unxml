@@ -4,21 +4,27 @@ xsl:stylesheet(
     xmlns:xs="http://www.w3.org/2001/XMLSchema",
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
   xsl:output(indent="yes", method="xml")
+  // xsl:character-map / xsl:output-character
   xsl:character-map(name="entities")
     xsl:output-character(character=" ", string="&nbsp;")
+  // User-defined function with typed params and result
   function my:full-name(first as string, last as string) -> string:
     <-- concat($first, ' ', $last)
+  // Typed variable
   threshold as integer := 10
   match /orders:
     report
+      // xsl:for-each-group with grouping keys
       xsl:for-each-group(group-by="@region", select="order")
         region(name="{current-grouping-key()}")
           count
             <- count(current-group())
           xsl:perform-sort(select="current-group()")
             xsl:sort(data-type="number", order="descending", select="@total")
+      // group-adjacent variant
       xsl:for-each-group(group-adjacent="@status", select="line")
         run(size="{count(current-group())}", status="{current-grouping-key()}")
+      // xsl:analyze-string with regex branches
       xsl:analyze-string(regex="([A-Z]+)-([0-9]+)", select="@code")
         xsl:matching-substring
           prefix
@@ -28,12 +34,16 @@ xsl:stylesheet(
         xsl:non-matching-substring
           raw
             <- .
+      // value-of with separator (2.0)
       names
         <- order/@customer
+      // xsl:namespace instruction
       element wrapped:
         xsl:namespace(name="ext", select="'urn:ext'")
+      // xsl:result-document to a secondary output
       xsl:result-document(href="summary.xml", method="xml")
         summary(total="{sum(order/@total)}")
+  // next-match delegates to a less-specific template
   match order[@priority='high']:
     urgent
       next-match

@@ -26,9 +26,7 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}schema\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "title" => {
@@ -49,9 +47,7 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}phase\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "active" => {
@@ -65,18 +61,14 @@ impl XmlElement {
                 } else {
                     result.push_str(&format!("{indent_str}pattern\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "rule" => {
                 let context = self.attributes.get("context")?;
                 let context_clean = context.split_whitespace().collect::<Vec<_>>().join(" ");
                 result.push_str(&format!("{indent_str}rule {context_clean}\n"));
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "assert" | "report" => {
@@ -97,9 +89,7 @@ impl XmlElement {
                     let inner_indent = "  ".repeat(indent + 1);
                     result.push_str(&format!("{inner_indent}= {msg_clean}\n"));
                 }
-                for child in &self.children {
-                    result.push_str(&child.format_yaml_like(indent + 1, opts, registry));
-                }
+                result.push_str(&self.render_children(indent + 1, opts, registry));
                 Some(result)
             }
             "let" => {

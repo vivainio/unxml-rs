@@ -1,0 +1,8 @@
+schema
+  // top-level element declaration
+  element Order : OrderType
+  type OrderType
+    // the order body
+    // the id field
+    id : xs:string
+    total : xs:decimal

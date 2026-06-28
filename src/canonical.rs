@@ -216,11 +216,24 @@ fn signature(elem: &XmlElement) -> String {
         .collect();
     attrs.sort();
     let kids: Vec<String> = elem.children.iter().map(signature).collect();
+    // Comments are part of identity: a subtree differing only in a comment must
+    // get a distinct signature so the change shows in a diff. Sorted, since the
+    // sibling sort reorders them anyway.
+    let mut comments: Vec<&str> = elem
+        .nodes
+        .iter()
+        .filter_map(|n| match n {
+            NodeRef::Comment(c) => Some(c.as_str()),
+            _ => None,
+        })
+        .collect();
+    comments.sort_unstable();
     format!(
-        "{}\u{1}{}\u{1}{}\u{1}{}",
+        "{}\u{1}{}\u{1}{}\u{1}{}\u{1}{}",
         elem.name,
         attrs.join("\u{2}"),
         elem.text_content.trim(),
+        comments.join("\u{4}"),
         kids.join("\u{3}")
     )
 }
@@ -233,6 +246,20 @@ fn sort_tree(elem: &mut XmlElement) {
         sort_tree(child);
     }
     if !elem.is_mixed() && elem.children.len() > 1 {
+        // Salvage comment nodes before the drain; sibling order is being
+        // normalised away, so a comment's exact anchor is incidental too. Keep
+        // them (sorted, for cross-file stability) after the sorted children so
+        // their content still renders and diffs.
+        let mut comments: Vec<String> = elem
+            .nodes
+            .iter()
+            .filter_map(|n| match n {
+                NodeRef::Comment(c) => Some(c.clone()),
+                _ => None,
+            })
+            .collect();
+        comments.sort();
+
         let mut keyed: Vec<(String, XmlElement)> = elem
             .children
             .drain(..)
@@ -240,7 +267,10 @@ fn sort_tree(elem: &mut XmlElement) {
             .collect();
         keyed.sort_by(|a, b| a.0.cmp(&b.0));
         elem.children = keyed.into_iter().map(|(_, c)| c).collect();
-        elem.nodes = (0..elem.children.len()).map(NodeRef::Child).collect();
+        elem.nodes = (0..elem.children.len())
+            .map(NodeRef::Child)
+            .chain(comments.into_iter().map(NodeRef::Comment))
+            .collect();
     }
 }
 
