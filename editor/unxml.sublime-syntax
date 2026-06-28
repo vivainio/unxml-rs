@@ -62,6 +62,13 @@ contexts:
         2: storage.type.unxml
       push: line-tail
 
+    # A collapsed wrapper-chain path from `--collapse`, e.g.
+    # `ext:UBLExtensions/ext:UBLExtension/ext:ExtensionContent`. Detected by the
+    # `/`-joined segments; each segment is highlighted as a tag (prefix dimmed)
+    # in `path-line`, which hands the trailing attributes/text off to line-tail.
+    - match: '^\s*(?={{ident}}(?:/{{ident}})+)'
+      push: path-line
+
     # An element name (with optional .class.class HTML suffixes) leading a line.
     # The namespace prefix (e.g. "ram:") is scoped as a comment so themes render
     # it dimmer than the local name, including the stock bat color schemes.
@@ -150,6 +157,21 @@ contexts:
     - match: '"'
       scope: punctuation.definition.string.begin.unxml
       push: dq-string
+
+  # A collapsed wrapper-chain path: `/`-separated tag segments, then hand the
+  # rest of the line (attributes, ` = text`) to line-tail. The empty trailing
+  # match fires only once the segment/separator rules stop applying.
+  path-line:
+    - match: '/'
+      scope: punctuation.separator.path.unxml
+    - match: '([A-Za-z_][\w-]*:)([A-Za-z_][\w.-]*)'
+      captures:
+        1: comment.namespace.unxml
+        2: entity.name.tag.unxml
+    - match: '[A-Za-z_][\w-]*'
+      scope: entity.name.tag.unxml
+    - match: ''
+      set: line-tail
 
   # A block-opening keyword line (template X:, choose:, foreach X:, call X:,
   # element X:, else:). Identical to line-tail, but a trailing ':' is the block
