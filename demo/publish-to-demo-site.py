@@ -115,6 +115,15 @@ INLINE_DEMOS: list[tuple[str, str, str, str]] = [
     ("XSLT basics", "xslt", "Literal-result-element stylesheet", "examples/xslt/breakfast-menu.xsl"),
 ]
 INLINE_ORDER = ["Invoice basics", "Folding boilerplate", "XSLT basics"]
+
+# Side-by-side comparisons of the SAME document rendered with two flag sets,
+# both through unxml — used to show what an opt-in flag buys. Unlike the
+# source-vs-output samples above, both columns are unxml output.
+# tuple: (section heading, title, repo-relative source path, left flags, right flags)
+INLINE_COMPARE: list[tuple[str, str, str, list[str], list[str]]] = [
+    ("Folding boilerplate", "CII / Factur-X — wrapper chains folded with --collapse",
+     "examples/cii/factur-x-basic.xml", ["--auto"], ["--auto", "--collapse"]),
+]
 # Per-mode label for the left ("source") column of an inline side-by-side sample.
 SOURCE_LABEL = {"xslt": "XSLT source", "auto": "XML source"}
 SITE_REPO_BLOB = "https://github.com/vivainio/unxml-demos/blob/main"
@@ -211,12 +220,17 @@ def fetch(url: str, dest: Path) -> bool:
         return False
 
 
-def render(mode: str, src: Path) -> str:
-    """Run `unxml --<mode> src` and return the rendered .unxml text."""
+def render_args(flags: list[str], src: Path) -> str:
+    """Run `unxml <flags...> src` and return the rendered .unxml text."""
     return subprocess.run(
-        [str(UNXML_BIN), f"--{mode}", str(src)],
+        [str(UNXML_BIN), *flags, str(src)],
         capture_output=True, text=True, check=True,
     ).stdout
+
+
+def render(mode: str, src: Path) -> str:
+    """Run `unxml --<mode> src` and return the rendered .unxml text."""
+    return render_args([f"--{mode}"], src)
 
 
 def highlight(bat: str, text: str, lang: str = "unxml") -> str:
@@ -263,18 +277,18 @@ def inline_section_html(samples: list[tuple]) -> str:
     """One raw-HTML block for a group of inline side-by-side samples. Kept free
     of blank lines so Markdown passes it through verbatim."""
     html = ['<div class="unxml-demo">']
-    for _section, mode, title, blob, src_frag, out_frag, sl, ol in samples:
+    for _section, title, blob, left_label, left_frag, right_label, right_frag, ll, rl in samples:
         fname = blob.rsplit("/", 1)[-1]
         html += [
             '<div class="unxml-sample">',
             f"<h3>{title}</h3>",
             f'<p class="unxml-cap"><a href="{blob}">{fname}</a> · '
-            f"{sl} → {ol} lines</p>",
+            f"{ll} → {rl} lines</p>",
             '<div class="unxml-cols">',
-            f'<div class="unxml-col"><div class="unxml-col-label">{SOURCE_LABEL.get(mode, "source")}</div>'
-            f'<pre class="unxml"><span class="ansi2html-content">{src_frag}</span></pre></div>',
-            f'<div class="unxml-col"><div class="unxml-col-label">unxml --{mode}</div>'
-            f'<pre class="unxml"><span class="ansi2html-content">{out_frag}</span></pre></div>',
+            f'<div class="unxml-col"><div class="unxml-col-label">{left_label}</div>'
+            f'<pre class="unxml"><span class="ansi2html-content">{left_frag}</span></pre></div>',
+            f'<div class="unxml-col"><div class="unxml-col-label">{right_label}</div>'
+            f'<pre class="unxml"><span class="ansi2html-content">{right_frag}</span></pre></div>',
             "</div></div>",
         ]
     html.append("</div>")
@@ -287,7 +301,7 @@ def index_markdown(
     inline_style: str,
 ) -> str:
     # entries: (heading, href, title, source, src_lines, src_bytes, out_lines, out_bytes)
-    # inline: (section, mode, title, blob_url, src_frag, out_frag, src_lines, out_lines)
+    # inline: (section, title, blob_url, left_label, left_frag, right_label, right_frag, left_lines, right_lines)
     # Each element of `blocks` is a complete block with no internal blank lines;
     # joining with a blank line keeps tables and raw-HTML blocks intact.
     blocks = [
@@ -400,7 +414,7 @@ def main() -> int:
     # Inline samples: render source + output (both highlighted) for the
     # side-by-side gallery section. Sources are vendored in the site repo, so
     # this also primes the palette with the XML highlighting classes.
-    # tuple: section, mode, title, blob_url, src_frag, out_frag, src_lines, out_lines
+    # tuple: section, title, blob_url, left_label, left_frag, right_label, right_frag, left_lines, right_lines
     inline_rendered: list[tuple] = []
     for section, mode, title, rel in INLINE_DEMOS:
         src_path = site / rel
@@ -412,11 +426,31 @@ def main() -> int:
         src_frag = conv.convert(highlight(bat, compact(src_text), lang="xml"), full=False)
         out_frag = conv.convert(highlight(bat, compact(out_text)), full=False)
         inline_rendered.append((
-            section, mode, title, f"{SITE_REPO_BLOB}/{rel}", src_frag, out_frag,
+            section, title, f"{SITE_REPO_BLOB}/{rel}",
+            SOURCE_LABEL.get(mode, "source"), src_frag, f"unxml --{mode}", out_frag,
             src_text.count("\n"), out_text.count("\n"),
         ))
         print(f"  inline + rendered {rel} "
               f"({src_text.count(chr(10))}->{out_text.count(chr(10))} lines)")
+
+    # Two-flag comparisons: both columns are unxml output of the same source.
+    for section, title, rel, lflags, rflags in INLINE_COMPARE:
+        src_path = site / rel
+        if not src_path.exists():
+            print(f"  WARNING: inline source {rel} not found under {site}")
+            continue
+        left_text = render_args(lflags, src_path)
+        right_text = render_args(rflags, src_path)
+        left_frag = conv.convert(highlight(bat, compact(left_text)), full=False)
+        right_frag = conv.convert(highlight(bat, compact(right_text)), full=False)
+        inline_rendered.append((
+            section, title, f"{SITE_REPO_BLOB}/{rel}",
+            "unxml " + " ".join(lflags), left_frag,
+            "unxml " + " ".join(rflags), right_frag,
+            left_text.count("\n"), right_text.count("\n"),
+        ))
+        print(f"  inline compare {rel} "
+              f"({left_text.count(chr(10))}->{right_text.count(chr(10))} lines)")
 
     # Colour palette from ansi2html (deduped to the ~260-rule set), shared by
     # the full-page ansi.css and the scoped inline <style>. produce_headers()
