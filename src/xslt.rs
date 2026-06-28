@@ -56,7 +56,7 @@ impl XmlElement {
                 NodeRef::Text(_) => break,
                 // A comment among leading params is incidental to the signature;
                 // skip it without ending the run.
-                NodeRef::Comment(_) => continue,
+                NodeRef::Comment { .. } => continue,
                 NodeRef::Child(i) => {
                     let child = &self.children[*i];
                     if child.name != "xsl:param" {
@@ -91,10 +91,10 @@ impl XmlElement {
                     leading = false;
                     out.push_str(&format!("{ind}\"{text}\"\n"));
                 }
-                NodeRef::Comment(c) => {
+                NodeRef::Comment { text, inline } => {
                     // Emit the comment in place without ending the leading-param
                     // run, so params after a comment still fold into the header.
-                    crate::render::render_comment(&mut out, c, indent);
+                    crate::render::push_comment(&mut out, text, *inline, indent);
                 }
                 NodeRef::Child(i) => {
                     let child = &self.children[*i];

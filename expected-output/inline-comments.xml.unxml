@@ -1,0 +1,8 @@
+config
+  server(host="db1", port="5432") // primary, do not change
+  server(host="db2", port="5432")
+  // this note stands on its own line
+  timeout = 30 // seconds
+  multi = x
+  // a comment
+  // spanning two lines stays standalone

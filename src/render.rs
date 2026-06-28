@@ -69,6 +69,22 @@ pub(crate) fn render_text(result: &mut String, text: &str, indent: usize) {
     }
 }
 
+/// Emit a comment into `out`, honouring its `inline` flag. An inline,
+/// single-line comment is spliced onto the end of the previous output line
+/// (`element(attr) // note`); otherwise — standalone, multi-line, or when there
+/// is no preceding line to attach to — it falls back to `render_comment` as its
+/// own `// …` line(s) at `indent`.
+pub(crate) fn push_comment(out: &mut String, text: &str, inline: bool, indent: usize) {
+    let single_line = !text.trim().contains('\n');
+    if inline && single_line && out.ends_with('\n') && !out.trim_end().is_empty() {
+        out.pop(); // drop the newline so the comment rides the previous line
+        out.push_str(&format!(" // {}", text.trim()));
+        out.push('\n');
+    } else {
+        render_comment(out, text, indent);
+    }
+}
+
 /// Render an XML comment as one or more `// …` lines at `indent`. A multi-line
 /// comment emits one `// ` line per source line so it stays within the
 /// indentation skeleton; an empty comment renders as a bare `//`.
@@ -149,13 +165,19 @@ impl XmlElement {
         registry: Option<&TemplateRegistry>,
     ) -> String {
         let mut out = String::new();
-        if self.nodes.iter().any(|n| matches!(n, NodeRef::Comment(_))) {
+        if self
+            .nodes
+            .iter()
+            .any(|n| matches!(n, NodeRef::Comment { .. }))
+        {
             for node in &self.nodes {
                 match node {
                     NodeRef::Child(i) => {
                         out.push_str(&self.children[*i].format_yaml_like(indent, opts, registry))
                     }
-                    NodeRef::Comment(c) => render_comment(&mut out, c, indent),
+                    NodeRef::Comment { text, inline } => {
+                        push_comment(&mut out, text, *inline, indent)
+                    }
                     NodeRef::Text(_) => {}
                 }
             }

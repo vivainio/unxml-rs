@@ -191,6 +191,12 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
     let mut inner_start_stack: Vec<usize> = Vec::new();
     let mut root_elements: Vec<XmlElement> = Vec::new();
     let mut buf = Vec::new();
+    // Byte offset just past the most recently closed sibling element (End or
+    // Empty). A comment is "inline" (rides the previous line) when the source
+    // between that offset and the comment's start holds no newline — i.e. they
+    // were on the same source line. Updated only on element-ending events so the
+    // intervening whitespace (its own trimmed Text event) is still in the slice.
+    let mut last_sibling_end: usize = 0;
 
     loop {
         // Position before reading this event: for an End event, this is where
@@ -233,6 +239,7 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                     } else {
                         root_elements.push(completed_element);
                     }
+                    last_sibling_end = reader.buffer_position() as usize;
                 }
             }
             Ok(Event::Text(ref e)) => {
@@ -275,6 +282,7 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                 } else {
                     root_elements.push(element);
                 }
+                last_sibling_end = reader.buffer_position() as usize;
             }
             Ok(Event::Comment(ref e)) => {
                 // Comments are content: keep them in document order so they
@@ -288,8 +296,25 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                     .unwrap_or_else(|_| String::from_utf8_lossy(e.as_ref()).into_owned());
                 let text = text.trim();
                 if !text.is_empty() {
+                    // Inline when the previous sibling closed on this same line:
+                    // the source between its end and this comment holds no
+                    // newline. The comment's start is derived from its end
+                    // position and token length (`<!--` + raw inner + `-->`)
+                    // because `trim_text` drops the intervening whitespace, so
+                    // `pos_before` alone would not locate the `<!--`.
+                    let comment_start =
+                        (reader.buffer_position() as usize).saturating_sub(e.as_ref().len() + 7);
+                    let inline = last_sibling_end > 0
+                        && content
+                            .get(last_sibling_end..comment_start)
+                            .is_some_and(|gap| !gap.contains('\n'));
                     if let Some(current) = elements_stack.last_mut() {
-                        current.nodes.push(NodeRef::Comment(text.to_string()));
+                        let inline =
+                            inline && matches!(current.nodes.last(), Some(NodeRef::Child(_)));
+                        current.nodes.push(NodeRef::Comment {
+                            text: text.to_string(),
+                            inline,
+                        });
                     } else {
                         top_comments.push((root_elements.len(), text.to_string()));
                     }

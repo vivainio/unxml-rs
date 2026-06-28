@@ -58,8 +58,14 @@ pub(crate) enum NodeRef {
     /// An XML comment's inner text (trimmed), kept in document order so it
     /// renders as a `// …` line where it stood. Comments are content — dropping
     /// them silently hides real edits from a diff — so they survive parsing,
-    /// rendering, and canonicalisation.
-    Comment(String),
+    /// rendering, and canonicalisation. `inline` marks a comment that sat on the
+    /// same source line as the preceding sibling (no newline between them); such
+    /// a comment is spliced onto the end of that sibling's output line rather
+    /// than taking its own line.
+    Comment {
+        text: String,
+        inline: bool,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -116,7 +122,7 @@ impl XmlElement {
             && !self
                 .nodes
                 .iter()
-                .any(|n| matches!(n, NodeRef::Comment(_)))
+                .any(|n| matches!(n, NodeRef::Comment { .. }))
     }
 
     /// True when this element's whole subtree can sit inside a flowing line of
@@ -166,7 +172,7 @@ impl XmlElement {
             NodeRef::Child(_) => true,
             // A comment alone is not a "body" for the keyword-colon decision in
             // the dialect renderers; it carries no child/text to introduce.
-            NodeRef::Comment(_) => false,
+            NodeRef::Comment { .. } => false,
         })
     }
 
@@ -194,7 +200,9 @@ impl XmlElement {
                 NodeRef::Child(i) => {
                     out.push_str(&self.children[*i].format_yaml_like(indent, opts, registry));
                 }
-                NodeRef::Comment(c) => crate::render::render_comment(&mut out, c, indent),
+                NodeRef::Comment { text, inline } => {
+                    crate::render::push_comment(&mut out, text, *inline, indent)
+                }
             }
         }
         out

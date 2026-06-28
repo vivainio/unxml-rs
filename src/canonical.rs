@@ -223,7 +223,7 @@ fn signature(elem: &XmlElement) -> String {
         .nodes
         .iter()
         .filter_map(|n| match n {
-            NodeRef::Comment(c) => Some(c.as_str()),
+            NodeRef::Comment { text, .. } => Some(text.as_str()),
             _ => None,
         })
         .collect();
@@ -254,7 +254,7 @@ fn sort_tree(elem: &mut XmlElement) {
             .nodes
             .iter()
             .filter_map(|n| match n {
-                NodeRef::Comment(c) => Some(c.clone()),
+                NodeRef::Comment { text, .. } => Some(text.clone()),
                 _ => None,
             })
             .collect();
@@ -267,9 +267,14 @@ fn sort_tree(elem: &mut XmlElement) {
             .collect();
         keyed.sort_by(|a, b| a.0.cmp(&b.0));
         elem.children = keyed.into_iter().map(|(_, c)| c).collect();
+        // Reattach comments as standalone: the sort has detached them from the
+        // sibling they trailed, so an inline flag would now be misleading.
         elem.nodes = (0..elem.children.len())
             .map(NodeRef::Child)
-            .chain(comments.into_iter().map(NodeRef::Comment))
+            .chain(comments.into_iter().map(|text| NodeRef::Comment {
+                text,
+                inline: false,
+            }))
             .collect();
     }
 }

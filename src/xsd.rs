@@ -4,7 +4,7 @@
 use std::collections::HashMap;
 
 use crate::model::{FormatOpts, NodeRef, XmlElement};
-use crate::render::render_comment;
+use crate::render::push_comment;
 use crate::types::{is_true, xsd_local};
 use crate::xslt::TemplateRegistry;
 
@@ -615,11 +615,11 @@ pub(crate) fn emit_complextype_body(
     if container
         .nodes
         .iter()
-        .any(|n| matches!(n, NodeRef::Comment(_)))
+        .any(|n| matches!(n, NodeRef::Comment { .. }))
     {
         for node in &container.nodes {
             match node {
-                NodeRef::Comment(c) => render_comment(out, c, indent),
+                NodeRef::Comment { text, inline } => push_comment(out, text, *inline, indent),
                 NodeRef::Child(i) => emit_complextype_child(
                     &container.children[*i],
                     indent,
@@ -659,7 +659,7 @@ pub(crate) fn emit_complextype_child(
         // the hoisted members; `format_xsd_member` drops the `element` keyword.
         for node in &child.nodes {
             match node {
-                NodeRef::Comment(c) => render_comment(out, c, indent),
+                NodeRef::Comment { text, inline } => push_comment(out, text, *inline, indent),
                 NodeRef::Child(i) => {
                     let grandchild = &child.children[*i];
                     if let Some(s) = grandchild.format_xsd_member(indent, indent_str, registry) {
