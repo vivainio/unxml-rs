@@ -4,7 +4,4 @@ Invoice(
   ext:UBLExtensions/ext:UBLExtension/ID = ext-1
   ID = INV-1
   IssueDate = 2026-01-01
-  AccountingSupplierParty
-    Party
-      PartyName
-        Name = Seller Oy
+  AccountingSupplierParty/Party/PartyName/Name = Seller Oy

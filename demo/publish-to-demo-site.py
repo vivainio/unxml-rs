@@ -121,8 +121,8 @@ INLINE_ORDER = ["Invoice basics", "Folding boilerplate", "XSLT basics"]
 # source-vs-output samples above, both columns are unxml output.
 # tuple: (section heading, title, repo-relative source path, left flags, right flags)
 INLINE_COMPARE: list[tuple[str, str, str, list[str], list[str]]] = [
-    ("Folding boilerplate", "CII / Factur-X — wrapper chains folded with --collapse",
-     "examples/cii/factur-x-basic.xml", ["--auto"], ["--auto", "--collapse"]),
+    ("Folding boilerplate", "CII / Factur-X — what --auto does (hide prefixes + fold wrapper chains)",
+     "examples/cii/factur-x-basic.xml", [], ["--auto"]),
 ]
 # Per-mode label for the left ("source") column of an inline side-by-side sample.
 SOURCE_LABEL = {"xslt": "XSLT source", "auto": "XML source"}
@@ -445,8 +445,8 @@ def main() -> int:
         right_frag = conv.convert(highlight(bat, compact(right_text)), full=False)
         inline_rendered.append((
             section, title, f"{SITE_REPO_BLOB}/{rel}",
-            "unxml " + " ".join(lflags), left_frag,
-            "unxml " + " ".join(rflags), right_frag,
+            " ".join(["unxml", *lflags]), left_frag,
+            " ".join(["unxml", *rflags]), right_frag,
             left_text.count("\n"), right_text.count("\n"),
         ))
         print(f"  inline compare {rel} "

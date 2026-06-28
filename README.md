@@ -204,11 +204,12 @@ Names match like `--select` (a bare `UBLExtensions` matches the local name, a
 prefixed `ext:UBLExtensions` matches the full name). The list must be joined to
 the flag with `=` so it is not mistaken for a file argument.
 
-Under `--auto`/`--bat`, a sniffed UBL instance folds its `ext:UBLExtensions`
-scaffolding automatically (the same documents that get `cbc:`/`cac:` hidden),
-unless you pass an explicit `--collapse`. The auto behaviour is scoped to the
-extension wrapper by name rather than folding every single-child chain, so the
-rest of the UBL structure is left intact.
+Under `--auto`/`--bat`, a sniffed UBL or CII instance folds its single-child
+wrapper chains automatically (the same documents that get their prefixes
+hidden), unless you pass an explicit `--collapse`. These vocabularies bury
+content under deep scaffolding — UBL's `ext:UBLExtensions`, CII's nested
+`ram:`/`rsm:` wrappers — and folding it trims 15–25% of the lines while leaving
+genuine multi-child aggregates (a `Party`, a `PostalAddress`) expanded.
 
 This is distinct from `--fold`: `--collapse` flattens *vertical* wrapper noise
 in the full render, while `--fold` dedups *repeated* records in the `--paths`

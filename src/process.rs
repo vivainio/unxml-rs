@@ -8,7 +8,8 @@ use anyhow::{Context, Result};
 
 use crate::canonical::canonicalize;
 use crate::document::{
-    HIDE_NS_ALL, hide_namespaces, is_ubl_document, select_subtrees, sniff_hidden_prefixes,
+    HIDE_NS_ALL, hide_namespaces, is_cii_document, is_ubl_document, select_subtrees,
+    sniff_hidden_prefixes,
 };
 use crate::model::{Collapse, FormatOpts, XmlElement};
 use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_lenient};
@@ -92,14 +93,21 @@ pub(crate) fn process_content(
         elements.iter().collect()
     };
 
-    // Under --auto/--bat, a genuine UBL instance gets its `ext:UBLExtensions`
-    // scaffolding folded automatically (the same vocabularies whose prefixes we
-    // hide), unless the user already chose a --collapse mode. Scoped to the
-    // extension wrapper by name rather than folding every single-child chain, so
-    // meaningful UBL structure is left intact.
+    // Under --auto/--bat, a genuine UBL or CII instance folds its single-child
+    // wrapper chains automatically (the same documents whose prefixes we hide),
+    // unless the user already chose a --collapse mode. These vocabularies bury
+    // content under deep scaffolding — UBL's `ext:UBLExtensions`, CII's nested
+    // `ram:`/`rsm:` wrappers — and folding it never drops information (the tag
+    // names stay on the path), while genuine multi-child aggregates are left
+    // expanded.
     let mut effective = opts.clone();
-    if cfg.sniff && matches!(opts.collapse, Collapse::Off) && elements.iter().any(is_ubl_document) {
-        effective.collapse = Collapse::Only(HashSet::from(["UBLExtensions".to_string()]));
+    if cfg.sniff
+        && matches!(opts.collapse, Collapse::Off)
+        && elements
+            .iter()
+            .any(|e| is_ubl_document(e) || is_cii_document(e))
+    {
+        effective.collapse = Collapse::All;
     }
     let opts = &effective;
 

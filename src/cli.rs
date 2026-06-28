@@ -121,8 +121,8 @@ pub(crate) struct Cli {
     /// then descends through its pass-through sub-elements automatically. Names
     /// match like --select (bare = local name, prefixed = full). A list must be
     /// joined with `=` so it is not mistaken for a file argument. Under --auto a
-    /// sniffed UBL instance folds `ext:UBLExtensions` automatically unless this is
-    /// given. Plain XML only; ignored in
+    /// sniffed UBL or CII instance folds all its wrapper chains automatically
+    /// unless this is given. Plain XML only; ignored in
     /// --xslt/--xsd/--wsdl/--schematron/--special and --paths modes.
     #[arg(long, require_equals = true, value_delimiter = ',', num_args = 0..)]
     pub(crate) collapse: Option<Vec<String>>,
