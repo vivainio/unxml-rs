@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<!-- License: ACME Corp 2026 -->
+<!-- Generated file - do not edit by hand -->
+<config>
+  <!-- the database section -->
+  <database host="db1"/>
+</config>
+<!-- end of file -->

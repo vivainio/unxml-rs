@@ -593,7 +593,7 @@ impl TemplateRegistry {
         let content = read_file_lenient(file_path)
             .with_context(|| format!("Failed to read file for template expansion: {file_path}"))?;
 
-        let elements = parse_xml(&content)?;
+        let elements = parse_xml(&content)?.roots;
 
         // Collect templates from this file
         for element in &elements {

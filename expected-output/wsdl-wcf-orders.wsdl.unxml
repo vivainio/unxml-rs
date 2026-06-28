@@ -1,3 +1,6 @@
+// WCF-style metadata: WSDL 1.1 over SOAP 1.2, document/literal, with the
+// typical import-split <types> (xsd:import only, no inline schema) and a
+// declared fault. Mirrors what a basicHttpBinding/?wsdl endpoint emits.
 wsdl OrderService http://tempuri.org/
   ns q1 = http://schemas.datacontract.org/2004/07/Orders
   ns tns = http://tempuri.org/

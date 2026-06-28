@@ -1,3 +1,4 @@
+// XSLT 3.0 feature coverage: maps, iterate, try/catch, merge, evaluate, etc.
 xsl:stylesheet(
     expand-text="yes",
     version="3.0",

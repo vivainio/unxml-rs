@@ -1,3 +1,8 @@
+// ASP.NET ASMX-style description: one portType exposed through both a SOAP
+// 1.1 and a SOAP 1.2 binding, an inline schema with array wrapper types, and
+// an .asmx endpoint address. This is the shape an "Add Web Reference" cache
+// stores. The XSD namespace is bound to the `s:` prefix (Microsoft's
+// convention), exercising prefix-agnostic schema rendering.
 wsdl http://example.org/tasks/TaskAccessPoint
   ns tns = http://example.org/tasks/TaskAccessPoint
   types

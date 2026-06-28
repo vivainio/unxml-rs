@@ -170,10 +170,20 @@ pub(crate) fn parse_html(content: &str, format: &InputFormat) -> Result<Vec<XmlE
     Ok(root_elements)
 }
 
-pub(crate) fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
+/// The result of parsing an XML document: its root element(s) plus any
+/// comments that live outside them (in the prolog or epilog). A top-level
+/// comment is paired with the number of roots that preceded it, i.e. its
+/// insertion point in document order, so the renderer can place it back.
+pub(crate) struct ParsedXml {
+    pub(crate) roots: Vec<XmlElement>,
+    pub(crate) top_comments: Vec<(usize, String)>,
+}
+
+pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
     let mut reader = Reader::from_str(content);
     reader.config_mut().trim_text(true);
 
+    let mut top_comments: Vec<(usize, String)> = Vec::new();
     let mut elements_stack: Vec<XmlElement> = Vec::new();
     // Byte offset where each open element's inner content begins (just past its
     // start tag), parallel to `elements_stack`. Used to capture verbatim inner
@@ -267,19 +277,22 @@ pub(crate) fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
                 }
             }
             Ok(Event::Comment(ref e)) => {
-                // Comments are content: keep them in document order on the
-                // enclosing element so they render and diff. Top-level comments
-                // (no open element — e.g. a licence header before the root) have
-                // no node list to attach to, so they are not captured.
+                // Comments are content: keep them in document order so they
+                // render and diff. A comment inside an element rides on that
+                // element's node list; a top-level comment (prolog/epilog, no
+                // open element — e.g. a licence header) is recorded separately
+                // with its insertion point among the roots.
                 let text = e
                     .unescape()
                     .map(|c| c.into_owned())
                     .unwrap_or_else(|_| String::from_utf8_lossy(e.as_ref()).into_owned());
                 let text = text.trim();
-                if !text.is_empty()
-                    && let Some(current) = elements_stack.last_mut()
-                {
-                    current.nodes.push(NodeRef::Comment(text.to_string()));
+                if !text.is_empty() {
+                    if let Some(current) = elements_stack.last_mut() {
+                        current.nodes.push(NodeRef::Comment(text.to_string()));
+                    } else {
+                        top_comments.push((root_elements.len(), text.to_string()));
+                    }
                 }
             }
             Ok(Event::Eof) => break,
@@ -295,5 +308,8 @@ pub(crate) fn parse_xml(content: &str) -> Result<Vec<XmlElement>> {
         buf.clear();
     }
 
-    Ok(root_elements)
+    Ok(ParsedXml {
+        roots: root_elements,
+        top_comments,
+    })
 }

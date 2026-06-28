@@ -1,3 +1,5 @@
+// Loose literal text directly inside xsl:* containers (mixed content).
+// Each piece of text should survive as a quoted line in the output.
 xsl:stylesheet(version="1.0", xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
   match title:
     "Title:"

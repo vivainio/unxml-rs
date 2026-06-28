@@ -14,6 +14,7 @@ use crate::document::{
 use crate::model::{Collapse, FormatOpts, XmlElement};
 use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_lenient};
 use crate::paths::dump_paths;
+use crate::render::render_comment;
 use crate::xslt::TemplateRegistry;
 
 /// The cross-cutting, CLI-derived options shared by every input. Built once and
@@ -56,10 +57,18 @@ pub(crate) fn process_content(
         detect_format(content, file_path)
     };
 
-    // Parse the content based on detected/specified format
-    let mut elements = match format {
-        InputFormat::Html => parse_html(content, &format).context("Failed to parse HTML")?,
-        InputFormat::Xml => parse_xml(content).context("Failed to parse XML")?,
+    // Parse the content based on detected/specified format. `top_comments` are
+    // the prolog/epilog comments outside the root element (XML only); HTML has
+    // no such concept here.
+    let (mut elements, top_comments) = match format {
+        InputFormat::Html => (
+            parse_html(content, &format).context("Failed to parse HTML")?,
+            Vec::new(),
+        ),
+        InputFormat::Xml => {
+            let parsed = parse_xml(content).context("Failed to parse XML")?;
+            (parsed.roots, parsed.top_comments)
+        }
     };
 
     // Build the effective set of prefixes to hide: those requested explicitly,
@@ -116,13 +125,35 @@ pub(crate) fn process_content(
     // line; the whole-document case emits roots back-to-back.
     let output = if cfg.paths {
         dump_paths(&roots, cfg.depth, cfg.no_attrs, cfg.fold)
-    } else {
+    } else if cfg.select.is_some() {
+        // --select renders matched subtrees as fragments; the document prolog
+        // (top-level comments) is not part of any selected subtree, so omit it.
         let mut out = String::new();
         for (i, elem) in roots.iter().enumerate() {
-            if i > 0 && cfg.select.is_some() {
+            if i > 0 {
                 out.push('\n');
             }
             out.push_str(&elem.format_yaml_like(0, opts, registry));
+        }
+        out
+    } else {
+        // Whole document: interleave top-level (prolog/epilog) comments with the
+        // roots at their recorded insertion points so a licence header or
+        // trailing note renders where it stood. `top_comments` is empty for HTML
+        // and for comment-free XML, so this matches the old output exactly.
+        let mut out = String::new();
+        for (i, elem) in roots.iter().enumerate() {
+            for (idx, text) in &top_comments {
+                if *idx == i {
+                    render_comment(&mut out, text, 0);
+                }
+            }
+            out.push_str(&elem.format_yaml_like(0, opts, registry));
+        }
+        for (idx, text) in &top_comments {
+            if *idx == roots.len() {
+                render_comment(&mut out, text, 0);
+            }
         }
         out
     };

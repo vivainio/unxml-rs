@@ -1,3 +1,5 @@
+// A stylesheet that PRODUCES UBL. Sniffing must NOT hide cbc:/cac: here:
+// they are literal result elements and XPath, not instance noise.
 xsl:stylesheet(
     version="1.0",
     xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",

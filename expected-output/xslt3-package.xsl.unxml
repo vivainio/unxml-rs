@@ -1,3 +1,4 @@
+// XSLT 3.0 packaging: xsl:package as root, expose, use-package, override.
 xsl:package(
     name="urn:my-utils",
     package-version="1.0",

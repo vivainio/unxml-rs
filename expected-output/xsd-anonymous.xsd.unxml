@@ -1,3 +1,5 @@
+// Anonymous nested types: complexType inlined under its element, and an
+// attribute whose simpleType restriction is inlined onto the @name line.
 schema (elementFormDefault=qualified)
   element Batch
     Period : xsd:string

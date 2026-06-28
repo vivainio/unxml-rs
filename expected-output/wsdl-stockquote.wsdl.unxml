@@ -1,3 +1,5 @@
+// Classic SOAP 1.1 document/literal service with an inline <types> schema.
+// Adapted from the W3C WSDL 1.1 primer's StockQuote example.
 wsdl StockQuote http://example.com/stockquote.wsdl
   ns tns = http://example.com/stockquote.wsdl
   ns xsd1 = http://example.com/stockquote.xsd
