@@ -96,6 +96,47 @@ fn attr_present(existing: &str, pattern: &str) -> bool {
     })
 }
 
+// --- `unxml git`: transient textconv wrapper --------------------------------
+//
+// `--init-git` above wires unxml into a repo's `.git/config` and
+// `info/attributes` permanently, which some find intrusive: every `git diff`,
+// `log -p`, and `show` in that clone renders through unxml from then on, even
+// for tools/scripts that didn't ask for it. `unxml git <args>` instead applies
+// the textconv driver only for this one invocation, via `-c` overrides and a
+// throwaway attributes file — nothing is written under `.git/`.
+
+/// Run `git <args>` with the unxml textconv driver applied for this
+/// invocation only, then exit with git's exit code. Nothing is persisted:
+/// the diff driver is passed via `-c`, and the file-pattern bindings live in
+/// a temporary attributes file pointed to by a transient
+/// `core.attributesFile` override.
+pub(crate) fn git_passthrough(args: &[String]) -> Result<()> {
+    let attrs_path =
+        std::env::temp_dir().join(format!("unxml-git-attributes-{}", std::process::id()));
+    let mut attrs = String::new();
+    for pattern in GIT_PATTERNS {
+        attrs.push_str(&format!("{pattern} diff=unxml\n"));
+    }
+    std::fs::write(&attrs_path, attrs)
+        .with_context(|| format!("Failed to write {}", attrs_path.display()))?;
+
+    let status = Command::new("git")
+        .arg("-c")
+        .arg(format!("diff.unxml.textconv={GIT_TEXTCONV}"))
+        .arg("-c")
+        .arg("diff.unxml.cachetextconv=true")
+        .arg("-c")
+        .arg(format!("core.attributesFile={}", attrs_path.display()))
+        .args(args)
+        .status()
+        .context("Failed to run `git` (is it installed and on PATH?)");
+
+    let _ = std::fs::remove_file(&attrs_path);
+
+    let status = status?;
+    std::process::exit(status.code().unwrap_or(1));
+}
+
 /// Configure the current git repo to diff XML/HTML through `unxml --canonical`.
 /// Idempotent: re-running only adds patterns not already present.
 pub(crate) fn init_git() -> Result<()> {

@@ -28,6 +28,15 @@ use crate::model::{Collapse, FormatOpts};
 use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
+    // `unxml git <args>` is a thin passthrough to `git <args>` with the unxml
+    // textconv driver applied for just this invocation. It's intercepted
+    // ahead of the normal `Cli::parse()` below, since `files: Vec<String>`
+    // would otherwise swallow "git" and everything after it as filenames.
+    let rest: Vec<String> = std::env::args().skip(1).collect();
+    if rest.first().map(String::as_str) == Some("git") {
+        return install::git_passthrough(&rest[1..]);
+    }
+
     let cli = Cli::parse();
 
     // Side-channel action: install the bundled skill and exit before any

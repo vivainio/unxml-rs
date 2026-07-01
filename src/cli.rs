@@ -143,6 +143,10 @@ pub(crate) struct Cli {
     /// the canonicalised flattened form and prefix- or order-only churn drops
     /// out. Everything lives inside `.git/` — the working tree is untouched and
     /// nothing is committed. Idempotent; re-run safely.
+    ///
+    /// For a one-off equivalent that touches no git config at all, use
+    /// `unxml git <args>` (e.g. `unxml git diff`) instead — it passes the same
+    /// textconv driver via `-c` for that single invocation only.
     #[arg(long)]
     pub(crate) init_git: bool,
 }

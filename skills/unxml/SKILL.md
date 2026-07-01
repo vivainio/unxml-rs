@@ -73,6 +73,26 @@ diff <(unxml --canonical a.xml) <(unxml --canonical b.xml)
 In a dialect mode (`--xslt`/`--xsd`/`--wsdl`/`--schematron`) element order is
 significant, so `--canonical` normalises prefixes only and preserves order.
 
+## Git integration
+
+`unxml git <args>` transparently runs `git <args>` (diff, log -p, show, ...)
+with a `textconv` driver applied for just that one invocation, so XML/HTML
+render in the canonicalised flattened form and prefix- or order-only churn
+drops out of the diff. Nothing is written to `.git/config` or
+`.git/info/attributes` — it's a drop-in replacement for plain `git` on a
+one-off basis:
+
+```bash
+unxml git diff
+unxml git log -p -- invoice.xml
+unxml git show HEAD~1:invoice.xml
+```
+
+`unxml --init-git` instead wires the same driver permanently into the current
+repo's `.git/config`/`info/attributes` (idempotent, working tree untouched),
+for when every `git diff`/`log -p`/`show` in that clone should render this way
+without prefixing commands with `unxml git`.
+
 ## Structural fingerprint (`--paths`)
 
 `--paths` dumps the set of *distinct* element paths as an indented tree (each
