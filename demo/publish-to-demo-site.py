@@ -141,6 +141,11 @@ pre.unxml {
   white-space: pre;
   tab-size: 2;
 }
+/* ansi2html's own palette sets white-space: pre-wrap/word-wrap: break-word on
+   this span, which overrides the inherited `pre` above and lets long lines
+   (e.g. a folded --auto chain) wrap without their indent, making the next
+   sibling line look mis-nested. Force it back to the ancestor's behaviour. */
+pre.unxml .ansi2html-content { white-space: inherit; word-wrap: normal; }
 .unxml-back {
   position: fixed; top: 0; right: 0;
   padding: 0.4rem 0.8rem; margin: 0.5rem;
@@ -172,6 +177,8 @@ INLINE_CSS = """
   font: 12px/1.5 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   white-space: pre; tab-size: 2; overflow-x: auto; max-width: 100%;
 }
+/* See CHROME_CSS above for why this override is needed. */
+.unxml-demo pre.unxml .ansi2html-content { white-space: inherit; word-wrap: normal; }
 @media (max-width: 820px) {
   .unxml-demo .unxml-cols { grid-template-columns: 1fr; }
 }
