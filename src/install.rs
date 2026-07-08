@@ -14,6 +14,13 @@ use include_dir::{Dir, include_dir};
 /// The skills tree, embedded at build time from `skills/`.
 static SKILLS_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/skills");
 
+/// The `bat`/`batcat` Sublime grammar for `.unxml` output, embedded at build
+/// time so `--install-bat` works from a plain `cargo install` with no
+/// checkout on disk (unlike `editor/install-editor-support.py`, which this
+/// supersedes for the bat half of that script).
+static BAT_SYNTAX: &str = include_str!("../editor/unxml.sublime-syntax");
+const BAT_SYNTAX_NAME: &str = "unxml.sublime-syntax";
+
 /// Resolve the user's home directory across platforms (`HOME`, then
 /// `USERPROFILE` on Windows).
 fn home_dir() -> Result<PathBuf> {
@@ -52,6 +59,60 @@ pub(crate) fn install_skills() -> Result<()> {
     let count = extract_dir(&SKILLS_DIR, &dir)?;
     println!("Installed {count} skill file(s) to {}", dir.display());
     Ok(())
+}
+
+// --- `--install-bat`: register the .unxml grammar with bat -----------------
+
+/// Copy the embedded Sublime grammar into `bat`'s config dir and rebuild its
+/// syntax cache, so `bat file.unxml` (and `unxml --bat`) get highlighting.
+/// Looks for `bat`, then `batcat` (the Debian/Ubuntu package name). Errors if
+/// neither is on PATH.
+pub(crate) fn install_bat() -> Result<()> {
+    let bat = which("bat")
+        .or_else(|| which("batcat"))
+        .context("`bat` (or `batcat`) not found on PATH — install it first")?;
+
+    let out = Command::new(&bat)
+        .arg("--config-dir")
+        .output()
+        .with_context(|| format!("Failed to run `{} --config-dir`", bat.display()))?;
+    if !out.status.success() {
+        return Err(anyhow::anyhow!(
+            "`{} --config-dir` failed: {}",
+            bat.display(),
+            String::from_utf8_lossy(&out.stderr).trim()
+        ));
+    }
+    let config_dir = String::from_utf8_lossy(&out.stdout).trim().to_string();
+    let dest_dir = Path::new(&config_dir).join("syntaxes");
+    std::fs::create_dir_all(&dest_dir)
+        .with_context(|| format!("Failed to create directory {}", dest_dir.display()))?;
+    let dest = dest_dir.join(BAT_SYNTAX_NAME);
+    std::fs::write(&dest, BAT_SYNTAX)
+        .with_context(|| format!("Failed to write {}", dest.display()))?;
+    println!("Installed grammar to {}", dest.display());
+
+    let status = Command::new(&bat)
+        .args(["cache", "--build"])
+        .status()
+        .with_context(|| format!("Failed to run `{} cache --build`", bat.display()))?;
+    if !status.success() {
+        return Err(anyhow::anyhow!("`{} cache --build` failed", bat.display()));
+    }
+    println!("Rebuilt bat cache — try: bat file.unxml, or unxml --bat file.xml");
+    Ok(())
+}
+
+/// Minimal `which`: search `PATH` for an executable named `name` (trying
+/// `name` and `name.exe`, for Windows). Avoids pulling in the `which` crate
+/// for this one lookup.
+fn which(name: &str) -> Option<PathBuf> {
+    let path = std::env::var_os("PATH")?;
+    std::env::split_paths(&path).find_map(|dir| {
+        [dir.join(name), dir.join(format!("{name}.exe"))]
+            .into_iter()
+            .find(|candidate| candidate.is_file())
+    })
 }
 
 // --- `--init-git`: wire unxml in as a git textconv diff driver -------------

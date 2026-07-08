@@ -45,6 +45,11 @@ fn main() -> Result<()> {
         return install::install_skills();
     }
 
+    // Side-channel action: register the .unxml grammar with bat and exit.
+    if cli.install_bat {
+        return install::install_bat();
+    }
+
     // Side-channel action: wire unxml in as the current repo's XML/HTML diff
     // driver and exit (no input files required).
     if cli.init_git {

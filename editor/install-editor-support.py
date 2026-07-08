@@ -2,6 +2,10 @@
 """Install unxml editor support (syntax highlighting for the .unxml format).
 
 Installs bat support: copies the Sublime grammar and rebuilds bat's cache.
+Superseded by `unxml --install-bat`, which does the same thing without a
+checkout on disk (the grammar is embedded in the binary) — prefer that from
+a plain `cargo install`. This script remains for a checkout that has no
+`unxml` binary built yet.
 
 Works on WSL, native Windows, Linux and macOS. Re-running is safe (idempotent).
 

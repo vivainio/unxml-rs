@@ -30,8 +30,9 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) xsd: bool,
 
-    /// Enable WSDL 1.1 / SOAP web-service-description formatting. The embedded
-    /// <types> schema is rendered with the XSD transformations.
+    /// Enable WSDL 1.1 / SOAP web-service-description formatting
+    ///
+    /// The embedded <types> schema is rendered with the XSD transformations.
     #[arg(long)]
     pub(crate) wsdl: bool,
 
@@ -40,20 +41,23 @@ pub(crate) struct Cli {
     pub(crate) expand: bool,
 
     /// Autodetect the processing mode from each file's extension
+    ///
     /// (.xsl/.xslt -> xslt, .sch -> schematron, .xsd -> xsd). Without this
     /// (and without an explicit mode flag) files render as plain XML.
     #[arg(long)]
     pub(crate) auto: bool,
 
-    /// Pipe the rendered output through `bat -l unxml` for syntax-highlighted,
-    /// paged display. Implies --auto. Falls back to plain stdout if `bat` is
-    /// not installed.
+    /// Pipe the rendered output through `bat` for a syntax-highlighted, paged display
+    ///
+    /// Runs `bat -l unxml`. Implies --auto. Falls back to plain stdout if
+    /// `bat` is not installed.
     #[arg(long)]
     pub(crate) bat: bool,
 
-    /// Hide one or more namespace prefixes from element and attribute names to
-    /// cut noise, e.g. `--hide-ns cbc,cac`. Repeatable and comma-separated; the
-    /// matching xmlns: declarations are dropped too. The special value
+    /// Hide one or more namespace prefixes from element and attribute names
+    ///
+    /// Cuts noise, e.g. `--hide-ns cbc,cac`. Repeatable and comma-separated;
+    /// the matching xmlns: declarations are dropped too. The special value
     /// `--hide-ns ALL` hides every prefix, reducing all names to their bare
     /// local form — handy for fingerprinting documents of unknown vocabularies.
     /// Under --auto/--bat, well-known document types (e.g. UBL) also get a
@@ -61,68 +65,77 @@ pub(crate) struct Cli {
     #[arg(long, value_delimiter = ',')]
     pub(crate) hide_ns: Vec<String>,
 
-    /// Render only the subtrees whose element name matches this tag, instead of
-    /// the whole document. Matching is by tag name only (no paths or
-    /// predicates): a bare name like `InvoiceLine` matches on the local name so
-    /// it ignores namespace prefixes, while a prefixed name like
-    /// `cac:InvoiceLine` matches the full name. Each matched subtree is rendered
-    /// as a top-level fragment.
+    /// Render only the subtrees whose element name matches this tag
+    ///
+    /// Renders only matching subtrees instead of the whole document. Matching
+    /// is by tag name only (no paths or predicates): a bare name like
+    /// `InvoiceLine` matches on the local name so it ignores namespace
+    /// prefixes, while a prefixed name like `cac:InvoiceLine` matches the
+    /// full name. Each matched subtree is rendered as a top-level fragment.
     #[arg(long)]
     pub(crate) select: Option<String>,
 
-    /// Canonicalise output for diffing: rebind namespace prefixes to stable
-    /// names (well-known vocabularies keep their conventional prefix, e.g.
-    /// `cac`/`xsl`; everything else becomes `ns1`, `ns2`, … in sorted-URI
-    /// order) and sort sibling elements so prefix- and order-only differences
-    /// disappear. Mixed content (prose) keeps its order. Sibling sorting applies
-    /// only to plain XML: in a dialect/--special mode (--xslt, --xsd, --wsdl,
+    /// Canonicalise output for diffing
+    ///
+    /// Rebinds namespace prefixes to stable names (well-known vocabularies
+    /// keep their conventional prefix, e.g. `cac`/`xsl`; everything else
+    /// becomes `ns1`, `ns2`, … in sorted-URI order) and sorts sibling
+    /// elements so prefix- and order-only differences disappear. Mixed
+    /// content (prose) keeps its order. Sibling sorting applies only to
+    /// plain XML: in a dialect/--special mode (--xslt, --xsd, --wsdl,
     /// --schematron) element order is significant, so only prefixes are
     /// normalised and document order is preserved.
     #[arg(long)]
     pub(crate) canonical: bool,
 
-    /// Dump the distinct element paths as an indented tree instead of the full
-    /// document: each element path is shown once (repeated siblings collapse),
-    /// annotated with the union of attribute names ever seen at that path, under
-    /// a `//` legend of the namespace prefixes. A compact structural summary,
-    /// useful for understanding or comparing document shapes. Honours --select,
-    /// --hide-ns and --canonical.
+    /// Dump the distinct element paths as an indented tree instead of the full document
+    ///
+    /// Each element path is shown once (repeated siblings collapse),
+    /// annotated with the union of attribute names ever seen at that path,
+    /// under a `//` legend of the namespace prefixes. A compact structural
+    /// summary, useful for understanding or comparing document shapes.
+    /// Honours --select, --hide-ns and --canonical.
     #[arg(long)]
     pub(crate) paths: bool,
 
-    /// Limit `--paths` output to N nesting levels (root = level 1); deeper
-    /// subtrees are dropped. Useful for coarser structural signatures when
-    /// clustering, or for skimming the top-level shape of a large document.
-    /// Only affects `--paths`.
+    /// Limit `--paths` output to N nesting levels (root = level 1)
+    ///
+    /// Deeper subtrees are dropped. Useful for coarser structural signatures
+    /// when clustering, or for skimming the top-level shape of a large
+    /// document. Only affects `--paths`.
     #[arg(long)]
     pub(crate) depth: Option<usize>,
 
-    /// In `--paths`, drop ordinary attribute names from each node, keeping only
-    /// namespaces (the format identity). Yields a coarser signature for
-    /// clustering — incidental per-document attributes (schemaLocation, version,
-    /// timestamps) stop fragmenting otherwise-identical formats. Only affects
-    /// `--paths`.
+    /// In `--paths`, drop ordinary attribute names from each node
+    ///
+    /// Keeps only namespaces (the format identity). Yields a coarser
+    /// signature for clustering — incidental per-document attributes
+    /// (schemaLocation, version, timestamps) stop fragmenting
+    /// otherwise-identical formats. Only affects `--paths`.
     #[arg(long)]
     pub(crate) no_attrs: bool,
 
-    /// In `--paths`, fold repeated subtree shapes into named `@Shape`
-    /// definitions listed in a leading `// shapes` legend, replacing each
-    /// occurrence with a reference. Collapses structural repetition (e.g. many
-    /// date fields sharing the same subtree) so each distinct shape is shown
-    /// once. Only affects `--paths`.
+    /// In `--paths`, fold repeated subtree shapes into named `@Shape` definitions
+    ///
+    /// Definitions are listed in a leading `// shapes` legend, replacing each
+    /// occurrence with a reference. Collapses structural repetition (e.g.
+    /// many date fields sharing the same subtree) so each distinct shape is
+    /// shown once. Only affects `--paths`.
     #[arg(long)]
     pub(crate) fold: bool,
 
-    /// Collapse single-child wrapper chains (one child, no attributes, no text)
-    /// onto a single `parent/child/grandchild` line, cutting the vertical noise
-    /// of boilerplate scaffolding like UBL's `ext:UBLExtensions`. With no value
-    /// every such wrapper folds; with a comma-separated list of names (e.g.
-    /// `--collapse=ext:UBLExtensions`) a chain only *starts* at a listed element,
-    /// then descends through its pass-through sub-elements automatically. Names
-    /// match like --select (bare = local name, prefixed = full). A list must be
-    /// joined with `=` so it is not mistaken for a file argument. Under --auto a
-    /// sniffed UBL or CII instance folds all its wrapper chains automatically
-    /// unless this is given. Plain XML only; ignored in
+    /// Collapse single-child wrapper chains onto a single `parent/child/grandchild` line
+    ///
+    /// A wrapper chain is one child, no attributes, no text — cutting the
+    /// vertical noise of boilerplate scaffolding like UBL's
+    /// `ext:UBLExtensions`. With no value every such wrapper folds; with a
+    /// comma-separated list of names (e.g. `--collapse=ext:UBLExtensions`) a
+    /// chain only *starts* at a listed element, then descends through its
+    /// pass-through sub-elements automatically. Names match like --select
+    /// (bare = local name, prefixed = full). A list must be joined with `=`
+    /// so it is not mistaken for a file argument. Under --auto a sniffed UBL
+    /// or CII instance folds all its wrapper chains automatically unless
+    /// this is given. Plain XML only; ignored in
     /// --xslt/--xsd/--wsdl/--schematron/--special and --paths modes.
     #[arg(long, require_equals = true, value_delimiter = ',', num_args = 0..)]
     pub(crate) collapse: Option<Vec<String>>,
@@ -132,17 +145,26 @@ pub(crate) struct Cli {
     pub(crate) stdin: bool,
 
     /// Install the bundled Claude Code skills into `~/.claude/skills/` and exit
-    /// (e.g. `unxml/SKILL.md`). Overwrites any existing copies.
+    ///
+    /// E.g. `unxml/SKILL.md`. Overwrites any existing copies.
     #[arg(long)]
     pub(crate) install_skills: bool,
 
-    /// Configure the current git repository to diff XML/HTML through unxml, then
-    /// exit. Registers a `textconv` diff driver (`unxml --canonical --auto`) in
+    /// Register the `.unxml` syntax with `bat`/`batcat`, then exit
+    ///
+    /// Copies the bundled Sublime grammar into its config dir and rebuilds
+    /// the cache. Requires `bat` on PATH. Idempotent; re-run safely.
+    #[arg(long)]
+    pub(crate) install_bat: bool,
+
+    /// Configure the current git repository to diff XML/HTML through unxml, then exit
+    ///
+    /// Registers a `textconv` diff driver (`unxml --canonical --auto`) in
     /// repo-local config and binds the usual XML/HTML globs in
-    /// `.git/info/attributes`, so `git diff`, `git log -p` and `git show` render
-    /// the canonicalised flattened form and prefix- or order-only churn drops
-    /// out. Everything lives inside `.git/` — the working tree is untouched and
-    /// nothing is committed. Idempotent; re-run safely.
+    /// `.git/info/attributes`, so `git diff`, `git log -p` and `git show`
+    /// render the canonicalised flattened form and prefix- or order-only
+    /// churn drops out. Everything lives inside `.git/` — the working tree
+    /// is untouched and nothing is committed. Idempotent; re-run safely.
     ///
     /// For a one-off equivalent that touches no git config at all, use
     /// `unxml git <args>` (e.g. `unxml git diff`) instead — it passes the same

@@ -85,7 +85,10 @@ unxml --bat some.xsd      # implies --auto (detects --xsd), pipes through `bat -
 
 `--bat` renders the output through [`bat`](https://github.com/sharkdp/bat) using
 the bundled `unxml` grammar (see `editor/`) for paged, colourised display. If
-`bat` is not installed it falls back to plain stdout.
+`bat` is not installed it falls back to plain stdout. Run `unxml --install-bat`
+once to register the grammar with `bat` (copies it into `bat`'s config dir and
+rebuilds the cache) — after that, both `--bat` and plain `bat file.unxml` are
+highlighted.
 
 ### Claude Code skill (`--install-skills`)
 
