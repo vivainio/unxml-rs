@@ -1,0 +1,31 @@
+Project(ToolsVersion="14.0", xmlns="http://schemas.microsoft.com/developer/msbuild/2003")
+  // Simple single-condition PropertyGroup
+  if '$(Configuration)' == '':
+    PropertyGroup
+      Configuration = Debug
+  // Multi-line condition with and/or, wrapped across source lines
+  if '$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(HasRuntimeOutput)' == 'true' and '$(RuntimeIdentifier)' == '':
+    PropertyGroup
+      _UsingDefaultRuntimeIdentifier = true
+  // Condition with padded whitespace around the value
+  if '$(_InvalidConfigurationError)' == 'true':
+    Error(Text="Invalid configuration")
+  // Item with Condition plus other attributes
+  ItemGroup
+    if '$(GenerateUserSecretsAttribute)' == 'true':
+      ProjectCapability(Include="LocalUserSecrets")
+  // Target with Condition plus several other attributes
+  if '$(_InvalidConfigurationWarning)' != 'true':
+    Target(
+        DependsOnTargets="$(BuildDependsOn)",
+        Name="Build",
+        Returns="@(TargetPathWithTargetPlatformMoniker)")
+  // Choose/When/Otherwise, each When carrying its own Condition
+  Choose
+    if '$(OS)' == 'Windows_NT':
+      When
+        PropertyGroup
+          PathSeparator = ;
+    Otherwise
+      PropertyGroup
+        PathSeparator = :

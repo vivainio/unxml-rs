@@ -6,6 +6,7 @@ mod cli;
 mod document;
 mod install;
 mod model;
+mod msbuild;
 mod parse;
 mod paths;
 mod process;
@@ -70,6 +71,7 @@ fn main() -> Result<()> {
         schematron: cli.schematron,
         xsd: cli.xsd,
         wsdl: cli.wsdl,
+        msbuild: cli.msbuild,
         collapse: Collapse::Off,
     };
 

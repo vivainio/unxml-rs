@@ -8,8 +8,8 @@ use anyhow::{Context, Result};
 
 use crate::canonical::canonicalize;
 use crate::document::{
-    HIDE_NS_ALL, hide_namespaces, is_cii_document, is_ubl_document, select_subtrees,
-    sniff_hidden_prefixes,
+    HIDE_NS_ALL, hide_namespaces, is_cii_document, is_msbuild_document, is_ubl_document,
+    select_subtrees, sniff_hidden_prefixes,
 };
 use crate::model::{Collapse, FormatOpts, XmlElement};
 use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_lenient};
@@ -85,6 +85,35 @@ pub(crate) fn process_content(
         }
     }
 
+    // Build the effective mode/collapse opts before canonicalising, so a
+    // content-sniffed mode also governs the sibling-sort decision below.
+    let mut effective = opts.clone();
+
+    // Under --auto/--bat, an MSBuild project/import file (`<Project>` root)
+    // gets --msbuild even when its extension didn't already select it (e.g.
+    // stdin, or an unrecognised extension) — unless the user already forced
+    // an explicit mode.
+    if cfg.sniff && !opts.has_mode() && elements.iter().any(is_msbuild_document) {
+        effective.msbuild = true;
+    }
+
+    // Under --auto/--bat, a genuine UBL or CII instance folds its single-child
+    // wrapper chains automatically (the same documents whose prefixes we hide),
+    // unless the user already chose a --collapse mode. These vocabularies bury
+    // content under deep scaffolding — UBL's `ext:UBLExtensions`, CII's nested
+    // `ram:`/`rsm:` wrappers — and folding it never drops information (the tag
+    // names stay on the path), while genuine multi-child aggregates are left
+    // expanded.
+    if cfg.sniff
+        && matches!(opts.collapse, Collapse::Off)
+        && elements
+            .iter()
+            .any(|e| is_ubl_document(e) || is_cii_document(e))
+    {
+        effective.collapse = Collapse::All;
+    }
+    let opts = &effective;
+
     // Canonicalise for diff-friendly output: always rebind prefixes to stable
     // names, but only sort siblings in plain XML mode — in a dialect/`--special`
     // mode element order is significant, so sorting would misrepresent it.
@@ -101,24 +130,6 @@ pub(crate) fn process_content(
     } else {
         elements.iter().collect()
     };
-
-    // Under --auto/--bat, a genuine UBL or CII instance folds its single-child
-    // wrapper chains automatically (the same documents whose prefixes we hide),
-    // unless the user already chose a --collapse mode. These vocabularies bury
-    // content under deep scaffolding — UBL's `ext:UBLExtensions`, CII's nested
-    // `ram:`/`rsm:` wrappers — and folding it never drops information (the tag
-    // names stay on the path), while genuine multi-child aggregates are left
-    // expanded.
-    let mut effective = opts.clone();
-    if cfg.sniff
-        && matches!(opts.collapse, Collapse::Off)
-        && elements
-            .iter()
-            .any(|e| is_ubl_document(e) || is_cii_document(e))
-    {
-        effective.collapse = Collapse::All;
-    }
-    let opts = &effective;
 
     // --paths dumps the distinct element paths; otherwise render the tree. Under
     // --select, render each matched subtree as a fragment separated by a blank

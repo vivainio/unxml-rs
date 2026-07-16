@@ -27,6 +27,7 @@ pub(crate) struct FormatOpts {
     pub(crate) schematron: bool,
     pub(crate) xsd: bool,
     pub(crate) wsdl: bool,
+    pub(crate) msbuild: bool,
     pub(crate) collapse: Collapse,
 }
 
@@ -37,13 +38,26 @@ impl FormatOpts {
         schematron: false,
         xsd: false,
         wsdl: false,
+        msbuild: false,
+        collapse: Collapse::Off,
+    };
+
+    /// Recursion opts for descending back into a Condition-folded MSBuild
+    /// element (see `format_msbuild_element`).
+    pub(crate) const MSBUILD: FormatOpts = FormatOpts {
+        special: false,
+        xslt: false,
+        schematron: false,
+        xsd: false,
+        wsdl: false,
+        msbuild: true,
         collapse: Collapse::Off,
     };
 
     /// True if the user explicitly selected any processing mode. When none is
     /// set we fall back to autodetecting the mode from the file extension.
     pub(crate) fn has_mode(&self) -> bool {
-        self.special || self.xslt || self.schematron || self.xsd || self.wsdl
+        self.special || self.xslt || self.schematron || self.xsd || self.wsdl || self.msbuild
     }
 }
 

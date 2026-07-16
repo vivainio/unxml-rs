@@ -142,6 +142,7 @@ explicit flag. Each has its own full reference:
 | XSD | `--xsd` / `.xsd` | `xs:element name="N" type="T"` → `element N : T` | [docs/xsd.md](xsd.md) |
 | Schematron | `--schematron` / `.sch` | `rule context="C"` → `rule C` | [docs/schematron.md](schematron.md) |
 | WSDL | `--wsdl` / `.wsdl` | SOAP service description; embedded schema uses XSD rules | (see README) |
+| MSBuild | `--msbuild` / `.targets`, `.props`, `.csproj`, ... | `Target Condition="C" ...` → `if C:` / `  Target(...)` | [docs/msbuild.md](msbuild.md) |
 
 There is also `--special`, a set of proprietary business-workflow rules
 (`include="foo"` → `if foo`, `<section name="X">` → `#X`, method references →

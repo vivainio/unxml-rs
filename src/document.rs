@@ -9,7 +9,7 @@ use crate::model::{FormatOpts, XmlElement};
 /// Pick a processing mode from a file's extension when the user hasn't forced
 /// one. Mirrors the extension->flag mapping the test suite applies:
 ///   .xsl / .xslt -> --xslt,  .sch -> --schematron,  .xsd -> --xsd,
-///   .wsdl -> --wsdl.
+///   .wsdl -> --wsdl,  .targets/.props/.*proj -> --msbuild.
 /// `--special` is intentionally excluded: it is proprietary and selected by
 /// file name, not extension. Returns the default (no mode) for anything else.
 pub(crate) fn detect_mode_from_ext(file_path: &str) -> FormatOpts {
@@ -32,6 +32,10 @@ pub(crate) fn detect_mode_from_ext(file_path: &str) -> FormatOpts {
         },
         "wsdl" => FormatOpts {
             wsdl: true,
+            ..FormatOpts::default()
+        },
+        "targets" | "props" | "csproj" | "vbproj" | "fsproj" | "sqlproj" => FormatOpts {
+            msbuild: true,
             ..FormatOpts::default()
         },
         _ => FormatOpts::default(),
@@ -155,6 +159,39 @@ pub(crate) fn is_cii_document(root: &XmlElement) -> bool {
             .attributes
             .values()
             .any(|uri| uri.contains("uncefact") && CII_ROOTS.iter().any(|r| uri.contains(r)))
+}
+
+/// True if `root` looks like an MSBuild project/import file: an unprefixed
+/// `<Project>` document element. Modern SDK-style files (`<Project
+/// Sdk="Microsoft.NET.Sdk">`, and even plain `.targets`/`.props` under the
+/// installed SDK) frequently carry neither the legacy
+/// `xmlns="http://schemas.microsoft.com/developer/msbuild/2003"` nor a
+/// `ToolsVersion` attribute — the root element name alone isn't a reliable
+/// enough signal on its own, since other XML vocabularies also use a bare
+/// `<Project>` root. So this also requires either one of those legacy
+/// attributes, or at least one child recognisable as MSBuild's own syntax
+/// (`PropertyGroup`, `ItemGroup`, `Target`, ...).
+pub(crate) fn is_msbuild_document(root: &XmlElement) -> bool {
+    const MSBUILD_CHILDREN: [&str; 7] = [
+        "PropertyGroup",
+        "ItemGroup",
+        "ItemDefinitionGroup",
+        "Target",
+        "UsingTask",
+        "Import",
+        "Choose",
+    ];
+    root.name == "Project"
+        && (root
+            .attributes
+            .get("xmlns")
+            .is_some_and(|uri| uri.contains("schemas.microsoft.com/developer/msbuild"))
+            || root.attributes.contains_key("ToolsVersion")
+            || root.attributes.contains_key("Sdk")
+            || root
+                .children
+                .iter()
+                .any(|c| MSBUILD_CHILDREN.contains(&c.name.as_str())))
 }
 
 /// Sniff well-known document types from the root elements' namespace bindings

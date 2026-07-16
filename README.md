@@ -58,14 +58,15 @@ unxml <xml_file>
 By default files render as plain XML. Pass `--auto` to pick the processing mode
 from each file's extension:
 
-| Extension      | Mode applied   |
-| -------------- | -------------- |
-| `.xsl` `.xslt` | `--xslt`       |
-| `.sch`         | `--schematron` |
-| `.xsd`         | `--xsd`        |
+| Extension                                                  | Mode applied   |
+| ----------------------------------------------------------- | -------------- |
+| `.xsl` `.xslt`                                               | `--xslt`       |
+| `.sch`                                                       | `--schematron` |
+| `.xsd`                                                       | `--xsd`        |
+| `.targets` `.props` `.csproj` `.vbproj` `.fsproj` `.sqlproj` | `--msbuild`    |
 
-An explicit mode flag (`--xslt`, `--schematron`, `--xsd`, `--special`) always
-overrides autodetection.
+An explicit mode flag (`--xslt`, `--schematron`, `--xsd`, `--msbuild`, `--special`)
+always overrides autodetection.
 
 For a tour of every way unxml shortens a document — base syntax plus which flag
 to reach for — see the **[simplification reference](docs/reference.md)**.
@@ -76,6 +77,7 @@ transformations, with side-by-side samples, is documented per format:
 - [XSLT transformations](docs/xslt.md) — `xsl:*` stylesheets
 - [XSD transformations](docs/xsd.md) — `xs:*` / `xsd:*` schemas
 - [Schematron transformations](docs/schematron.md) — `.sch` rule schemas
+- [MSBuild transformations](docs/msbuild.md) — `.targets`/`.props`/project files
 
 ### Syntax-highlighted output (`--bat`)
 
@@ -167,8 +169,9 @@ ns2:Order(xmlns:ns1="urn:shop:cust", xmlns:ns2="urn:shop:order")
 
 Sibling sorting applies only to plain XML. Element order *is* significant in
 stylesheets and schemas (`xsl:*` control flow, `xs:sequence`, Schematron rule
-order), so in a dialect/`--special` mode (`--xslt`, `--xsd`, `--wsdl`,
-`--schematron`) `--canonical` normalises prefixes only and preserves document
+order) and in MSBuild's target/property evaluation order, so in a
+dialect/`--special` mode (`--xslt`, `--xsd`, `--wsdl`, `--schematron`,
+`--msbuild`) `--canonical` normalises prefixes only and preserves document
 order.
 
 ### Collapsing wrapper chains (`--collapse`)
@@ -217,8 +220,8 @@ genuine multi-child aggregates (a `Party`, a `PostalAddress`) expanded.
 This is distinct from `--fold`: `--collapse` flattens *vertical* wrapper noise
 in the full render, while `--fold` dedups *repeated* records in the `--paths`
 view. `--collapse` affects plain XML only — it is ignored in the dialect modes
-(`--xslt`/`--xsd`/`--wsdl`/`--schematron`/`--special`), where element nesting is
-significant, and in `--paths`.
+(`--xslt`/`--xsd`/`--wsdl`/`--schematron`/`--msbuild`/`--special`), where
+element nesting is significant, and in `--paths`.
 
 ### Listing document paths (`--paths`)
 
@@ -442,7 +445,8 @@ significant (multi-line) text, such as `<programlisting>` or `<screen>`, is not
 inline-safe, so its parent stays in the flattened block form and the listing
 keeps its line breaks. Nested inline markup (e.g. `<emphasis>` wrapping a
 `<command>`) collapses all the way up. This applies to the generic XML render;
-the `--xslt`/`--xsd`/`--wsdl`/`--schematron` modes use their own formatting.
+the `--xslt`/`--xsd`/`--wsdl`/`--schematron`/`--msbuild` modes use their own
+formatting.
 
 ## Technical Details
 

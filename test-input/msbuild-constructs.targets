@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- Simple single-condition PropertyGroup -->
+  <PropertyGroup Condition="'$(Configuration)' == ''">
+    <Configuration>Debug</Configuration>
+  </PropertyGroup>
+
+  <!-- Multi-line condition with and/or, wrapped across source lines -->
+  <PropertyGroup
+      Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and
+                            '$(HasRuntimeOutput)' == 'true' and
+                            '$(RuntimeIdentifier)' == ''">
+    <_UsingDefaultRuntimeIdentifier>true</_UsingDefaultRuntimeIdentifier>
+  </PropertyGroup>
+
+  <!-- Condition with padded whitespace around the value -->
+  <Error Condition=" '$(_InvalidConfigurationError)' == 'true' " Text="Invalid configuration" />
+
+  <!-- Item with Condition plus other attributes -->
+  <ItemGroup>
+    <ProjectCapability
+        Condition=" '$(GenerateUserSecretsAttribute)' == 'true' "
+        Include="LocalUserSecrets" />
+  </ItemGroup>
+
+  <!-- Target with Condition plus several other attributes -->
+  <Target
+      Condition="'$(_InvalidConfigurationWarning)' != 'true'"
+      DependsOnTargets="$(BuildDependsOn)"
+      Name="Build"
+      Returns="@(TargetPathWithTargetPlatformMoniker)" />
+
+  <!-- Choose/When/Otherwise, each When carrying its own Condition -->
+  <Choose>
+    <When Condition="'$(OS)' == 'Windows_NT'">
+      <PropertyGroup>
+        <PathSeparator>;</PathSeparator>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <PathSeparator>:</PathSeparator>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+</Project>

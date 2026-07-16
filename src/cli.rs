@@ -36,6 +36,17 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) wsdl: bool,
 
+    /// Enable MSBuild-specific formatting transformations
+    ///
+    /// Folds a `Condition="..."` attribute (present on almost any MSBuild
+    /// element — Target, PropertyGroup, ItemGroup, individual items and
+    /// tasks) into a leading `if COND:` guard, with the element's remaining
+    /// attributes rendered underneath. Whitespace inside the condition
+    /// (MSBuild conditions are often wrapped across lines with `and`/`or`) is
+    /// collapsed to a single line.
+    #[arg(long)]
+    pub(crate) msbuild: bool,
+
     /// Expand xsl:apply-templates by inlining matching templates from imports
     #[arg(long)]
     pub(crate) expand: bool,
@@ -83,8 +94,8 @@ pub(crate) struct Cli {
     /// elements so prefix- and order-only differences disappear. Mixed
     /// content (prose) keeps its order. Sibling sorting applies only to
     /// plain XML: in a dialect/--special mode (--xslt, --xsd, --wsdl,
-    /// --schematron) element order is significant, so only prefixes are
-    /// normalised and document order is preserved.
+    /// --schematron, --msbuild) element order is significant, so only
+    /// prefixes are normalised and document order is preserved.
     #[arg(long)]
     pub(crate) canonical: bool,
 
@@ -136,7 +147,7 @@ pub(crate) struct Cli {
     /// so it is not mistaken for a file argument. Under --auto a sniffed UBL
     /// or CII instance folds all its wrapper chains automatically unless
     /// this is given. Plain XML only; ignored in
-    /// --xslt/--xsd/--wsdl/--schematron/--special and --paths modes.
+    /// --xslt/--xsd/--wsdl/--schematron/--msbuild/--special and --paths modes.
     #[arg(long, require_equals = true, value_delimiter = ',', num_args = 0..)]
     pub(crate) collapse: Option<Vec<String>>,
 

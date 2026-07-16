@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A <Project> root with none of MSBuild's telltale children or attributes
+     (xmlns, ToolsVersion, Sdk) -- must NOT be sniffed as MSBuild under --auto,
+     to prove the content sniff doesn't false-positive on unrelated "Project"
+     vocabularies. -->
+<Project>
+  <Name>Foo</Name>
+  <Owner>Bar</Owner>
+</Project>

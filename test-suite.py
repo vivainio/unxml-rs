@@ -47,7 +47,7 @@ class TestRunner:
     
     def find_test_files(self) -> List[Path]:
         """Find all XML and HTML files in the sample directory"""
-        extensions = ['*.xml', '*.html', '*.htm', '*.xsl', '*.sch', '*.xsd', '*.wsdl']
+        extensions = ['*.xml', '*.html', '*.htm', '*.xsl', '*.sch', '*.xsd', '*.wsdl', '*.targets', '*.props']
         files = []
         
         for ext in extensions:
@@ -147,6 +147,10 @@ class TestRunner:
             if file_path.suffix == ".wsdl":
                 cmd.append("--wsdl")
 
+            # Add --msbuild flag for .targets/.props files
+            if file_path.suffix in (".targets", ".props"):
+                cmd.append("--msbuild")
+
             # Exercise --select (Tier-A subtree selection by tag name) for files
             # named select-*: render only the `item` subtrees as top-level
             # fragments.
@@ -171,6 +175,12 @@ class TestRunner:
             # cii-*: a genuine CrossIndustryInvoice instance should have its
             # rsm:/ram:/udt:/qdt: prefixes hidden.
             if file_path.name.startswith("cii-"):
+                cmd.append("--auto")
+
+            # Exercise --auto MSBuild content sniffing for files named
+            # msbuild-sniff-*: a `.xml`-extension file whose root is a genuine
+            # `<Project>` should still get --msbuild via content, not extension.
+            if file_path.name.startswith("msbuild-sniff-"):
                 cmd.append("--auto")
 
             cmd.append(str(file_path))

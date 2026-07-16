@@ -232,6 +232,13 @@ impl XmlElement {
             return transformed;
         }
 
+        // MSBuild-specific transformations (currently: Condition= folding)
+        if opts.msbuild
+            && let Some(transformed) = self.format_msbuild_element(indent, &indent_str, registry)
+        {
+            return transformed;
+        }
+
         let special = opts.special;
 
         // Special handling for elements with loopDataSource attribute

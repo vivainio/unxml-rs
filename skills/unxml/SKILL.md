@@ -32,7 +32,8 @@ cat page.html | unxml --stdin --format html
 
 Each mode rewrites a vocabulary into terser pseudocode. Pass the flag explicitly,
 or use `--auto` to pick by extension (`.xsl`/`.xslt`→xslt, `.sch`→schematron,
-`.xsd`→xsd). An explicit flag always wins over `--auto`.
+`.xsd`→xsd, `.targets`/`.props`/`.csproj`/...→msbuild). An explicit flag always
+wins over `--auto`.
 
 | Flag           | For                                              |
 | -------------- | ------------------------------------------------ |
@@ -40,6 +41,7 @@ or use `--auto` to pick by extension (`.xsl`/`.xslt`→xslt, `.sch`→schematron
 | `--xsd`        | XML Schema                                       |
 | `--schematron` | Schematron rule schemas                          |
 | `--wsdl`       | WSDL 1.1 / SOAP (embedded schema via XSD rules)  |
+| `--msbuild`    | MSBuild `.targets`/`.props`/project files (`Condition=` → `if C:`) |
 | `--special`    | Proprietary business-element rules               |
 | `--auto`       | Pick the mode from each file's extension         |
 
@@ -70,8 +72,9 @@ default-vs-explicit namespace, or sibling order diff cleanly:
 diff <(unxml --canonical a.xml) <(unxml --canonical b.xml)
 ```
 
-In a dialect mode (`--xslt`/`--xsd`/`--wsdl`/`--schematron`) element order is
-significant, so `--canonical` normalises prefixes only and preserves order.
+In a dialect mode (`--xslt`/`--xsd`/`--wsdl`/`--schematron`/`--msbuild`) element
+order is significant, so `--canonical` normalises prefixes only and preserves
+order.
 
 ## Git integration
 

@@ -1,0 +1,9 @@
+// No xmlns, ToolsVersion, or Sdk attribute here (like real modern SDK
+// .targets files) -- only the structural children should trigger the
+// content-based MSBuild sniff under --auto, despite the .xml extension.
+Project(DefaultTargets="Build")
+  if '$(Configuration)' == '':
+    PropertyGroup
+      Configuration = Debug
+  ItemGroup
+    Compile(Include="**/*.cs")

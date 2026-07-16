@@ -182,9 +182,12 @@ contexts:
     - include: line-tail
 
   # A text value after '=' / '==': literal to end of line, no XSD/XPath rules.
+  # MSBuild property assignments land here unquoted (`Foo = $(Bar);$(Baz)`),
+  # so the msbuild-refs rules apply directly, not just inside a string.
   value-tail:
     - match: '$'
       pop: true
+    - include: msbuild-refs
     - match: '"'
       scope: punctuation.definition.string.begin.unxml
       push: dq-string
@@ -219,8 +222,9 @@ contexts:
       scope: keyword.operator.logical.unxml
     - match: '@[\w.:-]+'
       scope: variable.parameter.unxml
-    - match: "'[^']*'"
-      scope: string.quoted.single.unxml
+    - match: "'"
+      scope: punctuation.definition.string.begin.unxml
+      push: sq-string
     - match: '"'
       scope: punctuation.definition.string.begin.unxml
       push: dq-string
@@ -232,6 +236,31 @@ contexts:
       scope: variable.parameter.xpath.unxml
     - match: '\*'
       scope: keyword.operator.unxml
+
+  # MSBuild reference syntax: $(Property), %(Item.Metadata), @(Item). Spliced
+  # into quoted strings and unquoted assignment values, since MSBuild embeds
+  # these in both (`'$(Configuration)'` in a Condition, `$(Foo);$(Bar)` in a
+  # property assignment's RHS). Deliberately non-recursive -- a property
+  # reference containing a nested function call/parens
+  # (`$([MSBuild]::VersionGreaterThanOrEquals($(X), '8.0'))`) won't match as a
+  # whole and falls through unstyled, same as today; the common bare-name case
+  # is the one worth distinguishing from plain string text.
+  msbuild-refs:
+    - match: '(\$\()([\w.]+)(\))'
+      captures:
+        1: punctuation.definition.variable.begin.unxml
+        2: variable.other.readwrite.unxml
+        3: punctuation.definition.variable.end.unxml
+    - match: '(%\()([\w.]+)(\))'
+      captures:
+        1: punctuation.definition.variable.begin.unxml
+        2: variable.other.member.unxml
+        3: punctuation.definition.variable.end.unxml
+    - match: '(@\()([\w.-]+)(\))'
+      captures:
+        1: punctuation.definition.variable.begin.unxml
+        2: variable.other.constant.unxml
+        3: punctuation.definition.variable.end.unxml
 
   attributes:
     - match: '\)'
@@ -266,6 +295,17 @@ contexts:
     - meta_scope: string.quoted.double.unxml
     - match: '&(?:quot|amp|lt|gt|apos);'
       scope: constant.character.escape.unxml
+    - include: msbuild-refs
     - match: '"'
+      scope: punctuation.definition.string.end.unxml
+      pop: true
+
+  # A single-quoted string. MSBuild condition literals (`'$(Configuration)'`)
+  # are the main source of these outside XPath's own '...' literals; either
+  # way the msbuild-refs rules only fire when the sigils are actually present.
+  sq-string:
+    - meta_scope: string.quoted.single.unxml
+    - include: msbuild-refs
+    - match: "'"
       scope: punctuation.definition.string.end.unxml
       pop: true
