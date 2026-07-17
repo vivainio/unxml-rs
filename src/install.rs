@@ -18,7 +18,7 @@ static SKILLS_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/skills");
 /// time so `--install-bat` works from a plain `cargo install` with no
 /// checkout on disk (unlike `editor/install-editor-support.py`, which this
 /// supersedes for the bat half of that script).
-static BAT_SYNTAX: &str = include_str!("../editor/unxml.sublime-syntax");
+pub(crate) static BAT_SYNTAX: &str = include_str!("../editor/unxml.sublime-syntax");
 const BAT_SYNTAX_NAME: &str = "unxml.sublime-syntax";
 
 /// Resolve the user's home directory across platforms (`HOME`, then

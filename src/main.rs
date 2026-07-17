@@ -4,6 +4,7 @@
 mod canonical;
 mod cli;
 mod document;
+mod highlight;
 mod install;
 mod model;
 mod msbuild;
@@ -51,6 +52,12 @@ fn main() -> Result<()> {
         return install::install_bat();
     }
 
+    // Side-channel action: print the --html stylesheet and exit.
+    if cli.html_css {
+        print!("{}", highlight::html_css()?);
+        return Ok(());
+    }
+
     // Side-channel action: wire unxml in as the current repo's XML/HTML diff
     // driver and exit (no input files required).
     if cli.init_git {
@@ -76,14 +83,14 @@ fn main() -> Result<()> {
     };
 
     // Plain XML rendering is the default. Suffix-based mode autodetection is
-    // opt-in via `--auto` (or implied by `--bat`), and only fills in a mode
-    // when the user hasn't already forced one explicitly.
-    let autodetect = (cli.auto || cli.bat) && !opts.has_mode();
+    // opt-in via `--auto` (or implied by `--bat`/`--html`), and only fills in
+    // a mode when the user hasn't already forced one explicitly.
+    let autodetect = (cli.auto || cli.bat || cli.html) && !opts.has_mode();
 
     // Prefixes to hide from element names: the explicit --hide-ns list, plus
-    // (under --auto/--bat) any inferred by sniffing the document type.
+    // (under --auto/--bat/--html) any inferred by sniffing the document type.
     let hide_ns: HashSet<String> = cli.hide_ns.iter().cloned().collect();
-    let sniff = cli.auto || cli.bat;
+    let sniff = cli.auto || cli.bat || cli.html;
 
     // The cross-cutting options shared by every input. The per-file mode
     // (`file_opts`) is passed separately because it can vary under `--auto`.
@@ -113,7 +120,13 @@ fn main() -> Result<()> {
         let mut stdin_opts = opts.clone();
         stdin_opts.collapse = collapse.clone();
         match process_stdin(&stdin_opts, &cfg) {
-            Ok(output) => emit(&output, cli.bat),
+            Ok(output) => {
+                if cli.html {
+                    print!("{}", highlight::html_page(&output)?);
+                } else {
+                    emit(&output, cli.bat);
+                }
+            }
             Err(e) => {
                 eprintln!("Error processing stdin: {e}");
                 return Err(e);
@@ -205,6 +218,10 @@ fn main() -> Result<()> {
         }
     }
 
-    emit(&combined, cli.bat);
+    if cli.html {
+        print!("{}", highlight::html_page(&combined)?);
+    } else {
+        emit(&combined, cli.bat);
+    }
     Ok(())
 }
