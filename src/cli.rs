@@ -65,6 +65,31 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) bat: bool,
 
+    /// Render output as syntax-highlighted HTML instead of plain text
+    ///
+    /// Uses the same bundled Sublime grammar as --bat, via `syntect` — no
+    /// `bat` or Python required. Implies --auto. Writes a standalone page to
+    /// stdout that links an external `unxml.css`; generate that once with
+    /// --html-css and keep both files in the same directory.
+    #[arg(long, conflicts_with = "bat")]
+    pub(crate) html: bool,
+
+    /// Print the stylesheet `--html` pages link as `unxml.css`, then exit
+    ///
+    /// e.g. `unxml --html-css > unxml.css`. Only needs regenerating if the
+    /// bundled highlighting theme changes.
+    #[arg(long)]
+    pub(crate) html_css: bool,
+
+    /// With --html, embed the stylesheet inline instead of linking `unxml.css`
+    ///
+    /// Produces one fully self-contained HTML file with no sibling
+    /// stylesheet to keep alongside it — handy for a one-off page shared or
+    /// moved on its own. Without this, --html links `unxml.css`, which you
+    /// generate once with --html-css and reuse across every page.
+    #[arg(long, requires = "html")]
+    pub(crate) html_embed_css: bool,
+
     /// Hide one or more namespace prefixes from element and attribute names
     ///
     /// Cuts noise, e.g. `--hide-ns cbc,cac`. Repeatable and comma-separated;
