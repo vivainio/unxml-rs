@@ -175,10 +175,9 @@ impl XmlElement {
                 // `as` type becomes a `-> T` result annotation.
                 if let Some(match_val) = self.attributes.get("match") {
                     result.push_str(&format!("{indent_str}match {match_val}"));
-                } else if let Some(name_val) = self.attributes.get("name") {
-                    result.push_str(&format!("{indent_str}template {name_val}"));
                 } else {
-                    return None;
+                    let name_val = self.attributes.get("name")?;
+                    result.push_str(&format!("{indent_str}template {name_val}"));
                 }
                 let folded = self.push_signature_tail(&mut result, indent, &["match", "name"]);
                 result.push_str(":\n");

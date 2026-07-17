@@ -402,10 +402,9 @@ impl XmlElement {
             "group" | "attributeGroup" => {
                 if let Some(r) = self.attributes.get("ref") {
                     result.push_str(&format!("{indent_str}{local} ref {r}{occurs}\n"));
-                } else if let Some(n) = self.attributes.get("name") {
-                    result.push_str(&format!("{indent_str}{local} {n}\n"));
                 } else {
-                    return None;
+                    let n = self.attributes.get("name")?;
+                    result.push_str(&format!("{indent_str}{local} {n}\n"));
                 }
                 let inner_indent = "  ".repeat(indent + 1);
                 for child in &self.children {
