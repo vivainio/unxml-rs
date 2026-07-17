@@ -122,7 +122,7 @@ fn main() -> Result<()> {
         match process_stdin(&stdin_opts, &cfg) {
             Ok(output) => {
                 if cli.html {
-                    print!("{}", highlight::html_page(&output)?);
+                    print!("{}", highlight::html_page(&output, cli.html_embed_css)?);
                 } else {
                     emit(&output, cli.bat);
                 }
@@ -219,7 +219,7 @@ fn main() -> Result<()> {
     }
 
     if cli.html {
-        print!("{}", highlight::html_page(&combined)?);
+        print!("{}", highlight::html_page(&combined, cli.html_embed_css)?);
     } else {
         emit(&combined, cli.bat);
     }

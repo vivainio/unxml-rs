@@ -39,8 +39,10 @@ pre.unxml {
 ";
 
 /// Render `body` (already-processed `unxml` output) as a standalone HTML
-/// page with classed spans, linking the stylesheet `--html-css` produces.
-pub(crate) fn html_page(body: &str) -> Result<String> {
+/// page with classed spans. With `embed_css`, the stylesheet `--html-css`
+/// would otherwise produce is inlined in a `<style>` block instead of
+/// linked as `unxml.css`, so the page has no sibling file to keep with it.
+pub(crate) fn html_page(body: &str, embed_css: bool) -> Result<String> {
     let mut builder = SyntaxSetBuilder::new();
     builder.add(
         SyntaxDefinition::load_from_str(BAT_SYNTAX, true, None)
@@ -60,6 +62,12 @@ pub(crate) fn html_page(body: &str) -> Result<String> {
     }
     let spans = generator.finalize();
 
+    let stylesheet = if embed_css {
+        format!("<style>\n{}</style>", html_css()?)
+    } else {
+        "<link rel=\"stylesheet\" href=\"unxml.css\">".to_string()
+    };
+
     Ok(format!(
         "<!doctype html>\n\
          <html lang=\"en\">\n\
@@ -67,7 +75,7 @@ pub(crate) fn html_page(body: &str) -> Result<String> {
          <meta charset=\"utf-8\">\n\
          <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
          <title>unxml</title>\n\
-         <link rel=\"stylesheet\" href=\"unxml.css\">\n\
+         {stylesheet}\n\
          </head>\n\
          <body>\n\
          <pre class=\"unxml\">{spans}</pre>\n\
