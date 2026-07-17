@@ -18,11 +18,11 @@ cargo install --path .
 
 ### Testing Commands
 ```bash
-# Run the comprehensive test suite
-python test-suite.py
+# Run the comprehensive test suite (unit tests + golden-file e2e test)
+cargo test
 
-# Update expected outputs after intentional changes
-python test-suite.py --update
+# Update golden files after intentional output changes
+UNXML_TEST_UPDATE=1 cargo test --test e2e_test
 
 # Run specific test on single file
 ./target/release/unxml test-input/simple.xml
@@ -81,12 +81,12 @@ cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
 
 ### Test Infrastructure
 
-**Test Suite (`test-suite.py`):**
-- Comprehensive Python test runner that builds binaries and runs regression tests
-- Compares outputs against expected results in `expected-output/` directory
-- Supports `--update` mode to refresh expected outputs
-- Handles both XML and HTML test files in `test-input/` directory
-- Automatically detects and uses `--special` flag for `special-elements.xml`
+**E2E Golden-File Test (`tests/e2e_test.rs`):**
+- Runs the built `unxml` binary over every fixture in `test-input/` (XML, HTML, XSLT, Schematron, XSD, WSDL, MSBuild)
+- Compares stdout against expected results in `expected-output/` directory
+- Supports `UNXML_TEST_UPDATE=1` env var to refresh expected outputs
+- Applies the same per-filename flag rules as the CLI (e.g. `--special` for `special-elements.xml`, `--xslt` for `.xsl`)
+- Runs as part of `cargo test`, so it's covered by CI automatically
 
 **Test Files:**
 - `test-input/`: Sample XML and HTML files covering various scenarios
@@ -95,9 +95,9 @@ cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
 ## Development Workflow
 
 1. **Make Code Changes**: Edit `src/main.rs` or related files
-2. **Run Tests**: Execute `python test-suite.py` to check for regressions
+2. **Run Tests**: Execute `cargo test` to check for regressions
 3. **Code Quality**: Run `cargo fmt` and `cargo clippy` before committing
-4. **Update Tests**: Use `python test-suite.py --update` if output changes are intentional
+4. **Update Tests**: Use `UNXML_TEST_UPDATE=1 cargo test --test e2e_test` if output changes are intentional
 
 ## Key Dependencies
 
@@ -112,4 +112,4 @@ cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
 - `src/main.rs`: Main parser implementation
 - `test-input/`: Test files (XML, HTML)
 - `expected-output/`: Expected output files for regression testing
-- `test-suite.py`: Test runner script
+- `tests/e2e_test.rs`: Golden-file e2e test runner
