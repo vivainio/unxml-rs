@@ -58,6 +58,18 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) auto: bool,
 
+    /// Cancel the --auto that --bat/--html/--cat otherwise imply
+    ///
+    /// Those three flags default to acting as if --auto were also given
+    /// (extension-based mode detection, plus sniffing the document type to
+    /// infer namespace hiding and wrapper-chain folding). This cancels that,
+    /// so e.g. `--html --no-auto` renders the exact literal output `unxml`
+    /// alone would (no mode, no hidden prefixes) while still highlighting it
+    /// via --html/--cat's native grammar. Has no effect together with an
+    /// explicit --auto.
+    #[arg(long)]
+    pub(crate) no_auto: bool,
+
     /// Pipe the rendered output through `bat` for a syntax-highlighted, paged display
     ///
     /// Runs `bat -l unxml`. Implies --auto. Falls back to plain stdout if
@@ -97,6 +109,17 @@ pub(crate) struct Cli {
     /// generate once with --html-css and reuse across every page.
     #[arg(long, requires = "html")]
     pub(crate) html_embed_css: bool,
+
+    /// With --html or --cat, highlight the original source instead of unxml's output
+    ///
+    /// Skips the unxml transform: the file is read as-is and syntax-
+    /// highlighted as XML or HTML (same format detection as normal
+    /// processing) using syntect's own bundled grammar for that language,
+    /// not the unxml one. A dependency-free stand-in for `bat -l xml`
+    /// piped through `ansi2html` when you just want the original source
+    /// highlighted, e.g. next to unxml's output. Requires --html or --cat.
+    #[arg(long)]
+    pub(crate) raw: bool,
 
     /// Hide one or more namespace prefixes from element and attribute names
     ///

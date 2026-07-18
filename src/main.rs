@@ -20,13 +20,14 @@ mod xslt;
 
 use std::collections::HashSet;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use glob::glob;
 
 use crate::cli::Cli;
 use crate::document::detect_mode_from_ext;
 use crate::model::{Collapse, FormatOpts};
+use crate::parse::{InputFormat, detect_format, read_file_lenient};
 use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
@@ -64,6 +65,10 @@ fn main() -> Result<()> {
         return install::init_git();
     }
 
+    if cli.raw && !(cli.html || cli.cat) {
+        return Err(anyhow::anyhow!("--raw requires --html or --cat"));
+    }
+
     // `--collapse` is orthogonal to the processing mode, so it is applied to
     // every file's opts below (after --auto picks a mode), not baked in here.
     let collapse = match cli.collapse {
@@ -82,15 +87,21 @@ fn main() -> Result<()> {
         collapse: Collapse::Off,
     };
 
-    // Plain XML rendering is the default. Suffix-based mode autodetection is
-    // opt-in via `--auto` (or implied by `--bat`/`--html`), and only fills in
-    // a mode when the user hasn't already forced one explicitly.
-    let autodetect = (cli.auto || cli.bat || cli.html || cli.cat) && !opts.has_mode();
+    // Plain XML rendering is the default. Suffix-based mode autodetection and
+    // document-type sniffing are opt-in via `--auto`, which `--bat`/`--html`/
+    // `--cat` also imply unless `--no-auto` cancels that implication (used
+    // when one of those wants native highlighting on the exact literal,
+    // non-auto output).
+    let auto = cli.auto || ((cli.bat || cli.html || cli.cat) && !cli.no_auto);
+
+    // Suffix-based mode autodetection only fills in a mode when the user
+    // hasn't already forced one explicitly.
+    let autodetect = auto && !opts.has_mode();
 
     // Prefixes to hide from element names: the explicit --hide-ns list, plus
-    // (under --auto/--bat/--html/--cat) any inferred by sniffing the document type.
+    // (under --auto) any inferred by sniffing the document type.
     let hide_ns: HashSet<String> = cli.hide_ns.iter().cloned().collect();
-    let sniff = cli.auto || cli.bat || cli.html || cli.cat;
+    let sniff = auto;
 
     // The cross-cutting options shared by every input. The per-file mode
     // (`file_opts`) is passed separately because it can vary under `--auto`.
@@ -114,6 +125,28 @@ fn main() -> Result<()> {
             return Err(anyhow::anyhow!(
                 "Cannot specify both --stdin and file arguments"
             ));
+        }
+
+        // --raw skips the unxml transform entirely: highlight the stdin
+        // text as-is (XML or HTML, same detection as normal processing).
+        if cli.raw {
+            let mut bytes = Vec::new();
+            std::io::Read::read_to_end(&mut std::io::stdin(), &mut bytes)
+                .context("Failed to read from stdin")?;
+            let content = match String::from_utf8(bytes) {
+                Ok(text) => text,
+                Err(e) => e.into_bytes().into_iter().map(|b| b as char).collect(),
+            };
+            let is_html = detect_format(&content, "stdin") == InputFormat::Html;
+            if cli.html {
+                print!(
+                    "{}",
+                    highlight::html_page_raw(&content, is_html, cli.html_embed_css)?
+                );
+            } else {
+                print!("{}", highlight::ansi_raw(&content, is_html)?);
+            }
+            return Ok(());
         }
 
         // Process stdin input (no path, so nothing to autodetect from).
@@ -185,6 +218,36 @@ fn main() -> Result<()> {
         return Err(anyhow::anyhow!(
             "No files found matching the specified patterns."
         ));
+    }
+
+    // --raw skips the unxml transform entirely: read each file's original
+    // text and highlight it as-is (XML or HTML, picked from the first file).
+    if cli.raw {
+        let multiple = all_files.len() > 1;
+        let mut combined = String::new();
+        let mut is_html = false;
+        for (i, file_path) in all_files.iter().enumerate() {
+            if i > 0 {
+                combined.push('\n');
+            }
+            let content = read_file_lenient(file_path)?;
+            if i == 0 {
+                is_html = detect_format(&content, file_path) == InputFormat::Html;
+            }
+            if multiple {
+                combined.push_str(&format!("<!-- FILE: {file_path} -->\n"));
+            }
+            combined.push_str(&content);
+        }
+        if cli.html {
+            print!(
+                "{}",
+                highlight::html_page_raw(&combined, is_html, cli.html_embed_css)?
+            );
+        } else {
+            print!("{}", highlight::ansi_raw(&combined, is_html)?);
+        }
+        return Ok(());
     }
 
     // Process each file, accumulating output so it can be sent to the pager

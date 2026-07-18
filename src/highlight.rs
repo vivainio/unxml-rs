@@ -32,6 +32,26 @@ fn syntax_set() -> Result<SyntaxSet> {
     Ok(builder.build())
 }
 
+/// Syntect's own bundled syntax set (the `default-syntaxes` feature already
+/// pulled in by `default-fancy`), which happens to include general-purpose
+/// "XML" and "HTML" grammars alongside hundreds of others never referenced
+/// here. Used only by `--raw`, to highlight the original, untransformed
+/// source next to unxml's output — no `bat`/`ansi2html` round-trip needed.
+fn raw_syntax_set() -> SyntaxSet {
+    SyntaxSet::load_defaults_newlines()
+}
+
+/// Look up `name` ("UnXML", "XML", or "HTML") in `syntax_set`, for callers
+/// that already picked which grammar they want.
+fn find_syntax<'a>(
+    syntax_set: &'a SyntaxSet,
+    name: &str,
+) -> Result<&'a syntect::parsing::SyntaxReference> {
+    syntax_set
+        .find_syntax_by_name(name)
+        .with_context(|| format!("Bundled syntax set does not define a '{name}' syntax"))
+}
+
 /// Page chrome shared by every `--html` render: dark background, monospace
 /// font, and the `pre.unxml` white-space handling the highlighted output
 /// needs. Kept separate from the theme's own token-color rules so it never
@@ -52,25 +72,27 @@ pre.unxml {
 }
 ";
 
-/// Render `body` (already-processed `unxml` output) as a standalone HTML
-/// page with classed spans. With `embed_css`, the stylesheet `--html-css`
-/// would otherwise produce is inlined in a `<style>` block instead of
-/// linked as `unxml.css`, so the page has no sibling file to keep with it.
-pub(crate) fn html_page(body: &str, embed_css: bool) -> Result<String> {
-    let syntax_set = syntax_set()?;
-    let syntax = syntax_set
-        .find_syntax_by_name("UnXML")
-        .context("Bundled grammar does not define an 'UnXML' syntax")?;
-
+/// Highlight `body` through `syntax` into classed HTML spans. Shared by the
+/// unxml-grammar and raw-XML/HTML paths, which differ only in which
+/// `SyntaxSet`/`SyntaxReference` they look up.
+fn highlight_spans(
+    syntax_set: &SyntaxSet,
+    syntax: &syntect::parsing::SyntaxReference,
+    body: &str,
+) -> Result<String> {
     let mut generator =
-        ClassedHTMLGenerator::new_with_class_style(syntax, &syntax_set, ClassStyle::Spaced);
+        ClassedHTMLGenerator::new_with_class_style(syntax, syntax_set, ClassStyle::Spaced);
     for line in LinesWithEndings::from(body) {
         generator
             .parse_html_for_line_which_includes_newline(line)
-            .context("Failed to syntax-highlight the rendered output")?;
+            .context("Failed to syntax-highlight the source")?;
     }
-    let spans = generator.finalize();
+    Ok(generator.finalize())
+}
 
+/// Wrap already-highlighted `spans` in the standalone page chrome shared by
+/// `html_page` and `html_page_raw`.
+fn page(spans: &str, embed_css: bool) -> Result<String> {
     let stylesheet = if embed_css {
         format!("<style>\n{}</style>", html_css()?)
     } else {
@@ -93,28 +115,66 @@ pub(crate) fn html_page(body: &str, embed_css: bool) -> Result<String> {
     ))
 }
 
-/// Render `body` as ANSI-escaped text for a terminal: same bundled
-/// grammar/theme as `--html`, but escaped straight to stdout with no pager
-/// and no external `bat`/`batcat` process — just `cat`, in color.
-pub(crate) fn ansi(body: &str) -> Result<String> {
+/// Render `body` (already-processed `unxml` output) as a standalone HTML
+/// page with classed spans. With `embed_css`, the stylesheet `--html-css`
+/// would otherwise produce is inlined in a `<style>` block instead of
+/// linked as `unxml.css`, so the page has no sibling file to keep with it.
+pub(crate) fn html_page(body: &str, embed_css: bool) -> Result<String> {
     let syntax_set = syntax_set()?;
-    let syntax = syntax_set
-        .find_syntax_by_name("UnXML")
-        .context("Bundled grammar does not define an 'UnXML' syntax")?;
+    let syntax = find_syntax(&syntax_set, "UnXML")?;
+    page(&highlight_spans(&syntax_set, syntax, body)?, embed_css)
+}
+
+/// Like `html_page`, but for `--raw`: highlights `source` as-is (no unxml
+/// transform) using syntect's bundled XML or HTML grammar instead of the
+/// unxml one. Shares the same `unxml.css`/`--html-css` palette, since that
+/// stylesheet is keyed by the theme's generic TextMate scope names
+/// (comment, string, keyword, entity.name.tag, ...) rather than anything
+/// specific to the unxml grammar.
+pub(crate) fn html_page_raw(source: &str, is_html: bool, embed_css: bool) -> Result<String> {
+    let syntax_set = raw_syntax_set();
+    let syntax = find_syntax(&syntax_set, if is_html { "HTML" } else { "XML" })?;
+    page(&highlight_spans(&syntax_set, syntax, source)?, embed_css)
+}
+
+/// Highlight `body` through `syntax` as ANSI-escaped text for a terminal.
+/// Shared by `ansi` and `ansi_raw`.
+fn highlight_ansi(
+    syntax_set: &SyntaxSet,
+    syntax: &syntect::parsing::SyntaxReference,
+    body: &str,
+) -> Result<String> {
     let theme = &ThemeSet::load_defaults().themes[THEME_NAME];
     let mut highlighter = HighlightLines::new(syntax, theme);
 
     let mut out = String::new();
     for line in LinesWithEndings::from(body) {
         let ranges = highlighter
-            .highlight_line(line, &syntax_set)
-            .context("Failed to syntax-highlight the rendered output")?;
+            .highlight_line(line, syntax_set)
+            .context("Failed to syntax-highlight the source")?;
         // No background escapes (bat doesn't paint full-width either); reset
         // at the very end so color never leaks into the shell prompt.
         out.push_str(&as_24_bit_terminal_escaped(&ranges[..], false));
     }
     out.push_str("\x1b[0m");
     Ok(out)
+}
+
+/// Render `body` as ANSI-escaped text for a terminal: same bundled
+/// grammar/theme as `--html`, but escaped straight to stdout with no pager
+/// and no external `bat`/`batcat` process — just `cat`, in color.
+pub(crate) fn ansi(body: &str) -> Result<String> {
+    let syntax_set = syntax_set()?;
+    let syntax = find_syntax(&syntax_set, "UnXML")?;
+    highlight_ansi(&syntax_set, syntax, body)
+}
+
+/// Like `ansi`, but for `--raw`: highlights `source` as-is using syntect's
+/// bundled XML or HTML grammar instead of the unxml one.
+pub(crate) fn ansi_raw(source: &str, is_html: bool) -> Result<String> {
+    let syntax_set = raw_syntax_set();
+    let syntax = find_syntax(&syntax_set, if is_html { "HTML" } else { "XML" })?;
+    highlight_ansi(&syntax_set, syntax, source)
 }
 
 /// The stylesheet every `--html` page links as `unxml.css`: per-scope token
