@@ -3,17 +3,19 @@
 HTML for the Zensical demo site (https://github.com/vivainio/unxml-demos).
 
 Fully fetch-driven: the DEMOS manifest below lists canonical source URLs.
-Each source is downloaded into a gitignored cache (demo/.cache/) on demand,
-rendered with the local `unxml` binary, highlighted by `bat` (using the
-`unxml` grammar) piped to `ansi2html`, and written as a self-contained
-full-page HTML document under docs/demos/<category>/ in the site repo. A
-themed Markdown index links to them, grouped by category. Nothing large is
+Each source is downloaded into a gitignored cache (demo/.cache/) on demand
+and rendered with the local `unxml` binary. The `unxml` output itself is
+highlighted natively via `unxml --html` (syntect, no external process); the
+original-XML source shown beside it in the inline gallery samples is still
+highlighted via `bat -l xml` piped to `ansi2html`, since `--html` only knows
+the `unxml` grammar. Each full-page demo is written as a self-contained HTML
+document under docs/demos/<category>/ in the site repo, and a themed
+Markdown index links to them, grouped by category. Nothing large is
 vendored — re-running fetches anything missing from the cache.
 
 Requirements:
   - the release binary built: `cargo build --release` (in unxml-rs)
-  - `bat` on PATH with the unxml grammar installed
-    (run `python3 editor/install-editor-support.py` first)
+  - `bat` on PATH (built-in `xml` support only — no grammar install needed)
   - `pip install ansi2html`
   - network access (first run, or after clearing the cache)
 
@@ -128,24 +130,10 @@ INLINE_COMPARE: list[tuple[str, str, str, list[str], list[str]]] = [
 SOURCE_LABEL = {"xslt": "XSLT source", "auto": "XML source"}
 SITE_REPO_BLOB = "https://github.com/vivainio/unxml-demos/blob/main"
 
-# Page chrome shared by every standalone demo: a dark, edge-to-edge,
-# horizontally-scrolling code surface plus the floating "back" link. Appended
-# to ansi2html's colour classes in one shared stylesheet (demos/ansi.css).
+# Floating "back" link for every standalone demo page. The rest of the page
+# chrome (dark background, monospace pre, horizontal scroll) now ships in
+# `unxml --html-css` itself, so this is all the demo site adds on top.
 CHROME_CSS = """
-html, body { margin: 0; background: #0d1117; }
-pre.unxml {
-  margin: 0;
-  padding: 1.25rem 1.5rem;
-  color: #c9d1d9;
-  font: 13px/1.5 ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-  white-space: pre;
-  tab-size: 2;
-}
-/* ansi2html's own palette sets white-space: pre-wrap/word-wrap: break-word on
-   this span, which overrides the inherited `pre` above and lets long lines
-   (e.g. a folded --auto chain) wrap without their indent, making the next
-   sibling line look mis-nested. Force it back to the ancestor's behaviour. */
-pre.unxml .ansi2html-content { white-space: inherit; word-wrap: normal; }
 .unxml-back {
   position: fixed; top: 0; right: 0;
   padding: 0.4rem 0.8rem; margin: 0.5rem;
@@ -196,7 +184,7 @@ PAGE = """<!doctype html>
 </head>
 <body>
 <a class="unxml-back" href="{back}">← all demos</a>
-<pre class="unxml"><span class="ansi2html-content">{fragment}</span></pre>
+<pre class="unxml">{fragment}</pre>
 </body>
 </html>
 """
@@ -238,6 +226,38 @@ def render_args(flags: list[str], src: Path) -> str:
 def render(mode: str, src: Path) -> str:
     """Run `unxml --<mode> src` and return the rendered .unxml text."""
     return render_args([f"--{mode}"], src)
+
+
+_PRE_RE = re.compile(r'<pre class="unxml">(.*)</pre>\n</body>', re.DOTALL)
+
+
+def render_html(flags: list[str], src: Path) -> str:
+    """Run `unxml <flags...> --html src` and return the classed spans inside
+    its `<pre class="unxml">`, dropping the standalone-page chrome around it."""
+    page = subprocess.run(
+        [str(UNXML_BIN), *flags, "--html", str(src)],
+        capture_output=True, text=True, check=True,
+    ).stdout
+    match = _PRE_RE.search(page)
+    if not match:
+        sys.exit(f"unxml --html output for {src} did not contain the expected <pre> block")
+    return match.group(1)
+
+
+_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def compact_html(fragment: str) -> str:
+    """Like compact(), but operates after highlighting: keeps only lines whose
+    text content (HTML tags stripped) is non-blank."""
+    return "\n".join(ln for ln in fragment.splitlines() if _TAG_RE.sub("", ln).strip())
+
+
+def html_css() -> str:
+    """Run `unxml --html-css` and return the bundled token-colour stylesheet."""
+    return subprocess.run(
+        [str(UNXML_BIN), "--html-css"], capture_output=True, text=True, check=True,
+    ).stdout
 
 
 def highlight(bat: str, text: str, lang: str = "unxml") -> str:
@@ -370,8 +390,8 @@ def main() -> int:
     )
     ap.add_argument(
         "--regen-css", action="store_true",
-        help="regenerate the shared ansi.css palette (only needed when the bat "
-             "theme, the unxml grammar, or bat itself changes)",
+        help="regenerate the shared ansi.css palette (only needed when unxml's "
+             "bundled highlighting theme changes)",
     )
     args = ap.parse_args()
 
@@ -409,7 +429,7 @@ def main() -> int:
         src_bytes = cache_path.read_bytes()
         src_lines = src_bytes.count(b"\n")
         text = render(mode, cache_path)
-        fragment = conv.convert(highlight(bat, text), full=False)
+        fragment = render_html([f"--{mode}"], cache_path)
         out_slug = f"{subdir}/{slug}"
         out_lines = text.count("\n")
         out_bytes = len(text.encode("utf-8"))
@@ -431,7 +451,7 @@ def main() -> int:
         src_text = src_path.read_text(encoding="utf-8")
         out_text = render(mode, src_path)
         src_frag = conv.convert(highlight(bat, compact(src_text), lang="xml"), full=False)
-        out_frag = conv.convert(highlight(bat, compact(out_text)), full=False)
+        out_frag = compact_html(render_html([f"--{mode}"], src_path))
         inline_rendered.append((
             section, title, f"{SITE_REPO_BLOB}/{rel}",
             SOURCE_LABEL.get(mode, "source"), src_frag, f"unxml --{mode}", out_frag,
@@ -448,8 +468,15 @@ def main() -> int:
             continue
         left_text = render_args(lflags, src_path)
         right_text = render_args(rflags, src_path)
-        left_frag = conv.convert(highlight(bat, compact(left_text)), full=False)
-        right_frag = conv.convert(highlight(bat, compact(right_text)), full=False)
+        # `--html` implies --auto-style namespace sniffing whenever no
+        # explicit mode flag is already set (see cli.rs), so an empty flag
+        # list can't be highlighted via --html without picking up sniffing
+        # it shouldn't have. Fall back to bat/ansi2html for that case, which
+        # highlights the already-rendered plain text verbatim.
+        left_frag = (compact_html(render_html(lflags, src_path)) if lflags
+                     else conv.convert(highlight(bat, compact(left_text)), full=False))
+        right_frag = (compact_html(render_html(rflags, src_path)) if rflags
+                      else conv.convert(highlight(bat, compact(right_text)), full=False))
         inline_rendered.append((
             section, title, f"{SITE_REPO_BLOB}/{rel}",
             " ".join(["unxml", *lflags]), left_frag,
@@ -459,20 +486,27 @@ def main() -> int:
         print(f"  inline compare {rel} "
               f"({left_text.count(chr(10))}->{right_text.count(chr(10))} lines)")
 
-    # Colour palette from ansi2html (deduped to the ~260-rule set), shared by
-    # the full-page ansi.css and the scoped inline <style>. produce_headers()
-    # emits one rule line per span *occurrence*; dedupe order-preserving.
+    # Token-colour palette for unxml output, straight from the binary — it
+    # already bundles page chrome (dark background, monospace pre) matching
+    # what this script used to hand-roll for the ansi2html path.
+    unxml_palette = html_css()
+
+    # ansi2html's palette (deduped to the ~260-rule set) is only still needed
+    # for the XML-source columns in the inline gallery; produce_headers()
+    # emits one rule line per span *occurrence*, so dedupe order-preserving.
     headers = conv.produce_headers().replace('<style type="text/css">', "").replace("</style>", "")
     seen: set[str] = set()
-    palette = "\n".join(
+    ansi_palette = "\n".join(
         ln for ln in headers.splitlines()
         if ln.strip() and not (ln in seen or seen.add(ln))
     )
 
     # Created-once shared stylesheet for full-page demos: palette plus chrome.
+    # Full pages are pure unxml --html output now, so no ansi2html classes
+    # belong here.
     if args.regen_css or not css_path.exists():
         existed = css_path.exists()
-        css_path.write_text(palette + "\n" + CHROME_CSS, encoding="utf-8")
+        css_path.write_text(unxml_palette + "\n" + CHROME_CSS, encoding="utf-8")
         print(f"  {'regenerated' if existed else 'generated'} {css_path.relative_to(site)}")
     else:
         # Tripwire: warn if a page references a class the committed css lacks.
@@ -497,11 +531,15 @@ def main() -> int:
         )
         entries.append((heading, f"{out_slug}.html", title, url, sl, sb, ol, ob))
 
-    # Scoped palette + layout for the inline side-by-side samples, injected as
-    # a self-contained <style> so it can't bleed into the surrounding theme.
+    # Scoped palettes + layout for the inline side-by-side samples, injected
+    # as a self-contained <style> so nothing bleeds into the surrounding
+    # theme. Both palettes are needed here: unxml's for the output columns,
+    # ansi2html's for the XML-source columns. INLINE_CSS comes last so its
+    # layout rules win the cascade over either palette's own chrome.
     inline_style = ""
     if inline_rendered:
-        inline_style = ("<style>\n" + scope_css(palette, ".unxml-demo").strip()
+        inline_style = ("<style>\n" + scope_css(unxml_palette, ".unxml-demo").strip()
+                        + "\n" + scope_css(ansi_palette, ".unxml-demo").strip()
                         + "\n" + INLINE_CSS.strip() + "\n</style>")
 
     (demos_dir / "index.md").write_text(
