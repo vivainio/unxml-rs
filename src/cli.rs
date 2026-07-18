@@ -58,6 +58,18 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) auto: bool,
 
+    /// Cancel the --auto that --bat/--html/--cat otherwise imply
+    ///
+    /// Those three flags default to acting as if --auto were also given
+    /// (extension-based mode detection, plus sniffing the document type to
+    /// infer namespace hiding and wrapper-chain folding). This cancels that,
+    /// so e.g. `--html --no-auto` renders the exact literal output `unxml`
+    /// alone would (no mode, no hidden prefixes) while still highlighting it
+    /// via --html/--cat's native grammar. Has no effect together with an
+    /// explicit --auto.
+    #[arg(long)]
+    pub(crate) no_auto: bool,
+
     /// Pipe the rendered output through `bat` for a syntax-highlighted, paged display
     ///
     /// Runs `bat -l unxml`. Implies --auto. Falls back to plain stdout if

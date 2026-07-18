@@ -87,15 +87,21 @@ fn main() -> Result<()> {
         collapse: Collapse::Off,
     };
 
-    // Plain XML rendering is the default. Suffix-based mode autodetection is
-    // opt-in via `--auto` (or implied by `--bat`/`--html`), and only fills in
-    // a mode when the user hasn't already forced one explicitly.
-    let autodetect = (cli.auto || cli.bat || cli.html || cli.cat) && !opts.has_mode();
+    // Plain XML rendering is the default. Suffix-based mode autodetection and
+    // document-type sniffing are opt-in via `--auto`, which `--bat`/`--html`/
+    // `--cat` also imply unless `--no-auto` cancels that implication (used
+    // when one of those wants native highlighting on the exact literal,
+    // non-auto output).
+    let auto = cli.auto || ((cli.bat || cli.html || cli.cat) && !cli.no_auto);
+
+    // Suffix-based mode autodetection only fills in a mode when the user
+    // hasn't already forced one explicitly.
+    let autodetect = auto && !opts.has_mode();
 
     // Prefixes to hide from element names: the explicit --hide-ns list, plus
-    // (under --auto/--bat/--html/--cat) any inferred by sniffing the document type.
+    // (under --auto) any inferred by sniffing the document type.
     let hide_ns: HashSet<String> = cli.hide_ns.iter().cloned().collect();
-    let sniff = cli.auto || cli.bat || cli.html || cli.cat;
+    let sniff = auto;
 
     // The cross-cutting options shared by every input. The per-file mode
     // (`file_opts`) is passed separately because it can vary under `--auto`.
