@@ -1,22 +1,36 @@
-//! `--html` / `--html-css`: render output as syntax-highlighted HTML using
-//! `syntect` and the same bundled Sublime grammar `--install-bat` registers
-//! with `bat` — no external `bat` or Python step required.
+//! `--html` / `--html-css` / `--cat`: render output as syntax-highlighted
+//! HTML or ANSI-escaped terminal text using `syntect` and the same bundled
+//! Sublime grammar `--install-bat` registers with `bat` — no external `bat`
+//! or Python step required.
 //!
 //! HTML gets classed spans (`ClassStyle::Spaced`) rather than inline
 //! `style="..."` colors, so a single `--html-css` stylesheet can be shared
 //! across every `--html` page instead of being duplicated into each one.
 
 use anyhow::{Context, Result};
+use syntect::easy::HighlightLines;
 use syntect::highlighting::ThemeSet;
 use syntect::html::{ClassStyle, ClassedHTMLGenerator, css_for_theme_with_class_style};
-use syntect::parsing::{SyntaxDefinition, SyntaxSetBuilder};
-use syntect::util::LinesWithEndings;
+use syntect::parsing::{SyntaxDefinition, SyntaxSet, SyntaxSetBuilder};
+use syntect::util::{LinesWithEndings, as_24_bit_terminal_escaped};
 
 use crate::install::BAT_SYNTAX;
 
 /// One of syntect's bundled themes; only its color assignments per scope are
 /// used (via `--html-css`), not anything shipped by `bat` itself.
 const THEME_NAME: &str = "base16-ocean.dark";
+
+/// Build a `SyntaxSet` containing just the bundled `unxml` grammar. Shared by
+/// `html_page` and `ansi` — each still looks up "UnXML" itself since a
+/// `SyntaxReference` borrows from the set that produced it.
+fn syntax_set() -> Result<SyntaxSet> {
+    let mut builder = SyntaxSetBuilder::new();
+    builder.add(
+        SyntaxDefinition::load_from_str(BAT_SYNTAX, true, None)
+            .context("Failed to parse the bundled unxml.sublime-syntax grammar")?,
+    );
+    Ok(builder.build())
+}
 
 /// Page chrome shared by every `--html` render: dark background, monospace
 /// font, and the `pre.unxml` white-space handling the highlighted output
@@ -43,12 +57,7 @@ pre.unxml {
 /// would otherwise produce is inlined in a `<style>` block instead of
 /// linked as `unxml.css`, so the page has no sibling file to keep with it.
 pub(crate) fn html_page(body: &str, embed_css: bool) -> Result<String> {
-    let mut builder = SyntaxSetBuilder::new();
-    builder.add(
-        SyntaxDefinition::load_from_str(BAT_SYNTAX, true, None)
-            .context("Failed to parse the bundled unxml.sublime-syntax grammar")?,
-    );
-    let syntax_set = builder.build();
+    let syntax_set = syntax_set()?;
     let syntax = syntax_set
         .find_syntax_by_name("UnXML")
         .context("Bundled grammar does not define an 'UnXML' syntax")?;
@@ -82,6 +91,30 @@ pub(crate) fn html_page(body: &str, embed_css: bool) -> Result<String> {
          </body>\n\
          </html>\n"
     ))
+}
+
+/// Render `body` as ANSI-escaped text for a terminal: same bundled
+/// grammar/theme as `--html`, but escaped straight to stdout with no pager
+/// and no external `bat`/`batcat` process — just `cat`, in color.
+pub(crate) fn ansi(body: &str) -> Result<String> {
+    let syntax_set = syntax_set()?;
+    let syntax = syntax_set
+        .find_syntax_by_name("UnXML")
+        .context("Bundled grammar does not define an 'UnXML' syntax")?;
+    let theme = &ThemeSet::load_defaults().themes[THEME_NAME];
+    let mut highlighter = HighlightLines::new(syntax, theme);
+
+    let mut out = String::new();
+    for line in LinesWithEndings::from(body) {
+        let ranges = highlighter
+            .highlight_line(line, &syntax_set)
+            .context("Failed to syntax-highlight the rendered output")?;
+        // No background escapes (bat doesn't paint full-width either); reset
+        // at the very end so color never leaks into the shell prompt.
+        out.push_str(&as_24_bit_terminal_escaped(&ranges[..], false));
+    }
+    out.push_str("\x1b[0m");
+    Ok(out)
 }
 
 /// The stylesheet every `--html` page links as `unxml.css`: per-scope token
