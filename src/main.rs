@@ -85,12 +85,12 @@ fn main() -> Result<()> {
     // Plain XML rendering is the default. Suffix-based mode autodetection is
     // opt-in via `--auto` (or implied by `--bat`/`--html`), and only fills in
     // a mode when the user hasn't already forced one explicitly.
-    let autodetect = (cli.auto || cli.bat || cli.html) && !opts.has_mode();
+    let autodetect = (cli.auto || cli.bat || cli.html || cli.cat) && !opts.has_mode();
 
     // Prefixes to hide from element names: the explicit --hide-ns list, plus
-    // (under --auto/--bat/--html) any inferred by sniffing the document type.
+    // (under --auto/--bat/--html/--cat) any inferred by sniffing the document type.
     let hide_ns: HashSet<String> = cli.hide_ns.iter().cloned().collect();
-    let sniff = cli.auto || cli.bat || cli.html;
+    let sniff = cli.auto || cli.bat || cli.html || cli.cat;
 
     // The cross-cutting options shared by every input. The per-file mode
     // (`file_opts`) is passed separately because it can vary under `--auto`.
@@ -123,6 +123,8 @@ fn main() -> Result<()> {
             Ok(output) => {
                 if cli.html {
                     print!("{}", highlight::html_page(&output, cli.html_embed_css)?);
+                } else if cli.cat {
+                    print!("{}", highlight::ansi(&output)?);
                 } else {
                     emit(&output, cli.bat);
                 }
@@ -220,6 +222,8 @@ fn main() -> Result<()> {
 
     if cli.html {
         print!("{}", highlight::html_page(&combined, cli.html_embed_css)?);
+    } else if cli.cat {
+        print!("{}", highlight::ansi(&combined)?);
     } else {
         emit(&combined, cli.bat);
     }

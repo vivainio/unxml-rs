@@ -71,8 +71,16 @@ pub(crate) struct Cli {
     /// `bat` or Python required. Implies --auto. Writes a standalone page to
     /// stdout that links an external `unxml.css`; generate that once with
     /// --html-css and keep both files in the same directory.
-    #[arg(long, conflicts_with = "bat")]
+    #[arg(long, conflicts_with_all = ["bat", "cat"])]
     pub(crate) html: bool,
+
+    /// Print the rendered output with ANSI syntax highlighting, no pager
+    ///
+    /// Like --html but for the terminal: same bundled grammar/theme via
+    /// `syntect`, escaped straight to stdout. Unlike --bat this never shells
+    /// out to an external `bat`/`batcat` and never pages. Implies --auto.
+    #[arg(long, conflicts_with_all = ["bat", "html"])]
+    pub(crate) cat: bool,
 
     /// Print the stylesheet `--html` pages link as `unxml.css`, then exit
     ///
