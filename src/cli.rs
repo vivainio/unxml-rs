@@ -98,6 +98,17 @@ pub(crate) struct Cli {
     #[arg(long, requires = "html")]
     pub(crate) html_embed_css: bool,
 
+    /// With --html or --cat, highlight the original source instead of unxml's output
+    ///
+    /// Skips the unxml transform: the file is read as-is and syntax-
+    /// highlighted as XML or HTML (same format detection as normal
+    /// processing) using syntect's own bundled grammar for that language,
+    /// not the unxml one. A dependency-free stand-in for `bat -l xml`
+    /// piped through `ansi2html` when you just want the original source
+    /// highlighted, e.g. next to unxml's output. Requires --html or --cat.
+    #[arg(long)]
+    pub(crate) raw: bool,
+
     /// Hide one or more namespace prefixes from element and attribute names
     ///
     /// Cuts noise, e.g. `--hide-ns cbc,cac`. Repeatable and comma-separated;

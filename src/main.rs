@@ -20,13 +20,14 @@ mod xslt;
 
 use std::collections::HashSet;
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use glob::glob;
 
 use crate::cli::Cli;
 use crate::document::detect_mode_from_ext;
 use crate::model::{Collapse, FormatOpts};
+use crate::parse::{InputFormat, detect_format, read_file_lenient};
 use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
@@ -62,6 +63,10 @@ fn main() -> Result<()> {
     // driver and exit (no input files required).
     if cli.init_git {
         return install::init_git();
+    }
+
+    if cli.raw && !(cli.html || cli.cat) {
+        return Err(anyhow::anyhow!("--raw requires --html or --cat"));
     }
 
     // `--collapse` is orthogonal to the processing mode, so it is applied to
@@ -114,6 +119,28 @@ fn main() -> Result<()> {
             return Err(anyhow::anyhow!(
                 "Cannot specify both --stdin and file arguments"
             ));
+        }
+
+        // --raw skips the unxml transform entirely: highlight the stdin
+        // text as-is (XML or HTML, same detection as normal processing).
+        if cli.raw {
+            let mut bytes = Vec::new();
+            std::io::Read::read_to_end(&mut std::io::stdin(), &mut bytes)
+                .context("Failed to read from stdin")?;
+            let content = match String::from_utf8(bytes) {
+                Ok(text) => text,
+                Err(e) => e.into_bytes().into_iter().map(|b| b as char).collect(),
+            };
+            let is_html = detect_format(&content, "stdin") == InputFormat::Html;
+            if cli.html {
+                print!(
+                    "{}",
+                    highlight::html_page_raw(&content, is_html, cli.html_embed_css)?
+                );
+            } else {
+                print!("{}", highlight::ansi_raw(&content, is_html)?);
+            }
+            return Ok(());
         }
 
         // Process stdin input (no path, so nothing to autodetect from).
@@ -185,6 +212,36 @@ fn main() -> Result<()> {
         return Err(anyhow::anyhow!(
             "No files found matching the specified patterns."
         ));
+    }
+
+    // --raw skips the unxml transform entirely: read each file's original
+    // text and highlight it as-is (XML or HTML, picked from the first file).
+    if cli.raw {
+        let multiple = all_files.len() > 1;
+        let mut combined = String::new();
+        let mut is_html = false;
+        for (i, file_path) in all_files.iter().enumerate() {
+            if i > 0 {
+                combined.push('\n');
+            }
+            let content = read_file_lenient(file_path)?;
+            if i == 0 {
+                is_html = detect_format(&content, file_path) == InputFormat::Html;
+            }
+            if multiple {
+                combined.push_str(&format!("<!-- FILE: {file_path} -->\n"));
+            }
+            combined.push_str(&content);
+        }
+        if cli.html {
+            print!(
+                "{}",
+                highlight::html_page_raw(&combined, is_html, cli.html_embed_css)?
+            );
+        } else {
+            print!("{}", highlight::ansi_raw(&combined, is_html)?);
+        }
+        return Ok(());
     }
 
     // Process each file, accumulating output so it can be sent to the pager
