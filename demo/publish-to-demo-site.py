@@ -57,6 +57,12 @@ XSLTNG = "https://raw.githubusercontent.com/docbook/xslTNG/main/src/main/xslt"
 SCHEMATRON = "https://raw.githubusercontent.com/Schematron/schematron/master/trunk/schematron/code"
 EN16931 = ("https://raw.githubusercontent.com/ConnectingEurope/"
            "eInvoicing-EN16931/master/ubl/schematron")
+# Real MSBuild project/import files from Microsoft's own build tooling —
+# found by poking around a local `dotnet` SDK install, then pointed at their
+# canonical upstream sources (both MIT-licensed) so nothing large is vendored.
+MSBUILD = "https://raw.githubusercontent.com/dotnet/msbuild/main/src/Tasks"
+NUGET_CLIENT = ("https://raw.githubusercontent.com/NuGet/NuGet.Client/dev/"
+                "src/NuGet.Core/NuGet.Build.Tasks")
 # UN/CEFACT Cross Industry Invoice (CII) instance samples. phax's en16931-cii2ubl
 # carries a canonical EN16931 CII example; mustangproject carries Factur-X /
 # ZUGFeRD profile samples (both MIT-licensed, with clear provenance).
@@ -93,6 +99,9 @@ DEMOS: list[tuple[str, str, str, str]] = [
     ("schematron", "en16931/ubl-validation", "EN16931 — UBL validation (driver)", f"{EN16931}/EN16931-UBL-validation.sch"),
     ("schematron", "en16931/model", "EN16931 — abstract model rules", f"{EN16931}/abstract/EN16931-model.sch"),
     ("schematron", "en16931/ubl-model", "EN16931 — UBL bindings", f"{EN16931}/UBL/EN16931-UBL-model.sch"),
+    ("msbuild", "csharp-targets", "MSBuild — C# language targets", f"{MSBUILD}/Microsoft.CSharp.CurrentVersion.targets"),
+    ("msbuild", "nuget-restore-targets", "MSBuild — NuGet restore targets", f"{NUGET_CLIENT}/NuGet.targets"),
+    ("msbuild", "common-targets", "MSBuild — common build targets", f"{MSBUILD}/Microsoft.Common.CurrentVersion.targets"),
 ]
 # mode -> (subdir, index-section heading); SECTION_ORDER sets section order.
 MODE_CATEGORY = {
@@ -100,8 +109,9 @@ MODE_CATEGORY = {
     "xsd": ("schemas", "Schemas"),
     "xslt": ("xslt", "XSLT"),
     "schematron": ("schematron", "Schematron"),
+    "msbuild": ("msbuild", "MSBuild"),
 }
-SECTION_ORDER = ["XML documents", "Schemas", "XSLT", "Schematron"]
+SECTION_ORDER = ["XML documents", "Schemas", "XSLT", "Schematron", "MSBuild"]
 
 # Small, self-hosted samples rendered *inline* on the gallery page — source
 # beside output, so the transformation is visible at a glance without opening a
