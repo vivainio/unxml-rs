@@ -8,7 +8,7 @@ declarations and operations into the readable part of the line:
 - `Import Project="build\Common.targets"` → `Import "build\Common.targets"`
 - `PropertyGroup Label="Compiler settings"` →
   `PropertyGroup "Compiler settings"`
-- item `Include` / `Remove` / `Update` operations become `+` / `remove` /
+- item `Include` / `Remove` / `Update` operations become `+=` / `-=` /
   `update`
 
 It also folds `Condition="..."` — present on almost any MSBuild element — into
@@ -52,8 +52,8 @@ cat MyLib.targets | unxml --stdin --auto   # sniffed from content, no extension 
 | `Target Condition="C" Name="N" ...` | `if C:` / `  Target N(...)` |
 | `UsingTask TaskName="T" ...` | `UsingTask T(...)` |
 | `Import Project="P" ...` | `Import "P"(...)` |
-| item `Include="X"` | `Item + "X"` |
-| item `Remove="X"` | `Item remove "X"` |
+| item `Include="X"` | `Item += "X"` |
+| item `Remove="X"` | `Item -= "X"` |
 | item `Update="X"` | `Item update "X"` |
 | `Choose` / `When` / `Otherwise` | `if` / `else if` / `else` |
 
@@ -162,11 +162,35 @@ Item operations use a compact verb while retaining metadata as children:
 ```
 ```text
 ItemGroup
-  Compile + "Generated.cs"
-  Compile remove "Legacy\**\*.cs"
+  Compile += "Generated.cs"
+  Compile -= "Legacy\**\*.cs"
   Content update "settings.json"
     CopyToOutputDirectory = Always
 ```
+
+## Self-named property copies
+
+Runs of two or more child assignments whose value is the same-named MSBuild
+property are folded into a `copy properties:` block:
+
+```xml
+<_RestoreGraphEntry Include="$([System.Guid]::NewGuid())">
+  <TargetFrameworkIdentifier>$(TargetFrameworkIdentifier)</TargetFrameworkIdentifier>
+  <TargetFrameworkVersion>$(TargetFrameworkVersion)</TargetFrameworkVersion>
+  <TargetFrameworkMoniker>$(TargetFrameworkMoniker)</TargetFrameworkMoniker>
+  <TargetFrameworkProfile>$(TargetFrameworkProfile)</TargetFrameworkProfile>
+</_RestoreGraphEntry>
+```
+```text
+_RestoreGraphEntry += "$([System.Guid]::NewGuid())"
+  copy properties:
+    TargetFrameworkIdentifier
+    TargetFrameworkVersion
+    TargetFrameworkMoniker
+    TargetFrameworkProfile
+```
+
+An isolated copy stays expanded, as do renamed copies and literal values.
 
 ## `Choose` → conditional chain
 
