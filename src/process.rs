@@ -65,7 +65,7 @@ pub(crate) fn process_content(
                 "--select and --paths are not yet supported for JSON"
             ));
         }
-        return render_json(content, cfg.canonical);
+        return render_json(content, cfg.canonical, cfg.sniff);
     }
 
     // Parse the content based on detected/specified format. `top_comments` are

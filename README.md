@@ -81,6 +81,22 @@ description =
   | Third line.
 ```
 
+With `--auto`, standalone JSON Schema documents use a compact property view.
+Required fields carry `!`, types and formats move beside their names, arrays
+collapse, and references are shortened:
+
+```text
+schema : object
+  id! : integer int64
+  email! : string email
+  tags : string[]
+  manager : ref Person
+```
+
+The same schema view is applied at known OpenAPI locations:
+`components.schemas.*` and objects beneath a `schema` key. The rest of the
+OpenAPI document—and unrecognized schema keywords—stays in generic JSON form.
+
 By default files render as plain XML. Pass `--auto` to pick the processing mode
 from each file's extension:
 

@@ -139,7 +139,7 @@ contexts:
         2: storage.type.unxml
 
     # XSD: a type reference after a colon ( name : Type ).
-    - match: '(:)\s+([\w][\w.:-]*)'
+    - match: '(:)\s+((?:ref\s+\S+)|(?:[\w][\w.:-]*(?:\[\])?(?:\s+[\w.-]+)?(?:\s*\|\s*[\w][\w.:-]*)*))'
       captures:
         1: punctuation.separator.type.unxml
         2: storage.type.unxml
@@ -158,6 +158,9 @@ contexts:
     - match: '\[\d+\.\.(?:\d+|unbounded|\*)\]'
       scope: keyword.operator.cardinality.unxml
     - match: '(?<=\s)[?*+](?=\s|$)'
+      scope: keyword.operator.cardinality.unxml
+    # A required JSON Schema property: `name! : string`.
+    - match: '(?<=\w)!(?=\s*:)'
       scope: keyword.operator.cardinality.unxml
 
     # "<-- xpath" maps-from-sequence (xsl:sequence) and "<- xpath"

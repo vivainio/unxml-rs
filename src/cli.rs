@@ -51,10 +51,11 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) expand: bool,
 
-    /// Autodetect the processing mode from each file's extension
+    /// Autodetect the processing mode from each file's extension or content
     ///
-    /// (.xsl/.xslt -> xslt, .sch -> schematron, .xsd -> xsd). Without this
-    /// (and without an explicit mode flag) files render as plain XML.
+    /// (.xsl/.xslt -> xslt, .sch -> schematron, .xsd -> xsd). For JSON,
+    /// simplifies standalone JSON Schema documents and Schema Objects embedded
+    /// at known OpenAPI locations. Without this, inputs use generic rendering.
     #[arg(long)]
     pub(crate) auto: bool,
 
