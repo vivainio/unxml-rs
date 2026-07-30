@@ -18,9 +18,13 @@ fn render_root(value: &Value, canonical: bool, out: &mut String) {
     match value {
         Value::Object(object) => render_object(object, 0, canonical, out),
         Value::Array(array) => render_array(None, array, 0, canonical, out),
+        Value::String(value) if is_block_string(value) => {
+            out.push_str("=\n");
+            render_block_string(value, 1, out);
+        }
         scalar => {
             out.push_str("= ");
-            out.push_str(&render_scalar(scalar));
+            out.push_str(&render_scalar(scalar, ScalarContext::Plain));
             out.push('\n');
         }
     }
@@ -36,8 +40,15 @@ fn render_named(key: &str, value: &Value, indent: usize, canonical: bool, out: &
     let ind = "  ".repeat(indent);
     let key = render_key(key);
     match value {
+        Value::String(value) if is_block_string(value) => {
+            out.push_str(&format!("{ind}{key} =\n"));
+            render_block_string(value, indent + 1, out);
+        }
         scalar if is_scalar(scalar) => {
-            out.push_str(&format!("{ind}{key} = {}\n", render_scalar(scalar)));
+            out.push_str(&format!(
+                "{ind}{key} = {}\n",
+                render_scalar(scalar, ScalarContext::Plain)
+            ));
         }
         Value::Object(object) if object.is_empty() => {
             out.push_str(&format!("{ind}{key} = {{}}\n"));
@@ -73,7 +84,7 @@ fn render_array(
     if array.iter().all(is_scalar) {
         let values = array
             .iter()
-            .map(render_scalar)
+            .map(|value| render_scalar(value, ScalarContext::Delimited))
             .collect::<Vec<_>>()
             .join(", ");
         if key.is_some() {
@@ -96,7 +107,7 @@ fn render_array(
             let object = item.as_object().expect("table rows are objects");
             let row = columns
                 .iter()
-                .map(|column| render_scalar(&object[*column]))
+                .map(|column| render_scalar(&object[*column], ScalarContext::Delimited))
                 .collect::<Vec<_>>()
                 .join(", ");
             out.push_str(&format!("{row_indent}{row}\n"));
@@ -106,8 +117,15 @@ fn render_array(
 
     for item in array {
         match item {
+            Value::String(value) if is_block_string(value) => {
+                out.push_str(&format!("{ind}{name}[] =\n"));
+                render_block_string(value, indent + 1, out);
+            }
             scalar if is_scalar(scalar) => {
-                out.push_str(&format!("{ind}{name}[] = {}\n", render_scalar(scalar)));
+                out.push_str(&format!(
+                    "{ind}{name}[] = {}\n",
+                    render_scalar(scalar, ScalarContext::Plain)
+                ));
             }
             Value::Object(object) if object.is_empty() => {
                 out.push_str(&format!("{ind}{name}[] = {{}}\n"));
@@ -167,15 +185,55 @@ fn is_scalar(value: &Value) -> bool {
     )
 }
 
-fn render_scalar(value: &Value) -> String {
+#[derive(Clone, Copy)]
+enum ScalarContext {
+    Plain,
+    Delimited,
+}
+
+fn render_scalar(value: &Value, context: ScalarContext) -> String {
     match value {
         Value::Null => "null".to_string(),
         Value::Bool(value) => value.to_string(),
         Value::Number(value) => value.to_string(),
-        Value::String(value) => {
+        Value::String(value) if string_needs_quotes(value, context) => {
             serde_json::to_string(value).expect("serializing a string cannot fail")
         }
+        Value::String(value) => value.to_owned(),
         _ => unreachable!("containers are not scalar values"),
+    }
+}
+
+fn string_needs_quotes(value: &str, context: ScalarContext) -> bool {
+    if value.is_empty()
+        || value.trim() != value
+        || value.chars().any(char::is_control)
+        || value.contains(['"', '\\', '[', ']', '{', '}', '='])
+        || matches!(context, ScalarContext::Delimited) && value.contains(',')
+    {
+        return true;
+    }
+
+    matches!(
+        serde_json::from_str::<Value>(value),
+        Ok(Value::Null | Value::Bool(_) | Value::Number(_))
+    )
+}
+
+fn is_block_string(value: &str) -> bool {
+    value.contains('\n') && value.chars().all(|c| c == '\n' || !c.is_control())
+}
+
+fn render_block_string(value: &str, indent: usize, out: &mut String) {
+    let ind = "  ".repeat(indent);
+    for line in value.split('\n') {
+        out.push_str(&ind);
+        out.push('|');
+        if !line.is_empty() {
+            out.push(' ');
+            out.push_str(line);
+        }
+        out.push('\n');
     }
 }
 
@@ -199,7 +257,7 @@ mod tests {
         let input = r#"{"users":[{"id":1,"name":"Ada"},{"name":"Lin","id":2}]}"#;
         assert_eq!(
             render_json(input, false).unwrap(),
-            "users[]{id,name}\n  1, \"Ada\"\n  2, \"Lin\"\n"
+            "users[]{id,name}\n  1, Ada\n  2, Lin\n"
         );
     }
 
@@ -239,7 +297,7 @@ mod tests {
     fn renders_root_arrays_and_quoted_keys() {
         assert_eq!(
             render_json(r#"[{"first name":"Ada","active":true}]"#, false).unwrap(),
-            concat!("[]\n", "  \"first name\" = \"Ada\"\n", "  active = true\n")
+            concat!("[]\n", "  \"first name\" = Ada\n", "  active = true\n")
         );
         assert_eq!(
             render_json(r#"["null",null,-1.5e2,true]"#, false).unwrap(),
@@ -281,6 +339,68 @@ mod tests {
                 "mixed[]\n",
                 "  [3, 4]\n",
             )
+        );
+    }
+
+    #[test]
+    fn quotes_only_strings_that_would_be_ambiguous() {
+        let input = r#"{
+            "name":"Ada Lovelace",
+            "url":"https://example.test/a",
+            "version":"3.0.4",
+            "comma":"data, search",
+            "empty":"",
+            "bool":"true",
+            "number":"123",
+            "structural":"[value]"
+        }"#;
+        assert_eq!(
+            render_json(input, false).unwrap(),
+            concat!(
+                "name = Ada Lovelace\n",
+                "url = https://example.test/a\n",
+                "version = 3.0.4\n",
+                "comma = data, search\n",
+                "empty = \"\"\n",
+                "bool = \"true\"\n",
+                "number = \"123\"\n",
+                "structural = \"[value]\"\n",
+            )
+        );
+    }
+
+    #[test]
+    fn renders_named_multiline_strings_as_blocks() {
+        let input = r#"{"description":"first\n\nthird","mixed":["one\nline",{"x":1}]}"#;
+        assert_eq!(
+            render_json(input, false).unwrap(),
+            concat!(
+                "description =\n",
+                "  | first\n",
+                "  |\n",
+                "  | third\n",
+                "mixed[] =\n",
+                "  | one\n",
+                "  | line\n",
+                "mixed[]\n",
+                "  x = 1\n",
+            )
+        );
+    }
+
+    #[test]
+    fn keeps_multiline_strings_escaped_in_delimited_values() {
+        assert_eq!(
+            render_json(r#"["one\nline","two"]"#, false).unwrap(),
+            "[\"one\\nline\", two]\n"
+        );
+        assert_eq!(
+            render_json(r#""one\n\nthree""#, false).unwrap(),
+            "=\n  | one\n  |\n  | three\n"
+        );
+        assert_eq!(
+            render_json(r#"{"text":"one\n\ttwo"}"#, false).unwrap(),
+            "text = \"one\\n\\ttwo\"\n"
         );
     }
 }

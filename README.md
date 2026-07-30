@@ -61,15 +61,25 @@ scalar objects are rendered in a compact, TOON-inspired table:
 
 ```console
 $ unxml users.json
-service = "catalog"
+service = catalog
 owners[]{id,name,team}
-  1, "Ada", "platform"
-  2, "Lin", "data"
+  1, Ada, platform
+  2, Lin, data
 ```
 
 Primitive arrays stay inline; heterogeneous or nested arrays expand as repeated
 `key[]` blocks. JSON is selected automatically for `.json` files and can be
-forced for stdin with `--format json`.
+forced for stdin with `--format json`. Strings are left unquoted when their
+meaning is clear; ambiguous values such as `"true"` and `"123"` remain quoted.
+Named multiline strings use pipe blocks, while strings inside inline arrays and
+table rows stay JSON-escaped:
+
+```text
+description =
+  | First line.
+  |
+  | Third line.
+```
 
 By default files render as plain XML. Pass `--auto` to pick the processing mode
 from each file's extension:

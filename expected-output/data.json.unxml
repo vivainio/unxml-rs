@@ -1,16 +1,20 @@
-service = "catalog"
+service = catalog
+description =
+  | A compact service catalog.
+  |
+  | Used by the demo.
 enabled = true
 ports = [8080, 8081]
 owners[]{id,name,team}
-  1, "Ada", "platform"
-  2, "Lin", "data, search"
+  1, Ada, platform
+  2, Lin, "data, search"
 jobs[]
-  name = "build"
+  name = build
   settings
     retries = 3
 jobs[]
-  name = "deploy"
+  name = deploy
   settings = null
 metadata = {}
 children = []
-"release channel" = "stable"
+"release channel" = stable

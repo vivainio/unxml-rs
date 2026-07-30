@@ -1,5 +1,6 @@
 {
   "service": "catalog",
+  "description": "A compact service catalog.\n\nUsed by the demo.",
   "enabled": true,
   "ports": [8080, 8081],
   "owners": [

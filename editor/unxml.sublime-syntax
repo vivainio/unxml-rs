@@ -22,6 +22,12 @@ contexts:
     - match: '^\s*(?://.*|#\s*\[.*)$'
       scope: comment.line.unxml
 
+    # A line in a multiline scalar block. Empty `|` lines preserve blank lines.
+    - match: '^(\s*)(\|)(?: (.*))?$'
+      captures:
+        2: punctuation.definition.string.unxml
+        3: string.unquoted.unxml
+
     # A TOON-inspired uniform JSON-object array:
     # `users[]{id,name}` followed by comma-separated scalar rows.
     - match: '^\s*(?:(?:([A-Za-z_][\w-]*)|("(?:\\.|[^"\\])*")))?(\[\])(\{)'
@@ -219,10 +225,16 @@ contexts:
     - match: '$'
       pop: true
     - include: msbuild-refs
-    - include: json-values
     - match: '"'
       scope: punctuation.definition.string.begin.unxml
       push: dq-string
+    # A complete bare scalar is a string unless it is exactly a JSON primitive
+    # or the start of an inline array. This keeps versions and URLs intact
+    # instead of coloring numeric fragments inside them.
+    - match: '(?!\s*(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|\[\]|\{\})\s*$)(?!\s*\[)\s*(\S(?:.*\S)?)\s*$'
+      captures:
+        1: string.unquoted.unxml
+    - include: json-values
 
   json-values:
     - match: '\[\]|\{\}|\[|\]'
