@@ -31,16 +31,49 @@
       Name="Build"
       Returns="@(TargetPathWithTargetPlatformMoniker)" />
 
-  <!-- Choose/When/Otherwise, each When carrying its own Condition -->
+  <!-- Target identity becomes a declaration heading -->
+  <Target
+      DependsOnTargets="PreparePublish;GetCopyToOutputDirectoryItems;FinalizePublish"
+      Name="GetCopyToPublishDirectoryItems"
+      Returns="@(AllPublishItemsFullPathWithTargetPath)" />
+
+  <!-- Promoted declaration attributes -->
+  <UsingTask
+      TaskName="GenerateManifest"
+      AssemblyFile="$(TasksPath)\BuildTasks.dll" />
+  <Import Project="build\Common.targets" Label="Shared build logic" />
+  <Import
+      Condition="Exists('build\Optional.targets')"
+      Project="build\Optional.targets" />
+
+  <!-- Labelled property groups and item operations -->
+  <PropertyGroup Label="Compiler settings">
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="Generated.cs" />
+    <Compile Remove="Legacy\**\*.cs" />
+    <Content Update="settings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <!-- Choose becomes an if/else-if/else chain -->
   <Choose>
     <When Condition="'$(OS)' == 'Windows_NT'">
       <PropertyGroup>
         <PathSeparator>;</PathSeparator>
       </PropertyGroup>
     </When>
-    <Otherwise>
+    <When Condition="'$(OS)' == 'Unix'">
       <PropertyGroup>
         <PathSeparator>:</PathSeparator>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <PathSeparator>|</PathSeparator>
       </PropertyGroup>
     </Otherwise>
   </Choose>

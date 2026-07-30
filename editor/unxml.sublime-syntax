@@ -50,11 +50,43 @@ contexts:
         1: keyword.control.unxml
       push: each-tail
 
+    # A completed MSBuild Choose chain. Match `else if` before the generic
+    # `else` rule so the condition receives the same expression highlighting
+    # as an ordinary `if`.
+    - match: '^\s*(else)\s+(if)\b'
+      captures:
+        1: keyword.control.unxml
+        2: keyword.control.unxml
+      push: xpath-tail
+
     # `if` / `when` test clauses -- the rest of the line is an XPath expression.
     - match: '^\s*(if|when)\b'
       captures:
         1: keyword.control.unxml
       push: xpath-tail
+
+    # MSBuild declarations whose identifying XML attribute is promoted into
+    # the heading: `Target Build(...)` and `UsingTask GenerateManifest(...)`.
+    - match: '^\s*(Target|UsingTask)\s+([^\s(]+)'
+      captures:
+        1: keyword.control.unxml
+        2: entity.name.function.unxml
+      push: line-tail
+
+    # Promoted MSBuild path/label declarations. The quoted value itself is
+    # handled by line-tail, including embedded $(Property) references.
+    - match: '^\s*(Import|PropertyGroup)\b(?=\s+")'
+      captures:
+        1: keyword.control.unxml
+      push: line-tail
+
+    # MSBuild item operations: `Compile + "X"`, `Compile remove "X"`, and
+    # `Compile update "X"`.
+    - match: '^\s*({{ident}})\s+(\+|remove|update)(?=\s)'
+      captures:
+        1: entity.name.tag.unxml
+        2: keyword.operator.unxml
+      push: line-tail
 
     # Block-opening keywords: their header line may end with ':' (block marker).
     # `function`/`copy` open blocks; `next-match`/`apply-imports` are re-dispatch
@@ -325,6 +357,10 @@ contexts:
       pop: true
     - match: ','
       scope: punctuation.separator.unxml
+    # A vertical MSBuild dependency list, e.g. DependsOnTargets=[A B C].
+    - match: '\['
+      scope: punctuation.section.brackets.begin.unxml
+      push: msbuild-list
     # Folded function/template signature params: `name as T`, `name := default`.
     # The ':=' rule must precede the 'name=' rule below, since ':' is a valid
     # name char and would otherwise split ':=' into a name ':' plus '='.
@@ -347,6 +383,22 @@ contexts:
     # Bare boolean attribute (no value), e.g. (required, disabled)
     - match: '[\w.:*-]+'
       scope: constant.language.boolean.attribute.unxml
+
+  msbuild-list:
+    - match: '\]'
+      scope: punctuation.section.brackets.end.unxml
+      pop: true
+    - match: ','
+      scope: punctuation.separator.unxml
+    - include: msbuild-refs
+    - match: '"'
+      scope: punctuation.definition.string.begin.unxml
+      push: dq-string
+    - match: "'"
+      scope: punctuation.definition.string.begin.unxml
+      push: sq-string
+    - match: '[^\s,\]]+'
+      scope: entity.name.function.unxml
 
   dq-string:
     - meta_scope: string.quoted.double.unxml

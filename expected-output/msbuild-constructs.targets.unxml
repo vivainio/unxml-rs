@@ -13,19 +13,41 @@ Project(ToolsVersion="14.0", xmlns="http://schemas.microsoft.com/developer/msbui
   // Item with Condition plus other attributes
   ItemGroup
     if '$(GenerateUserSecretsAttribute)' == 'true':
-      ProjectCapability(Include="LocalUserSecrets")
+      ProjectCapability + "LocalUserSecrets"
   // Target with Condition plus several other attributes
   if '$(_InvalidConfigurationWarning)' != 'true':
-    Target(
+    Target Build(
         DependsOnTargets="$(BuildDependsOn)",
-        Name="Build",
         Returns="@(TargetPathWithTargetPlatformMoniker)")
-  // Choose/When/Otherwise, each When carrying its own Condition
-  Choose
-    if '$(OS)' == 'Windows_NT':
-      When
-        PropertyGroup
-          PathSeparator = ;
-    Otherwise
-      PropertyGroup
-        PathSeparator = :
+  // Target identity becomes a declaration heading
+  Target GetCopyToPublishDirectoryItems(
+      DependsOnTargets=[
+        PreparePublish
+        GetCopyToOutputDirectoryItems
+        FinalizePublish
+      ],
+      Returns="@(AllPublishItemsFullPathWithTargetPath)")
+  // Promoted declaration attributes
+  UsingTask GenerateManifest(AssemblyFile="$(TasksPath)\BuildTasks.dll")
+  Import "build\Common.targets"(Label="Shared build logic")
+  if Exists('build\Optional.targets'):
+    Import "build\Optional.targets"
+  // Labelled property groups and item operations
+  PropertyGroup "Compiler settings"
+    LangVersion = latest
+    Nullable = enable
+  ItemGroup
+    Compile + "Generated.cs"
+    Compile remove "Legacy\**\*.cs"
+    Content update "settings.json"
+      CopyToOutputDirectory = Always
+  // Choose becomes an if/else-if/else chain
+  if '$(OS)' == 'Windows_NT':
+    PropertyGroup
+      PathSeparator = ;
+  else if '$(OS)' == 'Unix':
+    PropertyGroup
+      PathSeparator = :
+  else:
+    PropertyGroup
+      PathSeparator = |

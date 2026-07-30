@@ -232,7 +232,7 @@ impl XmlElement {
             return transformed;
         }
 
-        // MSBuild-specific transformations (currently: Condition= folding)
+        // MSBuild-specific readability transformations
         if opts.msbuild
             && let Some(transformed) = self.format_msbuild_element(indent, &indent_str, registry)
         {
