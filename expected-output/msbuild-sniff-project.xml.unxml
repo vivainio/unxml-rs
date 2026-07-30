@@ -6,4 +6,4 @@ Project(DefaultTargets="Build")
     PropertyGroup
       Configuration = Debug
   ItemGroup
-    Compile(Include="**/*.cs")
+    Compile + "**/*.cs"

@@ -1,16 +1,20 @@
 # MSBuild transformations
 
-When `unxml` runs in MSBuild mode it folds the `Condition="..."` attribute —
-present on almost any MSBuild element (`Target`, `PropertyGroup`,
-`ItemGroup`, individual items, tasks, `When`, ...) — out of the attribute
-list and into a leading `if COND:` guard. This is the single biggest source
-of noise in real-world SDK `.targets`/`.props` files: `Condition` sorts
-alphabetically among an element's other attributes, so it routinely forces a
-short declaration to wrap across several lines just to fit one gate.
+When `unxml` runs in MSBuild mode it promotes the attributes that identify
+declarations and operations into the readable part of the line:
 
-This mode currently covers Condition-folding only; everything else (item
-metadata, `Choose`/`When`/`Otherwise`, `PropertyGroup`/`ItemGroup` nesting,
-...) renders through the same generic Pug-like conversion as plain XML.
+- `Target Name="Build"` → `Target Build`
+- `UsingTask TaskName="GenerateManifest"` → `UsingTask GenerateManifest`
+- `Import Project="build\Common.targets"` → `Import "build\Common.targets"`
+- `PropertyGroup Label="Compiler settings"` →
+  `PropertyGroup "Compiler settings"`
+- item `Include` / `Remove` / `Update` operations become `+` / `remove` /
+  `update`
+
+It also folds `Condition="..."` — present on almost any MSBuild element — into
+a leading `if COND:` guard, converts `Choose` branches to an
+`if` / `else if` / `else` chain, and expands multi-entry
+`DependsOnTargets` values into vertical lists.
 
 ## Enabling MSBuild mode
 
@@ -45,7 +49,13 @@ cat MyLib.targets | unxml --stdin --auto   # sniffed from content, no extension 
 
 | MSBuild construct | unxml output |
 | --- | --- |
-| `Target Condition="C" Name="N" ...` | `if C:` / `  Target(Name="N", ...)` |
+| `Target Condition="C" Name="N" ...` | `if C:` / `  Target N(...)` |
+| `UsingTask TaskName="T" ...` | `UsingTask T(...)` |
+| `Import Project="P" ...` | `Import "P"(...)` |
+| item `Include="X"` | `Item + "X"` |
+| item `Remove="X"` | `Item remove "X"` |
+| item `Update="X"` | `Item update "X"` |
+| `Choose` / `When` / `Otherwise` | `if` / `else if` / `else` |
 
 ## `Condition="..."` → `if COND:`
 
@@ -65,10 +75,28 @@ conditions are routinely wrapped across source lines with trailing
 ```
 ```text
 if '$(_InvalidConfigurationWarning)' != 'true':
-  Target(
+  Target Build(
       DependsOnTargets="$(BuildDependsOn)",
-      Name="Build",
       Returns="@(TargetPathWithTargetPlatformMoniker)")
+```
+
+When `DependsOnTargets` contains multiple top-level semicolon-separated
+entries, the dependencies become a vertical list. Semicolons inside quoted or
+nested MSBuild expressions are left intact.
+
+```xml
+<Target Name="Build"
+        DependsOnTargets="Prepare;Compile;CopyFiles"
+        Returns="@(TargetPath)" />
+```
+```text
+Target Build(
+    DependsOnTargets=[
+      Prepare
+      Compile
+      CopyFiles
+    ],
+    Returns="@(TargetPath)")
 ```
 
 A multi-line condition collapses onto one line:
@@ -100,6 +128,65 @@ if '$(Configuration)' == '':
   PropertyGroup
     Configuration = Debug
 ```
+
+## Declarations and item operations
+
+Identifying attributes move into the heading; other attributes remain in
+parentheses and children keep their normal indentation.
+
+```xml
+<UsingTask TaskName="GenerateManifest"
+           AssemblyFile="$(TasksPath)\BuildTasks.dll" />
+<Import Project="build\Common.targets" Label="Shared build logic" />
+<PropertyGroup Label="Compiler settings">
+  <LangVersion>latest</LangVersion>
+</PropertyGroup>
+```
+```text
+UsingTask GenerateManifest(AssemblyFile="$(TasksPath)\BuildTasks.dll")
+Import "build\Common.targets"(Label="Shared build logic")
+PropertyGroup "Compiler settings"
+  LangVersion = latest
+```
+
+Item operations use a compact verb while retaining metadata as children:
+
+```xml
+<ItemGroup>
+  <Compile Include="Generated.cs" />
+  <Compile Remove="Legacy\**\*.cs" />
+  <Content Update="settings.json">
+    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+  </Content>
+</ItemGroup>
+```
+```text
+ItemGroup
+  Compile + "Generated.cs"
+  Compile remove "Legacy\**\*.cs"
+  Content update "settings.json"
+    CopyToOutputDirectory = Always
+```
+
+## `Choose` → conditional chain
+
+A well-formed `Choose` containing `When` branches and an optional final
+`Otherwise` loses the XML scaffolding:
+
+```text
+if '$(OS)' == 'Windows_NT':
+  PropertyGroup
+    PathSeparator = ;
+else if '$(OS)' == 'Unix':
+  PropertyGroup
+    PathSeparator = :
+else:
+  PropertyGroup
+    PathSeparator = |
+```
+
+Unusual `Choose` structures carrying extra attributes or inter-branch comments
+fall back to the ordinary structural rendering so information is not discarded.
 
 ## A worked example
 

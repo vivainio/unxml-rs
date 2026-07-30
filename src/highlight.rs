@@ -187,3 +187,57 @@ pub(crate) fn html_css() -> Result<String> {
         .context("Failed to generate CSS for the bundled highlighting theme")?;
     Ok(format!("{palette}\n{CHROME_CSS}"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::{find_syntax, highlight_spans, syntax_set};
+
+    #[test]
+    fn highlights_msbuild_readability_forms() {
+        let source = "\
+Target Build(
+    DependsOnTargets=[
+      Prepare
+      $(BuildDependsOn)
+    ])
+UsingTask GenerateManifest(AssemblyFile=\"$(TasksPath)\\BuildTasks.dll\")
+Import \"build\\Common.targets\"
+PropertyGroup \"Compiler settings\"
+Compile + \"Generated.cs\"
+Compile remove \"Legacy\\**\\*.cs\"
+Content update \"settings.json\"
+else if '$(OS)' == 'Unix':
+";
+        let set = syntax_set().unwrap();
+        let syntax = find_syntax(&set, "UnXML").unwrap();
+        let html = highlight_spans(&set, syntax, source).unwrap();
+
+        assert!(html.contains(
+            "<span class=\"keyword control unxml\">Target</span> \
+             <span class=\"entity name function unxml\">Build</span>"
+        ));
+        assert!(html.contains("<span class=\"punctuation section brackets begin unxml\">[</span>"));
+        assert!(html.contains("<span class=\"entity name function unxml\">Prepare</span>"));
+        assert!(html.contains(
+            "<span class=\"keyword control unxml\">UsingTask</span> \
+             <span class=\"entity name function unxml\">GenerateManifest</span>"
+        ));
+        assert!(html.contains("<span class=\"keyword control unxml\">Import</span>"));
+        assert!(html.contains("<span class=\"keyword control unxml\">PropertyGroup</span>"));
+        assert!(html.contains(
+            "<span class=\"entity name tag unxml\">Compile</span> \
+             <span class=\"keyword operator unxml\">remove</span>"
+        ));
+        assert!(html.contains(
+            "<span class=\"entity name tag unxml\">Content</span> \
+             <span class=\"keyword operator unxml\">update</span>"
+        ));
+        assert!(html.contains(
+            "<span class=\"keyword control unxml\">else</span> \
+             <span class=\"keyword control unxml\">if</span>"
+        ));
+        assert!(
+            html.contains("<span class=\"variable other readwrite unxml\">BuildDependsOn</span>")
+        );
+    }
+}
