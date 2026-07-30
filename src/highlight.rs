@@ -18,7 +18,7 @@ use crate::install::BAT_SYNTAX;
 
 /// One of syntect's bundled themes; only its color assignments per scope are
 /// used (via `--html-css`), not anything shipped by `bat` itself.
-const THEME_NAME: &str = "base16-ocean.dark";
+const THEME_NAME: &str = "base16-eighties.dark";
 
 /// Build a `SyntaxSet` containing just the bundled `unxml` grammar. Shared by
 /// `html_page` and `ansi` — each still looks up "UnXML" itself since a
