@@ -22,6 +22,22 @@ contexts:
     - match: '^\s*(?://.*|#\s*\[.*)$'
       scope: comment.line.unxml
 
+    # A TOON-inspired uniform JSON-object array:
+    # `users[]{id,name}` followed by comma-separated scalar rows.
+    - match: '^\s*(?:(?:([A-Za-z_][\w-]*)|("(?:\\.|[^"\\])*")))?(\[\])(\{)'
+      captures:
+        1: entity.name.tag.unxml
+        2: string.quoted.double.unxml
+        3: keyword.operator.cardinality.unxml
+        4: punctuation.section.braces.begin.unxml
+      push: json-table-header
+
+    # A JSON key that needs quoting can lead an ordinary assignment or block.
+    - match: '^\s*("(?:\\.|[^"\\])*")'
+      captures:
+        1: string.quoted.double.unxml
+      push: line-tail
+
     # An `each X in <xpath>` loop clause -- highlight the XPath data source.
     - match: '^\s*(each)\b'
       captures:
@@ -158,6 +174,21 @@ contexts:
       scope: punctuation.definition.string.begin.unxml
       push: dq-string
 
+    - include: json-values
+
+  # Field names inside a JSON table header.
+  json-table-header:
+    - match: '\}'
+      scope: punctuation.section.braces.end.unxml
+      pop: true
+    - match: ','
+      scope: punctuation.separator.unxml
+    - match: '"'
+      scope: punctuation.definition.string.begin.unxml
+      push: dq-string
+    - match: '[A-Za-z_][\w-]*'
+      scope: entity.other.attribute-name.unxml
+
   # A collapsed wrapper-chain path: `/`-separated tag segments, then hand the
   # rest of the line (attributes, ` = text`) to line-tail. The empty trailing
   # match fires only once the segment/separator rules stop applying.
@@ -188,9 +219,20 @@ contexts:
     - match: '$'
       pop: true
     - include: msbuild-refs
+    - include: json-values
     - match: '"'
       scope: punctuation.definition.string.begin.unxml
       push: dq-string
+
+  json-values:
+    - match: '\[\]|\{\}|\[|\]'
+      scope: constant.language.unxml
+    - match: ','
+      scope: punctuation.separator.unxml
+    - match: '\b(?:true|false|null)\b'
+      scope: constant.language.unxml
+    - match: '-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?'
+      scope: constant.numeric.unxml
 
   # An `each` clause line: like an XPath line but with the `in` keyword.
   each-tail:
@@ -294,6 +336,8 @@ contexts:
   dq-string:
     - meta_scope: string.quoted.double.unxml
     - match: '&(?:quot|amp|lt|gt|apos);'
+      scope: constant.character.escape.unxml
+    - match: '\\(?:["\\/bfnrt]|u[0-9A-Fa-f]{4})'
       scope: constant.character.escape.unxml
     - include: msbuild-refs
     - match: '"'

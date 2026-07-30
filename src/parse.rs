@@ -30,6 +30,17 @@ pub(crate) fn read_file_lenient(file_path: &str) -> Result<String> {
 pub(crate) enum InputFormat {
     Xml,
     Html,
+    Json,
+}
+
+impl InputFormat {
+    pub(crate) fn syntax_name(&self) -> &'static str {
+        match self {
+            Self::Xml => "XML",
+            Self::Html => "HTML",
+            Self::Json => "JSON",
+        }
+    }
 }
 
 pub(crate) fn detect_format(content: &str, file_path: &str) -> InputFormat {
@@ -39,12 +50,23 @@ pub(crate) fn detect_format(content: &str, file_path: &str) -> InputFormat {
         match ext.as_str() {
             "html" | "htm" => return InputFormat::Html,
             "xml" | "xsl" | "xsd" | "wsdl" => return InputFormat::Xml,
+            "json" => return InputFormat::Json,
             _ => {}
         }
     }
 
     // Check content for HTML-specific indicators
     let content_lower = content.to_lowercase();
+
+    // JSON has no declaration. For extensionless input (notably stdin), only
+    // claim an object/array when it parses successfully so XML fragments and
+    // ordinary text keep the established XML fallback.
+    let trimmed = content.trim_start();
+    if matches!(trimmed.as_bytes().first(), Some(b'{') | Some(b'['))
+        && serde_json::from_str::<serde_json::Value>(content).is_ok()
+    {
+        return InputFormat::Json;
+    }
 
     // Look for common HTML indicators
     if content_lower.contains("<!doctype html")

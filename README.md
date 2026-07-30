@@ -1,6 +1,7 @@
 # Unxml
 
-Simplify and "flatten" XML files into a YAML-like readable format.
+Simplify and "flatten" XML, HTML, and JSON files into a YAML-like readable
+format.
 
 This is a Rust clone of the original [unxml](https://github.com/vivainio/unxml) F# tool.
 
@@ -54,6 +55,21 @@ cargo install unxml
 ```bash
 unxml <xml_file>
 ```
+
+JSON uses the same indentation and `key = value` vocabulary. Uniform arrays of
+scalar objects are rendered in a compact, TOON-inspired table:
+
+```console
+$ unxml users.json
+service = "catalog"
+owners[]{id,name,team}
+  1, "Ada", "platform"
+  2, "Lin", "data"
+```
+
+Primitive arrays stay inline; heterogeneous or nested arrays expand as repeated
+`key[]` blocks. JSON is selected automatically for `.json` files and can be
+forced for stdin with `--format json`.
 
 By default files render as plain XML. Pass `--auto` to pick the processing mode
 from each file's extension:
@@ -478,4 +494,4 @@ gh release create vX.Y.Z --title "Release vX.Y.Z" --notes "…"
 The pushed tag triggers the GitHub Actions workflow, which builds binaries and
 the PyPI wheel for all platforms and attaches them to the release.
 
-The CI workflow runs on every push to ensure code quality with formatting checks, linting, and tests. 
+The CI workflow runs on every push to ensure code quality with formatting checks, linting, and tests.

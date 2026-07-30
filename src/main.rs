@@ -6,6 +6,7 @@ mod cli;
 mod document;
 mod highlight;
 mod install;
+mod json;
 mod model;
 mod msbuild;
 mod parse;
@@ -27,7 +28,7 @@ use glob::glob;
 use crate::cli::Cli;
 use crate::document::detect_mode_from_ext;
 use crate::model::{Collapse, FormatOpts};
-use crate::parse::{InputFormat, detect_format, read_file_lenient};
+use crate::parse::{detect_format, read_file_lenient};
 use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
@@ -137,14 +138,14 @@ fn main() -> Result<()> {
                 Ok(text) => text,
                 Err(e) => e.into_bytes().into_iter().map(|b| b as char).collect(),
             };
-            let is_html = detect_format(&content, "stdin") == InputFormat::Html;
+            let format = detect_format(&content, "stdin");
             if cli.html {
                 print!(
                     "{}",
-                    highlight::html_page_raw(&content, is_html, cli.html_embed_css)?
+                    highlight::html_page_raw(&content, format.syntax_name(), cli.html_embed_css)?
                 );
             } else {
-                print!("{}", highlight::ansi_raw(&content, is_html)?);
+                print!("{}", highlight::ansi_raw(&content, format.syntax_name())?);
             }
             return Ok(());
         }
@@ -225,14 +226,14 @@ fn main() -> Result<()> {
     if cli.raw {
         let multiple = all_files.len() > 1;
         let mut combined = String::new();
-        let mut is_html = false;
+        let mut syntax_name = "XML";
         for (i, file_path) in all_files.iter().enumerate() {
             if i > 0 {
                 combined.push('\n');
             }
             let content = read_file_lenient(file_path)?;
             if i == 0 {
-                is_html = detect_format(&content, file_path) == InputFormat::Html;
+                syntax_name = detect_format(&content, file_path).syntax_name();
             }
             if multiple {
                 combined.push_str(&format!("<!-- FILE: {file_path} -->\n"));
@@ -242,10 +243,10 @@ fn main() -> Result<()> {
         if cli.html {
             print!(
                 "{}",
-                highlight::html_page_raw(&combined, is_html, cli.html_embed_css)?
+                highlight::html_page_raw(&combined, syntax_name, cli.html_embed_css)?
             );
         } else {
-            print!("{}", highlight::ansi_raw(&combined, is_html)?);
+            print!("{}", highlight::ansi_raw(&combined, syntax_name)?);
         }
         return Ok(());
     }

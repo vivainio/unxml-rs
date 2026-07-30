@@ -10,7 +10,7 @@ pub(crate) struct Cli {
     /// XML or HTML files to process (supports glob patterns)
     pub(crate) files: Vec<String>,
 
-    /// Force input format (xml or html). If not specified, format is auto-detected
+    /// Force input format (xml, html, or json). If omitted, it is auto-detected
     #[arg(short, long)]
     pub(crate) format: Option<String>,
 

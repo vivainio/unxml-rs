@@ -11,6 +11,7 @@ use crate::document::{
     HIDE_NS_ALL, hide_namespaces, is_cii_document, is_msbuild_document, is_ubl_document,
     select_subtrees, sniff_hidden_prefixes,
 };
+use crate::json::render_json;
 use crate::model::{Collapse, FormatOpts, XmlElement};
 use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_lenient};
 use crate::paths::dump_paths;
@@ -46,9 +47,10 @@ pub(crate) fn process_content(
         match format_str.to_lowercase().as_str() {
             "html" => InputFormat::Html,
             "xml" => InputFormat::Xml,
+            "json" => InputFormat::Json,
             _ => {
                 return Err(anyhow::anyhow!(
-                    "Unsupported format: {}. Use 'xml' or 'html'",
+                    "Unsupported format: {}. Use 'xml', 'html', or 'json'",
                     format_str
                 ));
             }
@@ -56,6 +58,15 @@ pub(crate) fn process_content(
     } else {
         detect_format(content, file_path)
     };
+
+    if format == InputFormat::Json {
+        if cfg.select.is_some() || cfg.paths {
+            return Err(anyhow::anyhow!(
+                "--select and --paths are not yet supported for JSON"
+            ));
+        }
+        return render_json(content, cfg.canonical);
+    }
 
     // Parse the content based on detected/specified format. `top_comments` are
     // the prolog/epilog comments outside the root element (XML only); HTML has
@@ -69,6 +80,7 @@ pub(crate) fn process_content(
             let parsed = parse_xml(content).context("Failed to parse XML")?;
             (parsed.roots, parsed.top_comments)
         }
+        InputFormat::Json => unreachable!("JSON returns before XML/HTML parsing"),
     };
 
     // Build the effective set of prefixes to hide: those requested explicitly,

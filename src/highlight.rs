@@ -41,7 +41,7 @@ fn raw_syntax_set() -> SyntaxSet {
     SyntaxSet::load_defaults_newlines()
 }
 
-/// Look up `name` ("UnXML", "XML", or "HTML") in `syntax_set`, for callers
+/// Look up `name` ("UnXML", "XML", "HTML", or "JSON") in `syntax_set`, for callers
 /// that already picked which grammar they want.
 fn find_syntax<'a>(
     syntax_set: &'a SyntaxSet,
@@ -131,9 +131,9 @@ pub(crate) fn html_page(body: &str, embed_css: bool) -> Result<String> {
 /// stylesheet is keyed by the theme's generic TextMate scope names
 /// (comment, string, keyword, entity.name.tag, ...) rather than anything
 /// specific to the unxml grammar.
-pub(crate) fn html_page_raw(source: &str, is_html: bool, embed_css: bool) -> Result<String> {
+pub(crate) fn html_page_raw(source: &str, syntax_name: &str, embed_css: bool) -> Result<String> {
     let syntax_set = raw_syntax_set();
-    let syntax = find_syntax(&syntax_set, if is_html { "HTML" } else { "XML" })?;
+    let syntax = find_syntax(&syntax_set, syntax_name)?;
     page(&highlight_spans(&syntax_set, syntax, source)?, embed_css)
 }
 
@@ -171,9 +171,9 @@ pub(crate) fn ansi(body: &str) -> Result<String> {
 
 /// Like `ansi`, but for `--raw`: highlights `source` as-is using syntect's
 /// bundled XML or HTML grammar instead of the unxml one.
-pub(crate) fn ansi_raw(source: &str, is_html: bool) -> Result<String> {
+pub(crate) fn ansi_raw(source: &str, syntax_name: &str) -> Result<String> {
     let syntax_set = raw_syntax_set();
-    let syntax = find_syntax(&syntax_set, if is_html { "HTML" } else { "XML" })?;
+    let syntax = find_syntax(&syntax_set, syntax_name)?;
     highlight_ansi(&syntax_set, syntax, source)
 }
 

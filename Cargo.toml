@@ -5,12 +5,12 @@ name = "unxml"
 # are cut with `gh release create vX.Y.Z`, which creates the tag.
 version = "0.0.0-dev"
 edition = "2024"
-description = "Unxml 'pretty-prints' xml and html files in light, yaml-like, readable format"
+description = "Pretty-print XML, HTML, and JSON in a light, YAML-like, readable format"
 authors = ["Ville Vainio <vivainio@gmail.com>"]
 license = "MIT"
 repository = "https://github.com/vivainio/unxml-rs"
 readme = "README.md"
-keywords = ["xml", "html", "yaml", "pretty-print", "cli", "parser"]
+keywords = ["xml", "html", "json", "pretty-print", "cli"]
 categories = ["command-line-utilities", "parsing"]
 
 [dependencies]
@@ -20,6 +20,7 @@ clap = { version = "4.4", features = ["derive"] }
 anyhow = "1.0"
 glob = "0.3"
 include_dir = "0.7"
+serde_json = { version = "1.0", features = ["preserve_order"] }
 syntect = { version = "5.3", default-features = false, features = ["default-fancy", "html", "parsing"] }
 
 [dev-dependencies]

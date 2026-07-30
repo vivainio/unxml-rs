@@ -128,7 +128,7 @@ fn which(name: &str) -> Option<PathBuf> {
 /// File globs bound to the unxml diff driver. `--auto` then picks the right
 /// dialect mode (xslt/xsd/schematron/…) from each extension.
 const GIT_PATTERNS: &[&str] = &[
-    "*.xml", "*.xsl", "*.xslt", "*.xsd", "*.wsdl", "*.sch", "*.html", "*.htm",
+    "*.xml", "*.xsl", "*.xslt", "*.xsd", "*.wsdl", "*.sch", "*.html", "*.htm", "*.json",
 ];
 
 /// The textconv command stored in git config. Assumes `unxml` is on PATH (the

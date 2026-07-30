@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 const FIXTURE_EXTENSIONS: &[&str] = &[
-    "xml", "html", "htm", "xsl", "sch", "xsd", "wsdl", "targets", "props",
+    "xml", "html", "htm", "xsl", "sch", "xsd", "wsdl", "targets", "props", "json",
 ];
 
 fn find_fixtures() -> Vec<PathBuf> {
