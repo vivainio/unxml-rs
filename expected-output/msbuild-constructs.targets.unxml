@@ -13,7 +13,7 @@ Project(ToolsVersion="14.0", xmlns="http://schemas.microsoft.com/developer/msbui
   // Item with Condition plus other attributes
   ItemGroup
     if '$(GenerateUserSecretsAttribute)' == 'true':
-      ProjectCapability + "LocalUserSecrets"
+      ProjectCapability += "LocalUserSecrets"
   // Target with Condition plus several other attributes
   if '$(_InvalidConfigurationWarning)' != 'true':
     Target Build(
@@ -37,10 +37,18 @@ Project(ToolsVersion="14.0", xmlns="http://schemas.microsoft.com/developer/msbui
     LangVersion = latest
     Nullable = enable
   ItemGroup
-    Compile + "Generated.cs"
-    Compile remove "Legacy\**\*.cs"
+    Compile += "Generated.cs"
+    Compile -= "Legacy\**\*.cs"
     Content update "settings.json"
       CopyToOutputDirectory = Always
+    _RestoreGraphEntry += "$([System.Guid]::NewGuid())"
+      copy properties:
+        TargetFrameworkIdentifier
+        TargetFrameworkVersion
+        TargetFrameworkMoniker
+        TargetFrameworkProfile
+      RuntimeIdentifier = win-x64
+      TargetPlatformIdentifier = $(TargetPlatformIdentifier)
   // Choose becomes an if/else-if/else chain
   if '$(OS)' == 'Windows_NT':
     PropertyGroup

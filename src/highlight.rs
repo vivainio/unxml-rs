@@ -203,9 +203,12 @@ Target Build(
 UsingTask GenerateManifest(AssemblyFile=\"$(TasksPath)\\BuildTasks.dll\")
 Import \"build\\Common.targets\"
 PropertyGroup \"Compiler settings\"
-Compile + \"Generated.cs\"
-Compile remove \"Legacy\\**\\*.cs\"
+Compile += \"Generated.cs\"
+Compile -= \"Legacy\\**\\*.cs\"
 Content update \"settings.json\"
+copy properties:
+  TargetFrameworkIdentifier
+  TargetFrameworkVersion
 else if '$(OS)' == 'Unix':
 ";
         let set = syntax_set().unwrap();
@@ -226,11 +229,19 @@ else if '$(OS)' == 'Unix':
         assert!(html.contains("<span class=\"keyword control unxml\">PropertyGroup</span>"));
         assert!(html.contains(
             "<span class=\"entity name tag unxml\">Compile</span> \
-             <span class=\"keyword operator unxml\">remove</span>"
+             <span class=\"keyword operator unxml\">+=</span>"
+        ));
+        assert!(html.contains(
+            "<span class=\"entity name tag unxml\">Compile</span> \
+             <span class=\"keyword operator unxml\">-=</span>"
         ));
         assert!(html.contains(
             "<span class=\"entity name tag unxml\">Content</span> \
              <span class=\"keyword operator unxml\">update</span>"
+        ));
+        assert!(html.contains(
+            "<span class=\"keyword control unxml\">copy</span> \
+             <span class=\"storage type unxml\">properties</span>"
         ));
         assert!(html.contains(
             "<span class=\"keyword control unxml\">else</span> \

@@ -65,6 +65,13 @@ contexts:
         1: keyword.control.unxml
       push: xpath-tail
 
+    # A folded run of self-named MSBuild property-to-metadata copies.
+    - match: '^\s*(copy)\s+(properties)\b'
+      captures:
+        1: keyword.control.unxml
+        2: storage.type.unxml
+      push: block-tail
+
     # MSBuild declarations whose identifying XML attribute is promoted into
     # the heading: `Target Build(...)` and `UsingTask GenerateManifest(...)`.
     - match: '^\s*(Target|UsingTask)\s+([^\s(]+)'
@@ -80,9 +87,9 @@ contexts:
         1: keyword.control.unxml
       push: line-tail
 
-    # MSBuild item operations: `Compile + "X"`, `Compile remove "X"`, and
+    # MSBuild item operations: `Compile += "X"`, `Compile -= "X"`, and
     # `Compile update "X"`.
-    - match: '^\s*({{ident}})\s+(\+|remove|update)(?=\s)'
+    - match: '^\s*({{ident}})\s+(\+=|-=|update)(?=\s)'
       captures:
         1: entity.name.tag.unxml
         2: keyword.operator.unxml

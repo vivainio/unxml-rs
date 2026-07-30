@@ -57,6 +57,14 @@
     <Content Update="settings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <_RestoreGraphEntry Include="$([System.Guid]::NewGuid())">
+      <TargetFrameworkIdentifier>$(TargetFrameworkIdentifier)</TargetFrameworkIdentifier>
+      <TargetFrameworkVersion>$(TargetFrameworkVersion)</TargetFrameworkVersion>
+      <TargetFrameworkMoniker>$(TargetFrameworkMoniker)</TargetFrameworkMoniker>
+      <TargetFrameworkProfile>$(TargetFrameworkProfile)</TargetFrameworkProfile>
+      <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+      <TargetPlatformIdentifier>$(TargetPlatformIdentifier)</TargetPlatformIdentifier>
+    </_RestoreGraphEntry>
   </ItemGroup>
 
   <!-- Choose becomes an if/else-if/else chain -->

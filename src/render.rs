@@ -164,6 +164,10 @@ impl XmlElement {
         opts: &FormatOpts,
         registry: Option<&TemplateRegistry>,
     ) -> String {
+        if opts.msbuild {
+            return self.render_msbuild_children(indent, registry);
+        }
+
         let mut out = String::new();
         if self
             .nodes

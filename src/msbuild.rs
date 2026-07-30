@@ -3,7 +3,7 @@
 use std::collections::HashSet;
 
 use crate::model::{FormatOpts, NodeRef, XmlElement};
-use crate::render::{current_col, render_attrs, render_text};
+use crate::render::{current_col, push_comment, render_attrs, render_text};
 use crate::xslt::TemplateRegistry;
 
 fn escaped(value: &str) -> String {
@@ -80,6 +80,88 @@ fn finish_heading(
 }
 
 impl XmlElement {
+    fn is_self_named_property_copy(&self) -> bool {
+        self.attributes.is_empty()
+            && self.children.is_empty()
+            && self.text_content.trim() == format!("$({})", self.name)
+    }
+
+    fn render_child_run(
+        &self,
+        child_indexes: &[usize],
+        indent: usize,
+        registry: Option<&TemplateRegistry>,
+    ) -> String {
+        let mut result = String::new();
+        let mut index = 0;
+        while index < child_indexes.len() {
+            let run_start = index;
+            while index < child_indexes.len()
+                && self.children[child_indexes[index]].is_self_named_property_copy()
+            {
+                index += 1;
+            }
+
+            if index - run_start >= 2 {
+                result.push_str(&format!("{}copy properties:\n", "  ".repeat(indent)));
+                let name_indent = "  ".repeat(indent + 1);
+                for child_index in &child_indexes[run_start..index] {
+                    result.push_str(&format!(
+                        "{name_indent}{}\n",
+                        self.children[*child_index].name
+                    ));
+                }
+            } else if index - run_start == 1 {
+                result.push_str(&self.children[child_indexes[run_start]].format_yaml_like(
+                    indent,
+                    &FormatOpts::MSBUILD,
+                    registry,
+                ));
+            }
+
+            if index < child_indexes.len() {
+                result.push_str(&self.children[child_indexes[index]].format_yaml_like(
+                    indent,
+                    &FormatOpts::MSBUILD,
+                    registry,
+                ));
+                index += 1;
+            }
+        }
+        result
+    }
+
+    pub(crate) fn render_msbuild_children(
+        &self,
+        indent: usize,
+        registry: Option<&TemplateRegistry>,
+    ) -> String {
+        if !self
+            .nodes
+            .iter()
+            .any(|node| matches!(node, NodeRef::Comment { .. }))
+        {
+            let indexes: Vec<_> = (0..self.children.len()).collect();
+            return self.render_child_run(&indexes, indent, registry);
+        }
+
+        let mut result = String::new();
+        let mut run = Vec::new();
+        for node in &self.nodes {
+            match node {
+                NodeRef::Child(index) => run.push(*index),
+                NodeRef::Comment { text, inline } => {
+                    result.push_str(&self.render_child_run(&run, indent, registry));
+                    run.clear();
+                    push_comment(&mut result, text, *inline, indent);
+                }
+                NodeRef::Text(_) => {}
+            }
+        }
+        result.push_str(&self.render_child_run(&run, indent, registry));
+        result
+    }
+
     fn format_choose(&self, indent: usize, registry: Option<&TemplateRegistry>) -> Option<String> {
         if self.name != "Choose"
             || !self.attributes.is_empty()
@@ -220,7 +302,7 @@ impl XmlElement {
         indent_str: &str,
         registry: Option<&TemplateRegistry>,
     ) -> Option<String> {
-        let operations = [("Include", "+"), ("Remove", "remove"), ("Update", "update")];
+        let operations = [("Include", "+="), ("Remove", "-="), ("Update", "update")];
         let present: Vec<_> = operations
             .iter()
             .filter_map(|(attribute, keyword)| {
