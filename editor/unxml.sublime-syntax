@@ -234,7 +234,7 @@ contexts:
     # A complete bare scalar is a string unless it is exactly a JSON primitive
     # or the start of an inline array. This keeps versions and URLs intact
     # instead of coloring numeric fragments inside them.
-    - match: '(?!\s*(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|\[\]|\{\})\s*$)(?!\s*\[)\s*(\S(?:.*\S)?)\s*$'
+    - match: '(?!\s*")(?!\s*(?:true|false|null|-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?|\[\]|\{\})\s*$)(?!\s*\[)\s*(\S(?:.*\S)?)\s*$'
       captures:
         1: string.unquoted.unxml
     - include: json-values
