@@ -115,15 +115,13 @@ fn which(name: &str) -> Option<PathBuf> {
     })
 }
 
-// --- `--init-git`: wire unxml in as a git textconv diff driver -------------
+// --- `unxml git`: transient textconv wrapper --------------------------------
 //
-// Configures the *current* repository to diff XML/HTML through unxml: a
-// `textconv` driver makes `git diff`, `git log -p`, and `git show` render the
-// canonicalised, flattened form, so prefix-only and sibling-order churn
-// disappears from diffs. Everything lives inside `.git/` (repo-local config +
-// `info/attributes`), so the working tree is untouched and nothing is committed
-// — the trade-off being it is per-clone, which is exactly what this command
-// automates away.
+// Wraps `git <args>` with the unxml diff driver applied for that one
+// invocation only, via `-c` config overrides and a throwaway attributes
+// file — nothing is written under `.git/`, so it never affects any other
+// tool or command that shells out to git in the repo (plain `git diff`,
+// an IDE's diff view, `tig`, ...).
 
 /// File globs bound to the unxml diff driver. `--auto` then picks the right
 /// dialect mode (xslt/xsd/schematron/…) from each extension.
@@ -131,40 +129,9 @@ const GIT_PATTERNS: &[&str] = &[
     "*.xml", "*.xsl", "*.xslt", "*.xsd", "*.wsdl", "*.sch", "*.html", "*.htm", "*.json", "*.leo",
 ];
 
-/// The textconv command stored in git config. Assumes `unxml` is on PATH (the
+/// The textconv command passed via `-c`. Assumes `unxml` is on PATH (the
 /// normal `cargo install --path .` outcome).
 const GIT_TEXTCONV: &str = "unxml --canonical --auto";
-
-/// Run `git` with `args`, capturing output and turning a missing binary into a
-/// clear error.
-fn run_git(args: &[&str]) -> Result<std::process::Output> {
-    Command::new("git")
-        .args(args)
-        .output()
-        .context("Failed to run `git` (is it installed and on PATH?)")
-}
-
-/// Whether `info/attributes` already binds `pattern` to the unxml driver,
-/// ignoring commented and blank lines so re-runs stay idempotent.
-fn attr_present(existing: &str, pattern: &str) -> bool {
-    existing.lines().any(|line| {
-        let line = line.trim();
-        if line.starts_with('#') {
-            return false;
-        }
-        let mut fields = line.split_whitespace();
-        fields.next() == Some(pattern) && fields.any(|f| f == "diff=unxml")
-    })
-}
-
-// --- `unxml git`: transient textconv wrapper --------------------------------
-//
-// `--init-git` above wires unxml into a repo's `.git/config` and
-// `info/attributes` permanently, which some find intrusive: every `git diff`,
-// `log -p`, and `show` in that clone renders through unxml from then on, even
-// for tools/scripts that didn't ask for it. `unxml git <args>` instead applies
-// the textconv driver only for this one invocation, via `-c` overrides and a
-// throwaway attributes file — nothing is written under `.git/`.
 
 /// Run `git <args>` with the unxml textconv driver applied for this
 /// invocation only, then exit with git's exit code. Nothing is persisted:
@@ -196,75 +163,4 @@ pub(crate) fn git_passthrough(args: &[String]) -> Result<()> {
 
     let status = status?;
     std::process::exit(status.code().unwrap_or(1));
-}
-
-/// Configure the current git repo to diff XML/HTML through `unxml --canonical`.
-/// Idempotent: re-running only adds patterns not already present.
-pub(crate) fn init_git() -> Result<()> {
-    // Locate the git dir; a failure here also doubles as the "not in a repo"
-    // check. The path may be relative (`.git`) — that's fine, we run in cwd.
-    let out = run_git(&["rev-parse", "--git-dir"])?;
-    if !out.status.success() {
-        return Err(anyhow::anyhow!(
-            "Not inside a git repository: {}",
-            String::from_utf8_lossy(&out.stderr).trim()
-        ));
-    }
-    let git_dir = String::from_utf8_lossy(&out.stdout).trim().to_string();
-    let git_dir = Path::new(&git_dir);
-
-    // 1. Define the diff driver in repo-local config (.git/config).
-    for (key, val) in [
-        ("diff.unxml.textconv", GIT_TEXTCONV),
-        ("diff.unxml.cachetextconv", "true"),
-    ] {
-        let out = run_git(&["config", key, val])?;
-        if !out.status.success() {
-            return Err(anyhow::anyhow!(
-                "`git config {key}` failed: {}",
-                String::from_utf8_lossy(&out.stderr).trim()
-            ));
-        }
-    }
-
-    // 2. Bind the file patterns in .git/info/attributes (untracked), appending
-    //    only the patterns not already present.
-    let info = git_dir.join("info");
-    std::fs::create_dir_all(&info)
-        .with_context(|| format!("Failed to create {}", info.display()))?;
-    let attrs_path = info.join("attributes");
-    let existing = std::fs::read_to_string(&attrs_path).unwrap_or_default();
-
-    let missing: Vec<&str> = GIT_PATTERNS
-        .iter()
-        .copied()
-        .filter(|p| !attr_present(&existing, p))
-        .collect();
-
-    if !missing.is_empty() {
-        let mut text = existing;
-        if !text.is_empty() && !text.ends_with('\n') {
-            text.push('\n');
-        }
-        text.push_str("# added by `unxml --init-git`\n");
-        for p in &missing {
-            text.push_str(&format!("{p} diff=unxml\n"));
-        }
-        std::fs::write(&attrs_path, text)
-            .with_context(|| format!("Failed to write {}", attrs_path.display()))?;
-    }
-
-    println!("Configured unxml diff driver in {}", git_dir.display());
-    println!("  diff.unxml.textconv = {GIT_TEXTCONV}");
-    if missing.is_empty() {
-        println!("  patterns already present in {}", attrs_path.display());
-    } else {
-        println!(
-            "  +{} pattern(s) in {}",
-            missing.len(),
-            attrs_path.display()
-        );
-    }
-    println!("Working tree untouched — nothing to commit.");
-    Ok(())
 }

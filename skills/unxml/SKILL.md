@@ -91,11 +91,6 @@ unxml git log -p -- invoice.xml
 unxml git show HEAD~1:invoice.xml
 ```
 
-`unxml --init-git` instead wires the same driver permanently into the current
-repo's `.git/config`/`info/attributes` (idempotent, working tree untouched),
-for when every `git diff`/`log -p`/`show` in that clone should render this way
-without prefixing commands with `unxml git`.
-
 ## Structural fingerprint (`--paths`)
 
 `--paths` dumps the set of *distinct* element paths as an indented tree (each

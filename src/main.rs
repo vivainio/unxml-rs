@@ -61,12 +61,6 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    // Side-channel action: wire unxml in as the current repo's XML/HTML diff
-    // driver and exit (no input files required).
-    if cli.init_git {
-        return install::init_git();
-    }
-
     if cli.raw && !(cli.html || cli.cat) {
         return Err(anyhow::anyhow!("--raw requires --html or --cat"));
     }
