@@ -9,6 +9,129 @@ This is a Rust clone of the original [unxml](https://github.com/vivainio/unxml) 
 real-world XML documents, schemas, stylesheets, and Schematron rules rendered
 with `unxml`, with original-vs-rendered size comparisons.
 
+## Introduction
+
+This command line application was developed for comparing XML files (e.g. database/application state dumps). It takes an XML file and converts it to a YAML-like syntax that is easier to read and compare.
+
+### Example
+
+Take an excerpt of the standard [UBL 2.1 invoice
+example](https://docs.oasis-open.org/ubl/os-UBL-2.1/xml/UBL-Invoice-2.1-Example.xml):
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+	xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+	xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
+	<cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+	<cbc:ID>TOSL108</cbc:ID>
+	<cbc:IssueDate>2009-12-15</cbc:IssueDate>
+	<cbc:InvoiceTypeCode listID="UN/ECE 1001 Subset" listAgencyID="6">380</cbc:InvoiceTypeCode>
+	<cbc:DocumentCurrencyCode listID="ISO 4217 Alpha" listAgencyID="6">EUR</cbc:DocumentCurrencyCode>
+	<cac:AccountingSupplierParty>
+		<cac:Party>
+			<cac:PartyName>
+				<cbc:Name>Salescompany ltd.</cbc:Name>
+			</cac:PartyName>
+			<cac:PostalAddress>
+				<cbc:StreetName>Main street</cbc:StreetName>
+				<cbc:CityName>Big city</cbc:CityName>
+				<cbc:PostalZone>54321</cbc:PostalZone>
+			</cac:PostalAddress>
+		</cac:Party>
+	</cac:AccountingSupplierParty>
+</Invoice>
+```
+
+`unxml invoice.xml` flattens it into:
+
+```
+Invoice(
+    xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2")
+  cbc:UBLVersionID = 2.1
+  cbc:ID = TOSL108
+  cbc:IssueDate = 2009-12-15
+  cbc:InvoiceTypeCode(listAgencyID="6", listID="UN/ECE 1001 Subset") = 380
+  cbc:DocumentCurrencyCode(listAgencyID="6", listID="ISO 4217 Alpha") = EUR
+  cac:AccountingSupplierParty
+    cac:Party
+      cac:PartyName
+        cbc:Name = Salescompany ltd.
+      cac:PostalAddress
+        cbc:StreetName = Main street
+        cbc:CityName = Big city
+        cbc:PostalZone = 54321
+```
+
+With `--auto`, unxml sniffs the UBL instance and hides the noisy `cbc:`/`cac:`
+prefixes (along with their `xmlns:` declarations), leaving just the signal:
+
+```
+Invoice(xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2")
+  UBLVersionID = 2.1
+  ID = TOSL108
+  IssueDate = 2009-12-15
+  InvoiceTypeCode(listAgencyID="6", listID="UN/ECE 1001 Subset") = 380
+  DocumentCurrencyCode(listAgencyID="6", listID="ISO 4217 Alpha") = EUR
+  AccountingSupplierParty
+    Party
+      PartyName
+        Name = Salescompany ltd.
+      PostalAddress
+        StreetName = Main street
+        CityName = Big city
+        PostalZone = 54321
+```
+
+### Mode example: XSLT
+
+Beyond flattening, each mode rewrites its vocabulary into terser pseudocode.
+A small XSLT stylesheet:
+
+```xml
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<xsl:template match="/">
+  <table border="1">
+    <xsl:for-each select="catalog/cd">
+    <tr>
+      <td><xsl:value-of select="title"/></td>
+      <td><xsl:value-of select="artist"/></td>
+    </tr>
+    </xsl:for-each>
+  </table>
+</xsl:template>
+</xsl:stylesheet>
+```
+
+renders with `unxml --xslt` as:
+
+```
+xsl:stylesheet(version="1.0", xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
+  match /:
+    table(border="1")
+      foreach catalog/cd:
+        tr
+          td
+            <- title
+          td
+            <- artist
+```
+
+`match`, `foreach` and `<-` (for `xsl:value-of`) read like the control flow the
+stylesheet actually expresses. See [XSLT transformations](docs/xslt.md) for the
+full vocabulary, and [XSD](docs/xsd.md) / [Schematron](docs/schematron.md) for
+the other modes.
+
+### Key Features
+
+- **Attributes in Parentheses**: Element attributes are displayed Pug-style as `element(attr="value")`
+- **Text Content with Equals**: Element text content is shown as `ElementName = text content`
+- **Hierarchical Indentation**: Nested elements are properly indented
+- **Clean Format**: Easy to read and compare, great for diffing
+- **Inline mixed content**: Prose interleaved with short inline elements stays on one readable line
+
 ## Installation
 
 ### Using uv (Easiest)
@@ -25,9 +148,9 @@ This puts the `unxml` command on your PATH. To try it without installing anythin
 uvx --from unxml-rs unxml <xml_file>
 ```
 
-### Pre-built Binaries (Recommended)
+### Pre-built Binaries
 
-Download the latest release for your platform from the [GitHub Releases](https://github.com/yourusername/unxml-rs/releases) page:
+Download the latest release for your platform from the [GitHub Releases](https://github.com/vivainio/unxml-rs/releases) page:
 
 - **Linux (x86_64)**: `unxml-linux-x86_64.tar.gz`
 - **Windows (x86_64)**: `unxml-windows-x86_64.zip`
@@ -39,15 +162,9 @@ Extract the archive and place the `unxml` binary in your PATH.
 ### From Source
 
 ```bash
-git clone https://github.com/yourusername/unxml-rs
+git clone https://github.com/vivainio/unxml-rs
 cd unxml-rs
 cargo install --path .
-```
-
-### Using Cargo
-
-```bash
-cargo install unxml
 ```
 
 ## Usage
@@ -55,6 +172,34 @@ cargo install unxml
 ```bash
 unxml <xml_file>
 ```
+
+### XML processing modes
+
+By default files render as plain XML. Pass `--auto` to pick the processing mode
+from each file's extension:
+
+| Extension                                                  | Mode applied   |
+| ----------------------------------------------------------- | -------------- |
+| `.xsl` `.xslt`                                               | `--xslt`       |
+| `.sch`                                                       | `--schematron` |
+| `.xsd`                                                       | `--xsd`        |
+| `.targets` `.props` `.csproj` `.vbproj` `.fsproj` `.sqlproj` | `--msbuild`    |
+
+An explicit mode flag (`--xslt`, `--schematron`, `--xsd`, `--msbuild`, `--special`)
+always overrides autodetection.
+
+For a tour of every way unxml shortens a document — base syntax plus which flag
+to reach for — see the **[simplification reference](docs/reference.md)**.
+
+Each mode rewrites its vocabulary into a terser pseudocode. The full set of
+transformations, with side-by-side samples, is documented per format:
+
+- [XSLT transformations](docs/xslt.md) — `xsl:*` stylesheets
+- [XSD transformations](docs/xsd.md) — `xs:*` / `xsd:*` schemas
+- [Schematron transformations](docs/schematron.md) — `.sch` rule schemas
+- [MSBuild transformations](docs/msbuild.md) — `.targets`/`.props`/project files
+
+### JSON
 
 JSON uses the same indentation and `key = value` vocabulary. Uniform arrays of
 scalar objects are rendered in a compact, TOON-inspired table:
@@ -96,30 +241,6 @@ schema : object
 The same schema view is applied at known OpenAPI locations:
 `components.schemas.*` and objects beneath a `schema` key. The rest of the
 OpenAPI document—and unrecognized schema keywords—stays in generic JSON form.
-
-By default files render as plain XML. Pass `--auto` to pick the processing mode
-from each file's extension:
-
-| Extension                                                  | Mode applied   |
-| ----------------------------------------------------------- | -------------- |
-| `.xsl` `.xslt`                                               | `--xslt`       |
-| `.sch`                                                       | `--schematron` |
-| `.xsd`                                                       | `--xsd`        |
-| `.targets` `.props` `.csproj` `.vbproj` `.fsproj` `.sqlproj` | `--msbuild`    |
-
-An explicit mode flag (`--xslt`, `--schematron`, `--xsd`, `--msbuild`, `--special`)
-always overrides autodetection.
-
-For a tour of every way unxml shortens a document — base syntax plus which flag
-to reach for — see the **[simplification reference](docs/reference.md)**.
-
-Each mode rewrites its vocabulary into a terser pseudocode. The full set of
-transformations, with side-by-side samples, is documented per format:
-
-- [XSLT transformations](docs/xslt.md) — `xsl:*` stylesheets
-- [XSD transformations](docs/xsd.md) — `xs:*` / `xsd:*` schemas
-- [Schematron transformations](docs/schematron.md) — `.sch` rule schemas
-- [MSBuild transformations](docs/msbuild.md) — `.targets`/`.props`/project files
 
 ### Syntax-highlighted output (`--bat`)
 
@@ -339,129 +460,6 @@ parens stay reserved for attributes (so `cbc:ID(schemeID)` inside a shape is
 still unambiguous). Only flat one-level groups fold, so definitions never nest
 or cross-reference each other. Shapes are named after their root element's local
 name (`@DATE`), with a numeric suffix on collision. Only affects `--paths`.
-
-## Introduction
-
-This command line application was developed for comparing XML files (e.g. database/application state dumps). It takes an XML file and converts it to a YAML-like syntax that is easier to read and compare.
-
-### Example
-
-Take an excerpt of the standard [UBL 2.1 invoice
-example](https://docs.oasis-open.org/ubl/os-UBL-2.1/xml/UBL-Invoice-2.1-Example.xml):
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
-	xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
-	xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2">
-	<cbc:UBLVersionID>2.1</cbc:UBLVersionID>
-	<cbc:ID>TOSL108</cbc:ID>
-	<cbc:IssueDate>2009-12-15</cbc:IssueDate>
-	<cbc:InvoiceTypeCode listID="UN/ECE 1001 Subset" listAgencyID="6">380</cbc:InvoiceTypeCode>
-	<cbc:DocumentCurrencyCode listID="ISO 4217 Alpha" listAgencyID="6">EUR</cbc:DocumentCurrencyCode>
-	<cac:AccountingSupplierParty>
-		<cac:Party>
-			<cac:PartyName>
-				<cbc:Name>Salescompany ltd.</cbc:Name>
-			</cac:PartyName>
-			<cac:PostalAddress>
-				<cbc:StreetName>Main street</cbc:StreetName>
-				<cbc:CityName>Big city</cbc:CityName>
-				<cbc:PostalZone>54321</cbc:PostalZone>
-			</cac:PostalAddress>
-		</cac:Party>
-	</cac:AccountingSupplierParty>
-</Invoice>
-```
-
-`unxml invoice.xml` flattens it into:
-
-```
-Invoice(
-    xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2",
-    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
-    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2")
-  cbc:UBLVersionID = 2.1
-  cbc:ID = TOSL108
-  cbc:IssueDate = 2009-12-15
-  cbc:InvoiceTypeCode(listAgencyID="6", listID="UN/ECE 1001 Subset") = 380
-  cbc:DocumentCurrencyCode(listAgencyID="6", listID="ISO 4217 Alpha") = EUR
-  cac:AccountingSupplierParty
-    cac:Party
-      cac:PartyName
-        cbc:Name = Salescompany ltd.
-      cac:PostalAddress
-        cbc:StreetName = Main street
-        cbc:CityName = Big city
-        cbc:PostalZone = 54321
-```
-
-With `--auto`, unxml sniffs the UBL instance and hides the noisy `cbc:`/`cac:`
-prefixes (along with their `xmlns:` declarations), leaving just the signal:
-
-```
-Invoice(xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2")
-  UBLVersionID = 2.1
-  ID = TOSL108
-  IssueDate = 2009-12-15
-  InvoiceTypeCode(listAgencyID="6", listID="UN/ECE 1001 Subset") = 380
-  DocumentCurrencyCode(listAgencyID="6", listID="ISO 4217 Alpha") = EUR
-  AccountingSupplierParty
-    Party
-      PartyName
-        Name = Salescompany ltd.
-      PostalAddress
-        StreetName = Main street
-        CityName = Big city
-        PostalZone = 54321
-```
-
-### Mode example: XSLT
-
-Beyond flattening, each mode rewrites its vocabulary into terser pseudocode.
-A small XSLT stylesheet:
-
-```xml
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-<xsl:template match="/">
-  <table border="1">
-    <xsl:for-each select="catalog/cd">
-    <tr>
-      <td><xsl:value-of select="title"/></td>
-      <td><xsl:value-of select="artist"/></td>
-    </tr>
-    </xsl:for-each>
-  </table>
-</xsl:template>
-</xsl:stylesheet>
-```
-
-renders with `unxml --xslt` as:
-
-```
-xsl:stylesheet(version="1.0", xmlns:xsl="http://www.w3.org/1999/XSL/Transform")
-  match /:
-    table(border="1")
-      foreach catalog/cd:
-        tr
-          td
-            <- title
-          td
-            <- artist
-```
-
-`match`, `foreach` and `<-` (for `xsl:value-of`) read like the control flow the
-stylesheet actually expresses. See [XSLT transformations](docs/xslt.md) for the
-full vocabulary, and [XSD](docs/xsd.md) / [Schematron](docs/schematron.md) for
-the other modes.
-
-### Key Features
-
-- **Attributes in Parentheses**: Element attributes are displayed Pug-style as `element(attr="value")`
-- **Text Content with Equals**: Element text content is shown as `ElementName = text content`
-- **Hierarchical Indentation**: Nested elements are properly indented
-- **Clean Format**: Easy to read and compare, great for diffing
-- **Inline mixed content**: Prose interleaved with short inline elements stays on one readable line
 
 ### Mixed content (prose with inline spans)
 
