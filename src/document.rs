@@ -9,7 +9,7 @@ use crate::model::{FormatOpts, XmlElement};
 /// Pick a processing mode from a file's extension when the user hasn't forced
 /// one. Mirrors the extension->flag mapping the test suite applies:
 ///   .xsl / .xslt -> --xslt,  .sch -> --schematron,  .xsd -> --xsd,
-///   .wsdl -> --wsdl,  .targets/.props/.*proj -> --msbuild.
+///   .wsdl -> --wsdl,  .targets/.props/.*proj -> --msbuild,  .leo -> --leo.
 /// `--special` is intentionally excluded: it is proprietary and selected by
 /// file name, not extension. Returns the default (no mode) for anything else.
 pub(crate) fn detect_mode_from_ext(file_path: &str) -> FormatOpts {
@@ -36,6 +36,10 @@ pub(crate) fn detect_mode_from_ext(file_path: &str) -> FormatOpts {
         },
         "targets" | "props" | "csproj" | "vbproj" | "fsproj" | "sqlproj" => FormatOpts {
             msbuild: true,
+            ..FormatOpts::default()
+        },
+        "leo" => FormatOpts {
+            leo: true,
             ..FormatOpts::default()
         },
         _ => FormatOpts::default(),

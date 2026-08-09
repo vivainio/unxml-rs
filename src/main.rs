@@ -7,6 +7,7 @@ mod document;
 mod highlight;
 mod install;
 mod json;
+mod leo;
 mod model;
 mod msbuild;
 mod parse;
@@ -85,6 +86,7 @@ fn main() -> Result<()> {
         xsd: cli.xsd,
         wsdl: cli.wsdl,
         msbuild: cli.msbuild,
+        leo: cli.leo,
         collapse: Collapse::Off,
     };
 

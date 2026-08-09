@@ -251,4 +251,28 @@ else if '$(OS)' == 'Unix':
             html.contains("<span class=\"variable other readwrite unxml\">BuildDependsOn</span>")
         );
     }
+
+    #[test]
+    fn highlights_leo_headlines_distinctly_from_body_text() {
+        let source = "\
+* Root
+  | print(\"root body\")
+  * Child A (clone)
+";
+        let set = syntax_set().unwrap();
+        let syntax = find_syntax(&set, "UnXML").unwrap();
+        let html = highlight_spans(&set, syntax, source).unwrap();
+
+        assert!(html.contains(
+            "<span class=\"markup heading unxml\">\
+             <span class=\"punctuation definition heading unxml\">*</span> \
+             <span class=\"entity name section unxml\">Root</span></span>"
+        ));
+        assert!(
+            html.contains(
+                "<span class=\"string unquoted unxml\">print(&quot;root body&quot;)</span>"
+            )
+        );
+        assert!(html.contains("<span class=\"entity name section unxml\">Child A (clone)</span>"));
+    }
 }

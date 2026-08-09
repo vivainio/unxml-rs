@@ -28,6 +28,7 @@ pub(crate) struct FormatOpts {
     pub(crate) xsd: bool,
     pub(crate) wsdl: bool,
     pub(crate) msbuild: bool,
+    pub(crate) leo: bool,
     pub(crate) collapse: Collapse,
 }
 
@@ -39,6 +40,7 @@ impl FormatOpts {
         xsd: false,
         wsdl: false,
         msbuild: false,
+        leo: false,
         collapse: Collapse::Off,
     };
 
@@ -51,13 +53,20 @@ impl FormatOpts {
         xsd: false,
         wsdl: false,
         msbuild: true,
+        leo: false,
         collapse: Collapse::Off,
     };
 
     /// True if the user explicitly selected any processing mode. When none is
     /// set we fall back to autodetecting the mode from the file extension.
     pub(crate) fn has_mode(&self) -> bool {
-        self.special || self.xslt || self.schematron || self.xsd || self.wsdl || self.msbuild
+        self.special
+            || self.xslt
+            || self.schematron
+            || self.xsd
+            || self.wsdl
+            || self.msbuild
+            || self.leo
     }
 }
 

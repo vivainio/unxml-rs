@@ -28,6 +28,17 @@ contexts:
         2: punctuation.definition.string.unxml
         3: string.unquoted.unxml
 
+    # A Leo (--leo) outline headline: "* Headline text", indented two spaces
+    # per outline depth. Its body (if any) follows as an ordinary `|` block on
+    # the next line(s), handled by the rule above -- a headline line never
+    # carries body text itself. Scoped as a heading (like Markdown/Org) so
+    # outline structure stands out from ordinary element/attribute lines.
+    - match: '^(\s*)(\*)(\s+)(.*)$'
+      scope: markup.heading.unxml
+      captures:
+        2: punctuation.definition.heading.unxml
+        4: entity.name.section.unxml
+
     # A TOON-inspired uniform JSON-object array:
     # `users[]{id,name}` followed by comma-separated scalar rows.
     - match: '^\s*(?:(?:([A-Za-z_][\w-]*)|("(?:\\.|[^"\\])*")))?(\[\])(\{)'

@@ -47,6 +47,18 @@ pub(crate) struct Cli {
     #[arg(long)]
     pub(crate) msbuild: bool,
 
+    /// Enable Leo (leo-editor) outline formatting for `.leo` files
+    ///
+    /// Joins the `<vnodes>` outline tree with the body text held separately in
+    /// `<tnodes>`, rendering each headline followed by its body indented
+    /// underneath. Clones (a node appearing at more than one outline position)
+    /// show their body once, at the first occurrence; later occurrences render
+    /// as `headline (clone)`. Bookkeeping noise (gnx ids, expansion/mark
+    /// state, the `<leo_header>`/`<globals>`/`<preferences>` boilerplate) is
+    /// dropped.
+    #[arg(long)]
+    pub(crate) leo: bool,
+
     /// Expand xsl:apply-templates by inlining matching templates from imports
     #[arg(long)]
     pub(crate) expand: bool,

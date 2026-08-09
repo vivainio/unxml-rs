@@ -243,6 +243,13 @@ impl XmlElement {
             return transformed;
         }
 
+        // Leo (leo-editor) outline transformation
+        if opts.leo
+            && let Some(transformed) = self.format_leo_element(indent, &indent_str, registry)
+        {
+            return transformed;
+        }
+
         let special = opts.special;
 
         // Special handling for elements with loopDataSource attribute
