@@ -48,22 +48,20 @@ schema : object
 
 ## Processing modes
 
-`--auto` picks by extension; explicit flag always wins.
-
-| Flag           | Extension(s)                            | For                                        |
-| -------------- | ---------------------------------------- | ------------------------------------------- |
-| `--xslt`       | `.xsl` `.xslt`                           | XSLT (`match`, `foreach`, `<-`)             |
-| `--xsd`        | `.xsd`                                   | XML Schema                                  |
-| `--schematron` | `.sch`                                   | Schematron rules                            |
-| `--wsdl`       | `.wsdl`                                  | WSDL 1.1/SOAP (embedded schema via XSD)     |
-| `--msbuild`    | `.targets` `.props` `.csproj` `.vbproj` `.fsproj` `.sqlproj` | `Condition=` → `if C:`  |
-| `--leo`        | `.leo`                                   | Leo outline (headline+body, clones marked)  |
-| `--special`    | —                                        | Proprietary business-element rules          |
+Default to `--auto` — it picks the dialect from the extension (`.xsl`/`.xslt`,
+`.xsd`, `.sch`, `.wsdl`, `.targets`/`.props`/`.csproj`/`.vbproj`/`.fsproj`/
+`.sqlproj`, `.leo`) and rewrites that vocabulary into terser pseudocode
+(XSLT's `match`/`foreach`/`<-`, MSBuild's `Condition=` → `if C:`, Leo's
+headline+body join, ...):
 
 ```bash
-unxml --xslt transform.xslt
-unxml --auto schema.xsd        # detects --xsd
+unxml --auto file.xsd
 ```
+
+No extension to sniff (e.g. stdin) or an unusual filename: pass the flag
+directly — `--xslt`, `--xsd`, `--schematron`, `--wsdl`, `--msbuild`, `--leo`.
+`--special` (proprietary business-element rules) has no extension trigger and
+always needs the explicit flag.
 
 ## Reading aids
 
