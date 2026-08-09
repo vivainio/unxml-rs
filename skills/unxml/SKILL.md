@@ -1,49 +1,64 @@
 ---
 name: unxml
-description: Flatten and compare XML/HTML files with the `unxml` CLI — read, diff, or fingerprint XML, HTML, XSLT, XSD, WSDL, or Schematron documents as a terse, token-efficient YAML/Pug-like form. Invoke with /unxml.
+description: Flatten and compare XML, HTML, and JSON files with the `unxml` CLI — read, diff, or fingerprint XML, HTML, JSON, XSLT, XSD, WSDL, Schematron, MSBuild, or Leo (.leo) documents as a terse, token-efficient YAML/Pug-like form. Invoke with /unxml.
 disable-model-invocation: true
 ---
 
 # unxml
 
-`unxml` rewrites XML/HTML into a light, indented YAML/Pug-like form that is
-much easier to read and diff than raw markup. Reach for it before catting a
-large or deeply-nested XML file — the flattened output is a fraction of the
-tokens and far more legible.
+Flattens XML/HTML/JSON into indented YAML/Pug-like text: far fewer tokens than
+raw markup/JSON, easier to read. Use before catting a large or nested file.
 
 ## Output shape
 
-- Attributes go in parentheses, Pug-style and sorted: `el(attr="value", flag)`
-- Text content uses `=`: `ElementName = text content`
-- Nesting is shown by indentation
-- HTML classes attach to the name: `div.row.active`
-- Inline prose (a `<para>` with inline `<command>`/`<link>`) stays on one line
+- Attributes: `el(attr="value", flag)`
+- Text: `ElementName = text content`
+- Nesting: indentation
+- HTML classes: `div.row.active`
+- Inline prose stays on one line (`<para>` with inline `<command>`/`<link>`)
 
 ## Core usage
 
 ```bash
-unxml file.xml                 # flatten one file (plain XML render by default)
+unxml file.xml                 # plain XML render by default
 unxml '*.xml'                  # glob; multiple files get `// FILE:` headers
-some-cmd | unxml --stdin       # read from stdin (assumes XML)
+some-cmd | unxml --stdin       # stdin, assumes XML
 cat page.html | unxml --stdin --format html
+```
+
+## JSON
+
+`.json` auto-detected, no flag needed. Same `key = value`/indentation as XML.
+Uniform scalar-object arrays → compact table (biggest token win):
+
+```
+users[]{id,name,team}
+  1, Ada, platform
+  2, Lin, data
+```
+
+`--auto`: JSON Schema docs / OpenAPI `components.schemas.*`/`schema` keys →
+compact property view:
+
+```
+schema : object
+  id! : integer int64
+  tags : string[]
 ```
 
 ## Processing modes
 
-Each mode rewrites a vocabulary into terser pseudocode. Pass the flag explicitly,
-or use `--auto` to pick by extension (`.xsl`/`.xslt`→xslt, `.sch`→schematron,
-`.xsd`→xsd, `.targets`/`.props`/`.csproj`/...→msbuild). An explicit flag always
-wins over `--auto`.
+`--auto` picks by extension; explicit flag always wins.
 
-| Flag           | For                                              |
-| -------------- | ------------------------------------------------ |
-| `--xslt`       | XSLT stylesheets (`match`, `foreach`, `<-` …)    |
-| `--xsd`        | XML Schema                                       |
-| `--schematron` | Schematron rule schemas                          |
-| `--wsdl`       | WSDL 1.1 / SOAP (embedded schema via XSD rules)  |
-| `--msbuild`    | MSBuild `.targets`/`.props`/project files (`Condition=` → `if C:`) |
-| `--special`    | Proprietary business-element rules               |
-| `--auto`       | Pick the mode from each file's extension         |
+| Flag           | Extension(s)                            | For                                        |
+| -------------- | ---------------------------------------- | ------------------------------------------- |
+| `--xslt`       | `.xsl` `.xslt`                           | XSLT (`match`, `foreach`, `<-`)             |
+| `--xsd`        | `.xsd`                                   | XML Schema                                  |
+| `--schematron` | `.sch`                                   | Schematron rules                            |
+| `--wsdl`       | `.wsdl`                                  | WSDL 1.1/SOAP (embedded schema via XSD)     |
+| `--msbuild`    | `.targets` `.props` `.csproj` `.vbproj` `.fsproj` `.sqlproj` | `Condition=` → `if C:`  |
+| `--leo`        | `.leo`                                   | Leo outline (headline+body, clones marked)  |
+| `--special`    | —                                        | Proprietary business-element rules          |
 
 ```bash
 unxml --xslt transform.xslt
@@ -52,38 +67,31 @@ unxml --auto schema.xsd        # detects --xsd
 
 ## Reading aids
 
-- `--bat` — pipe through `bat -l unxml` for paged, syntax-highlighted output
-  (implies `--auto`; falls back to plain stdout if `bat` is missing).
-- `--hide-ns cbc,cac` — drop noisy namespace prefixes (and their `xmlns:` decls)
-  from element/attribute names. Repeatable/comma-separated. `--hide-ns ALL`
-  strips every prefix to bare local names. Under `--auto`, well-known docs
-  (e.g. UBL instances) get a sensible set hidden automatically.
-- `--select InvoiceLine` — render only subtrees matching that tag (bare name
-  matches local name, ignoring prefix; `cac:InvoiceLine` matches the full name).
-- `--expand` — inline matching imported templates for `xsl:apply-templates`.
+- `--bat` — page through `bat -l unxml`, syntax-highlighted (implies `--auto`;
+  falls back to plain stdout if `bat` missing)
+- `--hide-ns cbc,cac` — drop prefixes + their `xmlns:` decls from names.
+  Repeatable/comma-separated. `--hide-ns ALL` = every prefix. `--auto` also
+  auto-hides for known vocabularies (e.g. UBL).
+- `--select InvoiceLine` — only subtrees matching that tag (bare = local name,
+  `cac:InvoiceLine` = full name)
+- `--expand` — inline matching imported templates for `xsl:apply-templates`
 
-## Diffing two documents (`--canonical`)
+## `--canonical` (diffing)
 
-`--canonical` rebinds namespace prefixes to stable names and sorts sibling
-elements, so two equivalent documents that differ only in prefix spelling,
-default-vs-explicit namespace, or sibling order diff cleanly:
+Rebinds namespace prefixes to stable names, sorts siblings — equivalent docs
+diff identically regardless of prefix spelling/order:
 
 ```bash
 diff <(unxml --canonical a.xml) <(unxml --canonical b.xml)
 ```
 
-In a dialect mode (`--xslt`/`--xsd`/`--wsdl`/`--schematron`/`--msbuild`) element
-order is significant, so `--canonical` normalises prefixes only and preserves
-order.
+Dialect modes (`--xslt`/`--xsd`/`--wsdl`/`--schematron`/`--msbuild`): prefixes
+only, order preserved (element order is significant there).
 
 ## Git integration
 
-`unxml git <args>` transparently runs `git <args>` (diff, log -p, show, ...)
-with a `textconv` driver applied for just that one invocation, so XML/HTML
-render in the canonicalised flattened form and prefix- or order-only churn
-drops out of the diff. Nothing is written to `.git/config` or
-`.git/info/attributes` — it's a drop-in replacement for plain `git` on a
-one-off basis:
+`unxml git <args>` = `git <args>` with the textconv driver for that one call
+only — nothing written to `.git/`:
 
 ```bash
 unxml git diff
@@ -91,32 +99,30 @@ unxml git log -p -- invoice.xml
 unxml git show HEAD~1:invoice.xml
 ```
 
-## Structural fingerprint (`--paths`)
+## `--paths` (structural fingerprint)
 
-`--paths` dumps the set of *distinct* element paths as an indented tree (each
-node once, annotated with the union of attribute names seen there) instead of
-the full document — answers "what shapes exist here".
+Distinct element paths as a tree (dedup siblings, union of attrs per path)
+instead of the full document:
 
 ```bash
 unxml --paths invoice.xml
-unxml --paths --depth 2 doc.xml            # cap nesting depth (root = level 1)
-unxml --paths --no-attrs doc.xml           # keep only namespaces, drop attrs
+unxml --paths --depth 2 doc.xml            # cap nesting (root = level 1)
+unxml --paths --no-attrs doc.xml           # namespaces only, drop attrs
 ```
 
-Format census across a directory — cluster files by structure:
+Format census across a directory:
 
 ```bash
 for f in *.xml; do unxml --paths --depth 1 --no-attrs --hide-ns ALL "$f"; done \
   | sort | uniq -c | sort -rn
 ```
 
-`--paths` composes with `--select`, `--hide-ns`, and `--canonical`.
+Composes with `--select`, `--hide-ns`, `--canonical`.
 
 ## Tips
 
-- Default render is plain XML — add `--auto` (or an explicit mode) for
-  stylesheets/schemas.
-- For unknown vocabularies, `--paths --hide-ns ALL` gives a prefix-free
-  structural signature.
-- Prefer `unxml` over reading raw XML when the goal is to understand structure
-  or compare files; it is dramatically more token-efficient.
+- Default = plain XML; add `--auto` (or explicit mode) for stylesheets/schemas.
+  `.json` needs no flag.
+- Unknown vocabulary: `--paths --hide-ns ALL` for a prefix-free signature.
+- Prefer `unxml` over raw XML/JSON for understanding structure or comparing
+  files — dramatically fewer tokens.
