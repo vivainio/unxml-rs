@@ -275,4 +275,19 @@ else if '$(OS)' == 'Unix':
         );
         assert!(html.contains("<span class=\"entity name section unxml\">Child A (clone)</span>"));
     }
+
+    #[test]
+    fn does_not_highlight_numbers_inside_hyphenated_param_names() {
+        let source = "param item-1234-displayName := ns2:convert012($doc/ns:value)\nparam limit := 1234\n";
+        let set = syntax_set().unwrap();
+        let syntax = find_syntax(&set, "UnXML").unwrap();
+        let html = highlight_spans(&set, syntax, source).unwrap();
+
+        assert!(html.contains("item-1234-displayName"));
+        assert!(!html.contains("item-<span class=\"constant numeric unxml\">1234</span>"));
+        assert!(!html.contains("item<span class=\"constant numeric unxml\">-1234</span>"));
+        assert!(!html.contains("ns<span class=\"constant numeric unxml\">2</span>"));
+        assert!(!html.contains("convert<span class=\"constant numeric unxml\">012</span>"));
+        assert!(html.contains("<span class=\"constant numeric unxml\">1234</span>"));
+    }
 }

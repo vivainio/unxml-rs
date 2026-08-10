@@ -296,7 +296,9 @@ contexts:
       scope: punctuation.separator.unxml
     - match: '\b(?:true|false|null)\b'
       scope: constant.language.unxml
-    - match: '-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?'
+    # Do not color numeric fragments inside names such as
+    # `item-1234-displayName` as number literals.
+    - match: '(?<![\w.-])-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?(?![\w.-])'
       scope: constant.numeric.unxml
 
   # An `each` clause line: like an XPath line but with the `in` keyword.
