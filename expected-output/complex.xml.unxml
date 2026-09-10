@@ -6,7 +6,7 @@ catalog(
     product(category="electronics", featured="true")
       id = E001
       name = Smartphone
-      description
+      description = Latest smartphone with advanced features
       price(currency="USD") = 599.99
       specifications
         display

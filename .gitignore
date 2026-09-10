@@ -20,3 +20,6 @@ Thumbs.db
 
 # Debug files
 *.pdb
+
+# Local scratch/planning notes, not part of the shipped project
+HANDOVER.md

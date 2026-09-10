@@ -3,6 +3,8 @@
 
 mod canonical;
 mod cli;
+mod diff;
+mod diffcmd;
 mod document;
 mod highlight;
 mod install;
@@ -11,12 +13,16 @@ mod leo;
 mod model;
 mod msbuild;
 mod parse;
+mod patch;
+mod patchcmd;
 mod paths;
+mod pathsel;
 mod process;
 mod render;
 mod schematron;
 mod types;
 mod wsdl;
+mod xmlwrite;
 mod xsd;
 mod xslt;
 
@@ -34,12 +40,18 @@ use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
     // `unxml git <args>` is a thin passthrough to `git <args>` with the unxml
-    // textconv driver applied for just this invocation. It's intercepted
-    // ahead of the normal `Cli::parse()` below, since `files: Vec<String>`
-    // would otherwise swallow "git" and everything after it as filenames.
+    // textconv driver applied for just this invocation. `unxml diff`/`unxml
+    // patch` are intercepted the same way, for the same reason: `Cli::files:
+    // Vec<String>` is a greedy positional that would otherwise swallow
+    // "diff"/"patch" and everything after it as filenames rather than
+    // dispatching to a subcommand. All three are checked ahead of the normal
+    // `Cli::parse()` below.
     let rest: Vec<String> = std::env::args().skip(1).collect();
-    if rest.first().map(String::as_str) == Some("git") {
-        return install::git_passthrough(&rest[1..]);
+    match rest.first().map(String::as_str) {
+        Some("git") => return install::git_passthrough(&rest[1..]),
+        Some("diff") => return diffcmd::run(&rest[1..]),
+        Some("patch") => return patchcmd::run(&rest[1..]),
+        _ => {}
     }
 
     let cli = Cli::parse();
