@@ -280,6 +280,15 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                         .push(NodeRef::Text(text_content.to_string()));
                 }
             }
+            Ok(Event::CData(ref e)) => {
+                // CDATA is literal character data, not an ignorable declaration.
+                // Keep its whitespace and do not entity-decode its contents.
+                let text = std::str::from_utf8(e.as_ref()).context("Invalid UTF-8 in CDATA")?;
+                if let Some(current) = elements_stack.last_mut() {
+                    current.text_content.push_str(text);
+                    current.nodes.push(NodeRef::Text(text.to_string()));
+                }
+            }
             Ok(Event::Empty(ref e)) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 let mut element = XmlElement::new(name);
@@ -350,7 +359,7 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                     e
                 ));
             }
-            _ => {} // Ignore other events like comments, CDATA, etc.
+            _ => {} // Ignore declarations and processing instructions.
         }
         buf.clear();
     }

@@ -57,7 +57,7 @@ pub(crate) fn generate(base: &[XmlElement], modified: &[XmlElement]) -> Result<V
         );
     }
 
-    let ops = reorder(ops);
+    let ops = reorder(base, ops);
     verify(base, modified, &ops)?;
     Ok(ops)
 }
@@ -297,42 +297,41 @@ fn next_equal_base_index(diff_ops: &[DiffOp], from_block_idx: usize) -> Option<u
         })
 }
 
-/// Order generated ops so applying them in sequence can't have one op's `sel`
-/// invalidated by an earlier one in the same list: attribute/text edits never
-/// change sibling counts, so they run first; removals run in descending
-/// same-name-ordinal order (globally — a removal only ever affects the
-/// numbering of not-yet-processed *same-parent, same-name* siblings at a
-/// lower index, so a single global descending sort is sufficient regardless
-/// of interleaving with unrelated removals elsewhere in the tree); inserts
-/// run last, since every insert anchors on an unmodified, already-present
-/// sibling — never on another op's target.
-fn reorder(ops: Vec<Op>) -> Vec<Op> {
-    let mut attr_or_text = Vec::new();
-    let mut removes = Vec::new();
-    let mut inserts = Vec::new();
+/// Apply value edits first, then structural edits from the end of the original
+/// document backwards. Descendants precede their ancestors, so changing a
+/// sibling count cannot invalidate a selector still waiting to be applied.
+fn reorder(base: &[XmlElement], ops: Vec<Op>) -> Vec<Op> {
+    let mut edits = Vec::new();
+    let mut structural = Vec::new();
     for op in ops {
         match op {
-            Op::Remove { .. } => removes.push(op),
-            Op::InsertAfter { .. } | Op::InsertBefore { .. } => inserts.push(op),
-            other => attr_or_text.push(other),
+            Op::Remove { .. } | Op::InsertAfter { .. } | Op::InsertBefore { .. } => {
+                let mut siblings = base;
+                let mut position = Vec::new();
+                for segment in op.sel().split('/') {
+                    let (name, ordinal) = segment.rsplit_once('[').unwrap();
+                    let ordinal: usize = ordinal.trim_end_matches(']').parse().unwrap();
+                    let index = siblings
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, e)| e.name == name)
+                        .nth(ordinal - 1)
+                        .unwrap()
+                        .0;
+                    position.push(index);
+                    siblings = &siblings[index].children;
+                }
+                // A leading insertion and a following insertion can share an
+                // anchor. Insert after it before shifting it with insert-before.
+                let after = matches!(op, Op::InsertAfter { .. });
+                structural.push((position, after, op));
+            }
+            other => edits.push(other),
         }
     }
-    removes.sort_by_key(|op| std::cmp::Reverse(trailing_index(op.sel())));
-    let mut result = Vec::with_capacity(attr_or_text.len() + removes.len() + inserts.len());
-    result.extend(attr_or_text);
-    result.extend(removes);
-    result.extend(inserts);
-    result
-}
-
-fn trailing_index(sel: &str) -> usize {
-    let Some(open) = sel.rfind('[') else {
-        return 0;
-    };
-    let Some(close) = sel[open..].find(']') else {
-        return 0;
-    };
-    sel[open + 1..open + close].parse().unwrap_or(0)
+    structural.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| b.1.cmp(&a.1)));
+    edits.extend(structural.into_iter().map(|(_, _, op)| op));
+    edits
 }
 
 /// Apply `ops` to a fresh clone of `base` and require the result to
@@ -371,7 +370,7 @@ fn verify(base: &[XmlElement], modified: &[XmlElement], ops: &[Op]) -> Result<()
 }
 
 fn canonical_render(mut roots: Vec<XmlElement>) -> String {
-    canonicalize(&mut roots, true);
+    canonicalize(&mut roots, false);
     let opts = FormatOpts::default();
     roots
         .iter()
@@ -387,6 +386,51 @@ mod tests {
 
     fn parse(xml: &str) -> Vec<XmlElement> {
         parse_xml(xml).unwrap().roots
+    }
+
+    fn assert_round_trip(base: &str, modified: &str) {
+        let mut base = parse(base);
+        let modified = parse(modified);
+        let ops = generate(&base, &modified).unwrap();
+        let ops = patch::load_all(&patch::render_all(&ops)).unwrap();
+        patch::apply(&mut base, &ops).unwrap();
+        assert_eq!(write_elements(&base), write_elements(&modified));
+    }
+
+    #[test]
+    fn structural_edits_keep_original_anchors() {
+        assert_round_trip("<r><b/><a/><c/><a/></r>", "<r><a/><b/><a/><d/><c/></r>");
+        assert_round_trip("<r><a/><b/><a/></r>", "<r><b/><a/><c/></r>");
+        assert_round_trip(
+            "<r><a/><b/><a><x/><y/><x/></a></r>",
+            "<r><b/><a><y/><x/><z/></a></r>",
+        );
+        assert_round_trip("<r><a/></r>", "<r><b/><a/><c/></r>");
+    }
+
+    #[test]
+    fn verification_rejects_wrong_sibling_order() {
+        assert!(verify(&parse("<r><a/><b/></r>"), &parse("<r><b/><a/></r>"), &[]).is_err());
+    }
+
+    #[test]
+    fn cdata_survives_attribute_patch() {
+        assert_round_trip(
+            "<r><note><![CDATA[hello <world> & friends]]></note><a/></r>",
+            "<r><note><![CDATA[hello <world> & friends]]></note><a v=\"1\"/></r>",
+        );
+        let mut base = parse("<r><![CDATA[hello]]><a/></r>");
+        patch::apply(
+            &mut base,
+            &[Op::SetAttr {
+                sel: "r[1]/a[1]".into(),
+                name: "v".into(),
+                value: "1".into(),
+            }],
+        )
+        .unwrap();
+        assert!(write_elements(&base).contains("hello"));
+        assert!(generate(&parse("<r><![CDATA[hello]]><a/></r>"), &base).is_err());
     }
 
     #[test]
