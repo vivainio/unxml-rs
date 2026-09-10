@@ -278,7 +278,8 @@ else if '$(OS)' == 'Unix':
 
     #[test]
     fn does_not_highlight_numbers_inside_hyphenated_param_names() {
-        let source = "param item-1234-displayName := ns2:convert012($doc/ns:value)\nparam limit := 1234\n";
+        let source =
+            "param item-1234-displayName := ns2:convert012($doc/ns:value)\nparam limit := 1234\n";
         let set = syntax_set().unwrap();
         let syntax = find_syntax(&set, "UnXML").unwrap();
         let html = highlight_spans(&set, syntax, source).unwrap();
