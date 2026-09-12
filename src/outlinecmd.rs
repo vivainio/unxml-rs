@@ -4,10 +4,11 @@
 //! without reading each in full. See `outline::render_outline` for the entry
 //! recognizers and output format.
 
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Parser;
 
-use crate::outline::{Dialect, render_outline};
+use crate::model::XmlElement;
+use crate::outline::{Dialect, render_outline, sniff_special};
 use crate::parse::{InputFormat, detect_format, expand_file_args, parse_xml, read_file_lenient};
 
 #[derive(Parser)]
@@ -27,17 +28,21 @@ struct OutlineArgs {
 
     /// Autodetect --xslt from each file's extension (.xsl/.xslt)
     ///
-    /// --special has no reliable extension signal (it's plain .xml), so it is
-    /// never inferred; pass --special explicitly when scanning such files.
+    /// --special is auto-detected regardless of this flag whenever the
+    /// document contains its unambiguous markers (`builtInMethodParameterList`,
+    /// or a `method` with `jumpToXmlFile`/`jumpToXPath`) — it has no reliable
+    /// extension signal (it's plain .xml), so content is sniffed instead.
     #[arg(long)]
     auto: bool,
 }
 
-fn dialect_for(file_path: &str, args: &OutlineArgs) -> Dialect {
+fn dialect_for(file_path: &str, roots: &[XmlElement], args: &OutlineArgs) -> Dialect {
     if args.special {
         Dialect::Special
     } else if args.xslt {
         Dialect::Xslt
+    } else if sniff_special(roots) {
+        Dialect::Special
     } else if args.auto {
         let ext = std::path::Path::new(file_path)
             .extension()
@@ -83,8 +88,14 @@ pub(crate) fn run(args: &[String]) -> Result<()> {
             continue;
         }
 
-        let parsed = parse_xml(&content).with_context(|| format!("failed to parse {file_path}"))?;
-        let dialect = dialect_for(file_path, &args);
+        let parsed = match parse_xml(&content) {
+            Ok(parsed) => parsed,
+            Err(e) => {
+                eprintln!("Skipping {file_path}: failed to parse as XML ({e})");
+                continue;
+            }
+        };
+        let dialect = dialect_for(file_path, &parsed.roots, &args);
         let rendered = render_outline(&parsed.roots, dialect);
 
         if i > 0 {
