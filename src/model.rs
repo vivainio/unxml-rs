@@ -107,6 +107,13 @@ pub(crate) struct XmlElement {
     /// as a single line of original XML rather than a stack of flattened nodes.
     /// `None` for elements built outside the XML parser (e.g. the HTML path).
     pub(crate) inner_source: Option<String>,
+    /// 1-indexed source line where this element's start tag begins. `0` for
+    /// elements built outside the XML parser (e.g. the HTML path), which
+    /// don't track source position. Used by `outline` to report line spans.
+    pub(crate) start_line: usize,
+    /// 1-indexed source line where this element's end tag (or, for a
+    /// self-closing element, its own tag) finishes.
+    pub(crate) end_line: usize,
 }
 
 impl XmlElement {
@@ -118,6 +125,8 @@ impl XmlElement {
             children: Vec::new(),
             nodes: Vec::new(),
             inner_source: None,
+            start_line: 0,
+            end_line: 0,
         }
     }
 

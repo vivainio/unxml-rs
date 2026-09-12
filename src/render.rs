@@ -9,6 +9,39 @@ use crate::xslt::TemplateRegistry;
 /// `function`/`template` param signature) wraps to one item per line.
 pub(crate) const WRAP_WIDTH: usize = 100;
 
+/// Renders a `--special` `method` element's `jumpToXmlFile`/`jumpToXPath`
+/// cross-file reference as `XmlFile::SectionName(name="methodName")`. Shared
+/// with `outline`, which reuses this exact label as its `call` entry text.
+pub(crate) fn method_call_target(
+    jump_to_xml_file: &str,
+    jump_to_xpath: &str,
+    name: Option<&str>,
+) -> String {
+    // Extract the file name from jumpToXmlFile (remove {v, prefix and } suffix)
+    let xml_file = if jump_to_xml_file.starts_with("{v,") && jump_to_xml_file.ends_with('}') {
+        &jump_to_xml_file[3..jump_to_xml_file.len() - 1]
+    } else {
+        jump_to_xml_file
+    };
+
+    // Extract section name from jumpToXPath using pattern //section[@name='SECTION_NAME']
+    let section_name = if let Some(start) = jump_to_xpath.find("[@name='") {
+        let start_idx = start + 8; // Length of "[@name='"
+        if let Some(end) = jump_to_xpath[start_idx..].find("']") {
+            &jump_to_xpath[start_idx..start_idx + end]
+        } else {
+            "UnknownSection"
+        }
+    } else {
+        "UnknownSection"
+    };
+
+    match name {
+        Some(name) => format!("{xml_file}::{section_name}(name=\"{name}\")"),
+        None => format!("{xml_file}::{section_name}()"),
+    }
+}
+
 /// Columns used by the last (unterminated) line of `s` — i.e. characters after
 /// the final newline. Used to tell `render_attrs` how much of the line the
 /// element name has already consumed.
@@ -279,6 +312,8 @@ impl XmlElement {
                 children: self.children.clone(),
                 nodes: self.nodes.clone(),
                 inner_source: self.inner_source.clone(),
+                start_line: self.start_line,
+                end_line: self.end_line,
             };
 
             // Always process the modified element normally (section should still appear)
@@ -303,6 +338,8 @@ impl XmlElement {
                 children: self.children.clone(),
                 nodes: self.nodes.clone(),
                 inner_source: self.inner_source.clone(),
+                start_line: self.start_line,
+                end_line: self.end_line,
             };
 
             // Special handling for section elements after include processing
@@ -411,37 +448,12 @@ impl XmlElement {
                         self.attributes.get("jumpToXmlFile"),
                         self.attributes.get("jumpToXPath"),
                     ) {
-                        // Extract the file name from jumpToXmlFile (remove {v, prefix and } suffix)
-                        let xml_file = if jump_to_xml_file.starts_with("{v,")
-                            && jump_to_xml_file.ends_with('}')
-                        {
-                            &jump_to_xml_file[3..jump_to_xml_file.len() - 1]
-                        } else {
-                            jump_to_xml_file
-                        };
-
-                        // Extract section name from jumpToXPath using pattern //section[@name='SECTION_NAME']
-                        let section_name = if let Some(start) = jump_to_xpath.find("[@name='") {
-                            let start_idx = start + 8; // Length of "[@name='"
-                            if let Some(end) = jump_to_xpath[start_idx..].find("']") {
-                                &jump_to_xpath[start_idx..start_idx + end]
-                            } else {
-                                "UnknownSection"
-                            }
-                        } else {
-                            "UnknownSection"
-                        };
-
-                        // Build the transformation: XmlFile::SectionName(name="methodName")
-                        result.push_str(&format!("{indent_str}{xml_file}::{section_name}"));
-
-                        // Add name parameter if present
-                        if let Some(name) = self.attributes.get("name") {
-                            result.push_str(&format!("(name=\"{name}\")"));
-                        } else {
-                            result.push_str("()");
-                        }
-
+                        let target = method_call_target(
+                            jump_to_xml_file,
+                            jump_to_xpath,
+                            self.attributes.get("name").map(String::as_str),
+                        );
+                        result.push_str(&format!("{indent_str}{target}"));
                         result.push('\n');
 
                         // Process children elements

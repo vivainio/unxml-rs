@@ -12,6 +12,8 @@ mod json;
 mod leo;
 mod model;
 mod msbuild;
+mod outline;
+mod outlinecmd;
 mod parse;
 mod patch;
 mod patchcmd;
@@ -30,27 +32,27 @@ use std::collections::HashSet;
 
 use anyhow::{Context, Result};
 use clap::Parser;
-use glob::glob;
 
 use crate::cli::Cli;
 use crate::document::detect_mode_from_ext;
 use crate::model::{Collapse, FormatOpts};
-use crate::parse::{detect_format, read_file_lenient};
+use crate::parse::{detect_format, expand_file_args, read_file_lenient};
 use crate::process::{ProcessOptions, emit, process_file, process_stdin};
 
 fn main() -> Result<()> {
     // `unxml git <args>` is a thin passthrough to `git <args>` with the unxml
     // textconv driver applied for just this invocation. `unxml diff`/`unxml
-    // patch` are intercepted the same way, for the same reason: `Cli::files:
-    // Vec<String>` is a greedy positional that would otherwise swallow
-    // "diff"/"patch" and everything after it as filenames rather than
-    // dispatching to a subcommand. All three are checked ahead of the normal
-    // `Cli::parse()` below.
+    // patch`/`unxml outline` are intercepted the same way, for the same
+    // reason: `Cli::files: Vec<String>` is a greedy positional that would
+    // otherwise swallow "diff"/"patch"/"outline" and everything after it as
+    // filenames rather than dispatching to a subcommand. All four are
+    // checked ahead of the normal `Cli::parse()` below.
     let rest: Vec<String> = std::env::args().skip(1).collect();
     match rest.first().map(String::as_str) {
         Some("git") => return install::git_passthrough(&rest[1..]),
         Some("diff") => return diffcmd::run(&rest[1..]),
         Some("patch") => return patchcmd::run(&rest[1..]),
+        Some("outline") => return outlinecmd::run(&rest[1..]),
         _ => {}
     }
 
@@ -186,42 +188,7 @@ fn main() -> Result<()> {
         ));
     }
 
-    let mut all_files = Vec::new();
-
-    // Expand glob patterns and collect all files
-    for pattern in &cli.files {
-        // An existing file takes precedence over glob interpretation: real
-        // filenames can contain glob metacharacters (e.g. `Invoice-[uuid].xml`),
-        // and an explicitly-passed file that exists should be read verbatim
-        // rather than treated as a (likely non-matching) pattern.
-        if std::path::Path::new(pattern).is_file() {
-            all_files.push(pattern.clone());
-        } else if pattern.contains('*') || pattern.contains('?') || pattern.contains('[') {
-            // This is a glob pattern
-            match glob(pattern) {
-                Ok(paths) => {
-                    for entry in paths {
-                        match entry {
-                            Ok(path) => {
-                                if let Some(path_str) = path.to_str() {
-                                    all_files.push(path_str.to_string());
-                                }
-                            }
-                            Err(e) => {
-                                eprintln!("Warning: Error reading glob entry: {e}");
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    return Err(anyhow::anyhow!("Invalid glob pattern '{}': {}", pattern, e));
-                }
-            }
-        } else {
-            // This is a regular file path
-            all_files.push(pattern.clone());
-        }
-    }
+    let all_files = expand_file_args(&cli.files)?;
 
     if all_files.is_empty() {
         return Err(anyhow::anyhow!(

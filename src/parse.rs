@@ -4,12 +4,49 @@
 use std::fs;
 use std::path::Path;
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
+use glob::glob;
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use scraper::{ElementRef, Html, Selector};
 
 use crate::model::{NodeRef, XmlElement};
+
+/// Expand a mix of literal file paths and glob patterns (e.g. `*.xml`) into
+/// the concrete list of files to process. An existing file takes precedence
+/// over glob interpretation: real filenames can contain glob metacharacters
+/// (e.g. `Invoice-[uuid].xml`), and an explicitly-passed file that exists
+/// should be read verbatim rather than treated as a (likely non-matching)
+/// pattern.
+pub(crate) fn expand_file_args(patterns: &[String]) -> Result<Vec<String>> {
+    let mut all_files = Vec::new();
+    for pattern in patterns {
+        if Path::new(pattern).is_file() {
+            all_files.push(pattern.clone());
+        } else if pattern.contains('*') || pattern.contains('?') || pattern.contains('[') {
+            match glob(pattern) {
+                Ok(paths) => {
+                    for entry in paths {
+                        match entry {
+                            Ok(path) => {
+                                if let Some(path_str) = path.to_str() {
+                                    all_files.push(path_str.to_string());
+                                }
+                            }
+                            Err(e) => {
+                                eprintln!("Warning: Error reading glob entry: {e}");
+                            }
+                        }
+                    }
+                }
+                Err(e) => bail!("Invalid glob pattern '{pattern}': {e}"),
+            }
+        } else {
+            all_files.push(pattern.clone());
+        }
+    }
+    Ok(all_files)
+}
 
 /// Read a file as text, tolerating non-UTF-8 inputs.
 ///
@@ -201,7 +238,28 @@ pub(crate) struct ParsedXml {
     pub(crate) top_comments: Vec<(usize, String)>,
 }
 
+/// Byte offset (0-indexed) where each source line begins, for translating a
+/// `quick_xml` `buffer_position()` into a 1-indexed line number. `line_starts[0]`
+/// is always `0`; the line containing a given offset is
+/// `line_starts.partition_point(|&s| s <= offset)`.
+fn line_starts(content: &str) -> Vec<usize> {
+    let mut starts = vec![0];
+    starts.extend(
+        content
+            .bytes()
+            .enumerate()
+            .filter(|(_, b)| *b == b'\n')
+            .map(|(i, _)| i + 1),
+    );
+    starts
+}
+
+fn offset_to_line(line_starts: &[usize], offset: usize) -> usize {
+    line_starts.partition_point(|&s| s <= offset)
+}
+
 pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
+    let line_starts = line_starts(content);
     let mut reader = Reader::from_str(content);
     reader.config_mut().trim_text(true);
 
@@ -228,6 +286,17 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
             Ok(Event::Start(ref e)) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 let mut element = XmlElement::new(name);
+                // `pos_before` is unreliable here: with `trim_text(true)`,
+                // insignificant whitespace between the previous tag and this
+                // one is skipped silently within this same read, so
+                // `pos_before` lands at the *previous* tag's end, not this
+                // tag's `<`. Derive the true start by walking back from the
+                // now-current (post-tag) position by this tag's raw length
+                // (`<` + `e.as_ref()` + `>`) — the same trick already used
+                // below for a comment's start offset.
+                let tag_start =
+                    (reader.buffer_position() as usize).saturating_sub(e.as_ref().len() + 2);
+                element.start_line = offset_to_line(&line_starts, tag_start);
 
                 // Parse attributes
                 for attr in e.attributes() {
@@ -255,6 +324,8 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                         completed_element.inner_source =
                             content.get(inner_start..pos_before).map(str::to_string);
                     }
+                    completed_element.end_line =
+                        offset_to_line(&line_starts, reader.buffer_position() as usize);
                     if let Some(parent) = elements_stack.last_mut() {
                         parent.nodes.push(NodeRef::Child(parent.children.len()));
                         parent.children.push(completed_element);
@@ -292,6 +363,13 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
             Ok(Event::Empty(ref e)) => {
                 let name = String::from_utf8_lossy(e.name().as_ref()).to_string();
                 let mut element = XmlElement::new(name);
+                // See the matching comment in the `Start` arm: `pos_before` is
+                // unreliable, so derive the start from the post-tag position
+                // minus this self-closing tag's raw length (`<` + `e.as_ref()`
+                // + `/>`).
+                let tag_start =
+                    (reader.buffer_position() as usize).saturating_sub(e.as_ref().len() + 3);
+                element.start_line = offset_to_line(&line_starts, tag_start);
 
                 // Parse attributes for empty elements
                 for attr in e.attributes() {
@@ -307,6 +385,7 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                     element.attributes.insert(key, value);
                 }
 
+                element.end_line = offset_to_line(&line_starts, reader.buffer_position() as usize);
                 if let Some(parent) = elements_stack.last_mut() {
                     parent.nodes.push(NodeRef::Child(parent.children.len()));
                     parent.children.push(element);
@@ -368,4 +447,45 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
         roots: root_elements,
         top_comments,
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Regression test for a bug the `outline` feature surfaced: with
+    /// `trim_text(true)`, `quick_xml` silently skips insignificant whitespace
+    /// between tags rather than emitting a Text event for it, so a naive
+    /// "position before this read" offset lands at the *previous* tag's end,
+    /// not this tag's `<` — drifting further off with every extra blank line
+    /// between elements. Each sibling below is separated by a different
+    /// amount of blank-line padding specifically to catch that drift
+    /// accumulating (a fix that's merely "off by one" everywhere would still
+    /// fail this).
+    #[test]
+    fn start_and_end_lines_are_exact_despite_varying_inter_tag_whitespace() {
+        let xml = "<root>\n\
+                    <a>1</a>\n\
+                    \n\
+                    <b>2</b>\n\
+                    \n\n\
+                    <c>\n  <d/>\n</c>\n\
+                    </root>\n";
+        let root = &parse_xml(xml).unwrap().roots[0];
+        assert_eq!((root.start_line, root.end_line), (1, 10));
+        assert_eq!(
+            (root.children[0].start_line, root.children[0].end_line),
+            (2, 2)
+        );
+        assert_eq!(
+            (root.children[1].start_line, root.children[1].end_line),
+            (4, 4)
+        );
+        assert_eq!(
+            (root.children[2].start_line, root.children[2].end_line),
+            (7, 9)
+        );
+        let d = &root.children[2].children[0];
+        assert_eq!((d.start_line, d.end_line), (8, 8));
+    }
 }
