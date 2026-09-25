@@ -314,6 +314,7 @@ impl XmlElement {
                 inner_source: self.inner_source.clone(),
                 start_line: self.start_line,
                 end_line: self.end_line,
+                byte_range: self.byte_range,
             };
 
             // Always process the modified element normally (section should still appear)
@@ -340,6 +341,7 @@ impl XmlElement {
                 inner_source: self.inner_source.clone(),
                 start_line: self.start_line,
                 end_line: self.end_line,
+                byte_range: self.byte_range,
             };
 
             // Special handling for section elements after include processing

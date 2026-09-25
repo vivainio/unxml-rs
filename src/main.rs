@@ -39,7 +39,7 @@ use crate::cli::Cli;
 use crate::inputs::{Output, Renderer, ZipSpec};
 use crate::model::{Collapse, FormatOpts};
 use crate::parse::{decode_lenient, detect_format, expand_file_args, read_file_lenient};
-use crate::process::{ProcessOptions, emit, process_stdin};
+use crate::process::{OutputMode, ProcessOptions, emit, process_stdin};
 use crate::xpathmini::XPathMini;
 
 fn main() -> Result<()> {
@@ -133,6 +133,13 @@ fn main() -> Result<()> {
         no_attrs: cli.no_attrs,
         fold: cli.fold,
         expand: cli.expand,
+        output: if cli.jsonl {
+            OutputMode::Jsonl
+        } else if cli.files_with_matches {
+            OutputMode::FilesWithMatches
+        } else {
+            OutputMode::Text
+        },
     };
 
     // Handle stdin input
@@ -275,6 +282,11 @@ fn main() -> Result<()> {
                 None
             }
         };
+        // Records and file lists are self-describing: no headers or separators.
+        if cfg.output != OutputMode::Text {
+            out.push(output.as_deref().unwrap_or_default());
+            return;
+        }
         // Under --select an input without matches is left out entirely, so a
         // search over many files lists only the hits.
         if cfg.select.is_some() && output.as_deref().is_none_or(str::is_empty) {

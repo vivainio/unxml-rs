@@ -62,9 +62,18 @@ pub(crate) fn read_file_lenient(file_path: &str) -> Result<String> {
 
 /// Decode bytes as UTF-8, falling back to Latin-1 (see `read_file_lenient`).
 pub(crate) fn decode_lenient(bytes: Vec<u8>) -> String {
+    decode_with_fallback(bytes).0
+}
+
+/// `decode_lenient`, also reporting whether the Latin-1 fallback was used —
+/// byte offsets into the decoded text then differ from the original bytes.
+pub(crate) fn decode_with_fallback(bytes: Vec<u8>) -> (String, bool) {
     match String::from_utf8(bytes) {
-        Ok(text) => text,
-        Err(e) => e.into_bytes().into_iter().map(|b| b as char).collect(),
+        Ok(text) => (text, false),
+        Err(e) => (
+            e.into_bytes().into_iter().map(|b| b as char).collect(),
+            true,
+        ),
     }
 }
 
@@ -272,12 +281,23 @@ fn offset_to_line(line_starts: &[usize], offset: usize) -> usize {
 }
 
 pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
+    // quick-xml skips a leading byte-order mark without counting it in
+    // `buffer_position()`, so every offset would land that many bytes early.
+    // Parse the text after it instead, and add it back for `byte_range`.
+    let bom = if content.starts_with('\u{feff}') {
+        '\u{feff}'.len_utf8()
+    } else {
+        0
+    };
+    let content = &content[bom..];
     let line_starts = line_starts(content);
     let mut reader = Reader::from_str(content);
     reader.config_mut().trim_text(true);
 
     let mut top_comments: Vec<(usize, String)> = Vec::new();
     let mut elements_stack: Vec<XmlElement> = Vec::new();
+    // Byte offset of each open element's start tag, parallel to `elements_stack`.
+    let mut tag_start_stack: Vec<usize> = Vec::new();
     // Byte offset where each open element's inner content begins (just past its
     // start tag), parallel to `elements_stack`. Used to capture verbatim inner
     // source for inline mixed-content rendering.
@@ -325,6 +345,7 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                 }
 
                 elements_stack.push(element);
+                tag_start_stack.push(tag_start);
                 // Inner content starts right after the start tag we just read.
                 inner_start_stack.push(reader.buffer_position() as usize);
             }
@@ -338,6 +359,10 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                     }
                     completed_element.end_line =
                         offset_to_line(&line_starts, reader.buffer_position() as usize);
+                    if let Some(tag_start) = tag_start_stack.pop() {
+                        completed_element.byte_range =
+                            Some((bom + tag_start, bom + reader.buffer_position() as usize));
+                    }
                     if let Some(parent) = elements_stack.last_mut() {
                         parent.nodes.push(NodeRef::Child(parent.children.len()));
                         parent.children.push(completed_element);
@@ -397,6 +422,8 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                 }
 
                 element.end_line = offset_to_line(&line_starts, reader.buffer_position() as usize);
+                element.byte_range =
+                    Some((bom + tag_start, bom + reader.buffer_position() as usize));
                 if let Some(parent) = elements_stack.last_mut() {
                     parent.nodes.push(NodeRef::Child(parent.children.len()));
                     parent.children.push(element);
@@ -463,6 +490,24 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn byte_ranges_slice_back_to_each_element_even_after_a_bom() {
+        for prefix in ["", "\u{feff}"] {
+            let xml = format!(
+                "{prefix}<?xml version=\"1.0\"?>\r\n<r>\r\n  <a k=\"v\">caf\u{e9}</a>\r\n  <b/>\r\n</r>"
+            );
+            let root = &parse_xml(&xml).unwrap().roots[0];
+            let slice = |e: &XmlElement| {
+                let (start, end) = e.byte_range.unwrap();
+                &xml[start..end]
+            };
+            assert!(slice(root).starts_with("<r>") && slice(root).ends_with("</r>"));
+            assert_eq!(slice(&root.children[0]), "<a k=\"v\">caf\u{e9}</a>");
+            assert_eq!(slice(&root.children[1]), "<b/>");
+            assert_eq!(root.children[0].start_line, 3);
+        }
+    }
 
     /// Regression test for a bug the `outline` feature surfaced: with
     /// `trim_text(true)`, `quick_xml` silently skips insignificant whitespace

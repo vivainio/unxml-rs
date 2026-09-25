@@ -13,7 +13,7 @@ use zip::ZipArchive;
 
 use crate::document::detect_mode_from_ext;
 use crate::model::{Collapse, FormatOpts};
-use crate::parse::{InputFormat, decode_lenient, expand_file_args, format_from_extension};
+use crate::parse::{InputFormat, decode_with_fallback, expand_file_args, format_from_extension};
 use crate::process::{ProcessOptions, process_content};
 use crate::xslt::TemplateRegistry;
 
@@ -45,7 +45,7 @@ pub(crate) struct ZipSpec {
 }
 
 /// Separates an archive path from the entry path inside it.
-const ENTRY_SEP: &str = "!/";
+pub(crate) const ENTRY_SEP: &str = "!/";
 
 impl ZipSpec {
     /// Whether a file argument names entries inside an archive.
@@ -202,8 +202,15 @@ impl Renderer<'_> {
         if self.cannot_match(&bytes, name) {
             return Ok(String::new());
         }
-        let content = decode_lenient(bytes);
-        process_content(&content, name, &self.file_opts(name), registry, self.cfg)
+        let (content, from_latin1) = decode_with_fallback(bytes);
+        process_content(
+            &content,
+            name,
+            from_latin1,
+            &self.file_opts(name),
+            registry,
+            self.cfg,
+        )
     }
 
     fn file_opts(&self, name: &str) -> FormatOpts {

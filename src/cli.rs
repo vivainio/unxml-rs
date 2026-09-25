@@ -148,13 +148,17 @@ pub(crate) struct Cli {
     /// Render only the elements selected by this XPath-like pattern
     ///
     /// A small XPath subset: `/a/b` (from the root), `a/b` or `//a`
-    /// (anywhere), `a//b`, `*`, `..` (parent), `.`, and attribute tests
-    /// `[@attr]` / `[@attr="value"]` (either quote style, chainable), e.g.
-    /// `item[@id="2"]`, `order[@status='open']/line`, `qty[@unit="kg"]/..`.
-    /// Unlike XPath, a relative pattern matches anywhere (`item` = `//item`),
-    /// and a bare name like `InvoiceLine` matches the local name, ignoring
-    /// namespace prefixes, while `cac:InvoiceLine` matches the full name
-    /// (attribute names likewise). No other axes, positions or functions.
+    /// (anywhere), `a//b`, `*`, `..` (parent), `.`, and chainable
+    /// predicates: `[@attr]`, `[@attr="v"]`, `[child="v"]` (a child's
+    /// text), `[.="v"]` / `[text()="v"]` (own text), `[a/b/@c="v"]` (any
+    /// relative path, with its own predicates), `[contains(X, "v")]`, e.g.
+    /// `item[@id="2"]`, `order[@status='open']/line`, `qty[@unit="kg"]/..`,
+    /// `call[param[@name="command"]="decrypt"]`. Unlike XPath, a relative
+    /// pattern matches anywhere (`item` = `//item`), `=` ignores whitespace
+    /// around the document's text, and a bare name like `InvoiceLine`
+    /// matches the local name, ignoring namespace prefixes, while
+    /// `cac:InvoiceLine` matches the full name (attribute names likewise).
+    /// No other axes, positions, operators or functions.
     /// Each selected element is rendered as a top-level fragment; one inside
     /// another selected element is shown only as part of it. Documents with
     /// no match produce no output, not even a `// FILE:` header, so this
@@ -163,6 +167,23 @@ pub(crate) struct Cli {
     /// when one is missing.
     #[arg(long)]
     pub(crate) select: Option<String>,
+
+    /// Print one JSON object per hit, one per line (JSON Lines)
+    ///
+    /// For scripts and agents consuming a search. Each record has `file`
+    /// (plus `archive`/`entry` for a zip entry), `path` (the `name[k]/...`
+    /// anchor `unxml diff`/`patch` use), `name`, `attrs`, `line_range`
+    /// (1-indexed, inclusive), `byte_range` (half-open, into the file's —
+    /// or zip entry's — original bytes, to read the exact segment back),
+    /// `text` (the rendered unxml form, honouring modes like --special) and
+    /// `xml` (the raw source segment). Positions are omitted for HTML.
+    /// Without --select, each document root is one hit.
+    #[arg(long, conflicts_with_all = ["paths", "html", "cat", "bat", "raw", "files_with_matches"])]
+    pub(crate) jsonl: bool,
+
+    /// Print only the names of inputs with at least one --select hit
+    #[arg(short = 'l', long, conflicts_with_all = ["paths", "html", "cat", "bat", "raw"])]
+    pub(crate) files_with_matches: bool,
 
     /// Canonicalise output for diffing
     ///

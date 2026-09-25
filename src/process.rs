@@ -5,18 +5,21 @@ use std::collections::HashSet;
 use std::io::{self, Read};
 
 use anyhow::{Context, Result};
+use serde_json::{Map, Value, json};
 
 use crate::canonical::canonicalize;
 use crate::document::{
     HIDE_NS_ALL, hide_namespaces, is_cii_document, is_msbuild_document, is_ubl_document,
     sniff_hidden_prefixes,
 };
+use crate::inputs::ENTRY_SEP;
 use crate::json::render_json;
 use crate::model::{Collapse, FormatOpts, XmlElement};
-use crate::parse::{InputFormat, decode_lenient, detect_format, parse_html, parse_xml};
+use crate::parse::{InputFormat, decode_with_fallback, detect_format, parse_html, parse_xml};
 use crate::paths::dump_paths;
+use crate::pathsel::ordinal_among;
 use crate::render::render_comment;
-use crate::xpathmini::XPathMini;
+use crate::xpathmini::{Hit, XPathMini};
 use crate::xslt::TemplateRegistry;
 
 /// The cross-cutting, CLI-derived options shared by every input. Built once and
@@ -34,11 +37,27 @@ pub(crate) struct ProcessOptions<'a> {
     pub(crate) no_attrs: bool,
     pub(crate) fold: bool,
     pub(crate) expand: bool,
+    pub(crate) output: OutputMode,
 }
 
+/// What each input's output is made of.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum OutputMode {
+    /// The rendered unxml text (the default).
+    Text,
+    /// `--jsonl`: one JSON object per hit, one per line.
+    Jsonl,
+    /// `--files-with-matches`: just the input's name, when it has a hit.
+    FilesWithMatches,
+}
+
+/// Render one input. `from_latin1` says `content` was decoded with the
+/// Latin-1 fallback, so `--jsonl` byte ranges must be mapped back to the
+/// original bytes.
 pub(crate) fn process_content(
     content: &str,
     file_path: &str,
+    from_latin1: bool,
     opts: &FormatOpts,
     registry: Option<&TemplateRegistry>,
     cfg: &ProcessOptions,
@@ -61,9 +80,9 @@ pub(crate) fn process_content(
     };
 
     if format == InputFormat::Json {
-        if cfg.select.is_some() || cfg.paths {
+        if cfg.select.is_some() || cfg.paths || cfg.output != OutputMode::Text {
             return Err(anyhow::anyhow!(
-                "--select and --paths are not yet supported for JSON"
+                "--select, --paths, --jsonl and --files-with-matches are not yet supported for JSON"
             ));
         }
         return render_json(content, cfg.canonical, cfg.sniff);
@@ -148,7 +167,7 @@ pub(crate) fn process_content(
 
     // Determine the roots to emit: the whole document, or just the subtrees
     // matched by --select.
-    let roots: Vec<&XmlElement> = if let Some(selector) = cfg.select {
+    let hits: Vec<Hit> = if let Some(selector) = cfg.select {
         let matched = selector.select(&elements);
         // No match renders nothing at all (not even an empty --paths dump),
         // so callers can drop the file from multi-file output.
@@ -157,8 +176,29 @@ pub(crate) fn process_content(
         }
         matched
     } else {
-        elements.iter().collect()
+        elements
+            .iter()
+            .map(|elem| Hit {
+                elem,
+                path: format!("{}[{}]", elem.name, ordinal_among(&elements, elem)),
+            })
+            .collect()
     };
+    match cfg.output {
+        OutputMode::Text => {}
+        OutputMode::FilesWithMatches => return Ok(format!("{file_path}\n")),
+        OutputMode::Jsonl => {
+            return Ok(jsonl_records(
+                &hits,
+                content,
+                file_path,
+                from_latin1,
+                opts,
+                registry,
+            ));
+        }
+    }
+    let roots: Vec<&XmlElement> = hits.iter().map(|hit| hit.elem).collect();
 
     // --paths dumps the distinct element paths; otherwise render the tree. Under
     // --select, render each matched subtree as a fragment separated by a blank
@@ -201,16 +241,82 @@ pub(crate) fn process_content(
     Ok(output)
 }
 
+/// `--jsonl`: one JSON object per hit, so a search over many files is easy to
+/// consume incrementally. `byte_range` is a half-open range into the input's
+/// original bytes (for an archive entry, the entry's uncompressed bytes), so
+/// the raw segment can be read back exactly; `xml` is that segment and
+/// `text` its rendered form. Positions are absent for HTML, which the parser
+/// doesn't track.
+fn jsonl_records(
+    hits: &[Hit],
+    content: &str,
+    file_path: &str,
+    from_latin1: bool,
+    opts: &FormatOpts,
+    registry: Option<&TemplateRegistry>,
+) -> String {
+    // A Latin-1 input was decoded one char per original byte, so its original
+    // offset is the char count up to the decoded offset.
+    let original_offset = |offset: usize| {
+        if from_latin1 {
+            content[..offset].chars().count()
+        } else {
+            offset
+        }
+    };
+    let mut out = String::new();
+    for hit in hits {
+        let elem = hit.elem;
+        let mut record = Map::new();
+        record.insert("file".into(), file_path.into());
+        if let Some((archive, entry)) = file_path.split_once(ENTRY_SEP) {
+            record.insert("archive".into(), archive.into());
+            record.insert("entry".into(), entry.into());
+        }
+        record.insert("path".into(), hit.path.clone().into());
+        record.insert("name".into(), elem.name.clone().into());
+        let mut attrs: Vec<_> = elem.attributes.iter().collect();
+        attrs.sort();
+        let attrs: Map<String, Value> = attrs
+            .into_iter()
+            .map(|(k, v)| (k.clone(), v.clone().into()))
+            .collect();
+        record.insert("attrs".into(), attrs.into());
+        if elem.start_line > 0 {
+            record.insert("line_range".into(), json!([elem.start_line, elem.end_line]));
+        }
+        let source = elem
+            .byte_range
+            .and_then(|(start, end)| Some((start, end, content.get(start..end)?)));
+        if let Some((start, end, _)) = source {
+            record.insert(
+                "byte_range".into(),
+                json!([original_offset(start), original_offset(end)]),
+            );
+        }
+        record.insert(
+            "text".into(),
+            elem.format_yaml_like(0, opts, registry).into(),
+        );
+        if let Some((_, _, xml)) = source {
+            record.insert("xml".into(), xml.into());
+        }
+        out.push_str(&Value::Object(record).to_string());
+        out.push('\n');
+    }
+    out
+}
+
 pub(crate) fn process_stdin(opts: &FormatOpts, cfg: &ProcessOptions) -> Result<String> {
     // Read from stdin, tolerating non-UTF-8 input (see read_file_lenient).
     let mut bytes = Vec::new();
     io::stdin()
         .read_to_end(&mut bytes)
         .context("Failed to read from stdin")?;
-    let content = decode_lenient(bytes);
+    let (content, from_latin1) = decode_with_fallback(bytes);
 
     // Note: expand mode not supported for stdin since we need file paths for imports
-    process_content(&content, "stdin", opts, None, cfg)
+    process_content(&content, "stdin", from_latin1, opts, None, cfg)
 }
 
 /// Emit rendered output, optionally through `bat` for syntax highlighting.

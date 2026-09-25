@@ -108,7 +108,8 @@ unxml --select InvoiceLine invoice.xml   # bare name ignores prefixes
 ```
 
 The pattern is a small XPath subset: paths (`/a/b`, `a//b`), `*`, `..`, and
-attribute tests `[@attr]` / `[@attr="value"]`. A relative pattern matches
+predicates on attributes (`[@attr="value"]`), text (`[Name="Widget"]`,
+`[.="x"]`), nested paths, and `contains()`. A relative pattern matches
 anywhere:
 
 ```bash
@@ -116,6 +117,8 @@ unxml --select 'InvoiceLine[@status="open"]' invoice.xml
 unxml --select "*[@id='42']" invoice.xml
 unxml --select 'ID[@schemeID="0088"]/..' invoice.xml   # parent of each match
 unxml --select 'InvoiceLine/Item/Name' invoice.xml
+unxml --select 'InvoiceLine[Item/Name="Widget"]' invoice.xml   # whole lines
+unxml --select 'InvoiceLine[contains(Item/Name, "Wid")]' invoice.xml
 ```
 
 See [searching many files and zip archives](../README.md#searching-many-files-and-zip-archives---select---zip)

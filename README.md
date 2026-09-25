@@ -396,16 +396,26 @@ element nesting is significant, and in `--paths`.
 | `/root/order` | an absolute path from the document root |
 | `order/line`, `order//line` | child / descendant steps |
 | `*` | any element |
-| `[@attr]`, `[@attr="v"]` | attribute present / exact value (chainable) |
+| `[@attr]`, `[@attr="v"]` | attribute present / exact value |
+| `[name]`, `[name="v"]` | has a `name` child / one whose text is `v` |
+| `[.="v"]`, `[text()="v"]` | the element's own text is `v` |
+| `[a/b/@c="v"]`, `[../@id="7"]` | any relative path, ending in an element, `@attr` or `text()` |
+| `[contains(X, "v")]` | like `X="v"`, but a substring match |
 | `..`, `.` | parent / self |
 
-It differs from XPath in three ways:
+Predicates can be chained (`a[p1][p2]`, both must hold) and nested
+(`call[param[@name="command"]="decrypt"]`).
+
+It differs from XPath in four ways:
 - A relative pattern matches anywhere, so `item` means `//item`.
 - A bare name ignores namespace prefixes (`InvoiceLine` finds `cac:InvoiceLine`).
+- `=` ignores whitespace around the document's text, so an element whose text
+  is `decrypt` on a line of its own still equals `"decrypt"`.
 - An element inside another selected element is shown only as part of it.
   For example, a parent with several matching children is shown once.
 
-There are no other axes, positional predicates or functions.
+There are no other axes, positional predicates, `and`/`or`/`!=`, or functions
+besides `contains`.
 
 ```bash
 unxml --select InvoiceLine invoice.xml
@@ -413,11 +423,13 @@ unxml --select 'item[@id="2"]' 'data/**/*.xml'
 unxml --select "*[@lang='fi'][@status]" 'data/**/*.xml'
 unxml --select '/Invoice/InvoiceLine[@status="open"]/Item' 'data/**/*.xml'
 unxml --select 'qty[@unit="kg"]/..' 'data/**/*.xml'   # the element holding it
+unxml --select 'Invoice[BuyerReference="PO-17"]' 'data/**/*.xml'
+unxml --select 'call[param[@name="command"]="decrypt"]' 'flows/*.xml'
 ```
 
 Over many files this works as a search. Files with no match print nothing, not
 even a `// FILE:` header. Before parsing, XML files are scanned for the
-pattern's names (and for plain attribute values like `42` or `INV-7`), and a
+pattern's names (and for plain compared values like `42` or `INV-7`), and a
 file missing one is skipped. Files are processed in parallel and output
 streams in input order, so `| head` stops early.
 
@@ -439,6 +451,40 @@ unxml 'dumps/2024.zip!/orders/5000.xml'          # the full document
 unxml --cat --raw 'dumps/2024.zip!/orders/5000.xml'  # the original XML
 unxml --select note 'dumps/*.zip!/orders/*.xml'  # search only some entries
 ```
+
+#### Machine-readable results (`--jsonl`, `-l`)
+
+`-l` (`--files-with-matches`) prints just the names of inputs that have a hit.
+`--jsonl` prints one JSON object per hit, one per line, so scripts and agents
+can consume a large search as it streams:
+
+```bash
+unxml --jsonl --select 'call[param[@name="command"]="decrypt"]' 'flows/**/*.xml' --zip 'dumps/*.zip'
+```
+
+```json
+{"file":"dumps/2024.zip!/flows/a.xml","archive":"dumps/2024.zip","entry":"flows/a.xml",
+ "path":"flow[1]/call[2]","name":"call","attrs":{"name":"b"},
+ "line_range":[3,7],"byte_range":[64,151],
+ "text":"call(name=\"b\")\n  param(name=\"command\") = decrypt\n",
+ "xml":"<call name=\"b\">\n    <param name=\"command\">decrypt</param>\n  </call>"}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `file` | the input's name; `archive` and `entry` split it for a zip entry |
+| `path` | `name[k]/...` from the root, the anchor syntax `unxml diff`/`patch` use |
+| `name`, `attrs` | the hit element's tag and attributes |
+| `line_range` | first and last line of the hit (1-indexed, inclusive) |
+| `byte_range` | half-open `[start, end)` into the file's original bytes (a zip entry's uncompressed bytes) — read exactly the hit back |
+| `text` | the rendered unxml form (honours `--special` etc.) |
+| `xml` | the raw source of the hit |
+
+`byte_range` counts bytes of the file as stored, even for Latin-1 files and
+files with a byte-order mark. HTML input has no positions, so `line_range`,
+`byte_range` and `xml` are left out. Without `--select`, each document's root
+is one hit. `path` refers to the parsed document; with `--canonical`
+(which reorders siblings) it no longer matches the source.
 
 ### Listing document paths (`--paths`)
 

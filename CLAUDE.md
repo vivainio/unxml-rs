@@ -105,11 +105,20 @@ cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
 - `scraper`: HTML parsing with CSS selector support
 - `clap`: Command-line argument parsing
 - `anyhow`: Error handling
-- `glob`: Pattern matching for file inputs
+- `glob`: Pattern matching for file inputs (and `archive.zip!/entry` globs)
+- `rayon`: Parallel rendering of many inputs
+- `zip`: Reading `--zip` archives
+- `memchr`: Byte-level `--select` prefilter
 
 ## File Organization
 
-- `src/main.rs`: Main parser implementation
+- `src/main.rs`: CLI driver
+- `src/xpathmini.rs`: `--select` pattern language (small XPath subset: paths,
+  `..`, attribute/text/path predicates, `contains`) and its prefilter literals
+- `src/inputs.rs`: Parallel, order-preserving rendering of files and zip
+  entries (`--zip`, `archive.zip!/entry`), streaming output
+- `src/pathsel.rs`: The separate `name[k]` anchor syntax used by diff/patch
 - `test-input/`: Test files (XML, HTML)
 - `expected-output/`: Expected output files for regression testing
 - `tests/e2e_test.rs`: Golden-file e2e test runner
+- `tests/search_test.rs`: `--select` over many files and zip archives

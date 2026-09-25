@@ -114,6 +114,10 @@ pub(crate) struct XmlElement {
     /// 1-indexed source line where this element's end tag (or, for a
     /// self-closing element, its own tag) finishes.
     pub(crate) end_line: usize,
+    /// Half-open byte range of the whole element in the parsed text, from the
+    /// `<` of its start tag to just past its end tag. `None` for elements
+    /// built outside the XML parser.
+    pub(crate) byte_range: Option<(usize, usize)>,
 }
 
 impl XmlElement {
@@ -127,6 +131,7 @@ impl XmlElement {
             inner_source: None,
             start_line: 0,
             end_line: 0,
+            byte_range: None,
         }
     }
 

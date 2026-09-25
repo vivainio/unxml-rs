@@ -94,3 +94,62 @@ fn test_zip_entry_argument_dumps_whole_document() {
         )
     );
 }
+
+// `--jsonl` emits one record per hit; `byte_range` slices the original file
+// back to exactly the hit's raw XML, and `path` is a diff/patch anchor.
+#[test]
+fn test_jsonl_records_locate_hits_exactly() {
+    let dir = scratch("jsonl");
+    let file = dir.join("calls.xml");
+    // Latin-1 bytes (é = 0xE9) so the offsets must refer to the original
+    // bytes, not the decoded text.
+    let body: &[u8] = b"<flow>\n  <call name=\"a\"><p name=\"command\">caf\xe9</p></call>\n  <call name=\"b\">\n    <p name=\"command\">\n      decrypt\n    </p>\n  </call>\n</flow>\n";
+    std::fs::write(&file, body).unwrap();
+    let path = file.to_str().unwrap();
+
+    let out = run_unxml(&[
+        "--jsonl",
+        "--select",
+        r#"call[p[@name="command"]="decrypt"]"#,
+        path,
+    ]);
+    let lines: Vec<&str> = out.lines().collect();
+    assert_eq!(lines.len(), 1, "got: {out}");
+    let record: serde_json::Value = serde_json::from_str(lines[0]).unwrap();
+    assert_eq!(record["file"], path);
+    assert_eq!(record["path"], "flow[1]/call[2]");
+    assert_eq!(record["attrs"]["name"], "b");
+    assert_eq!(record["line_range"], serde_json::json!([3, 7]));
+    let start = record["byte_range"][0].as_u64().unwrap() as usize;
+    let end = record["byte_range"][1].as_u64().unwrap() as usize;
+    let raw = &body[start..end];
+    assert!(raw.starts_with(b"<call name=\"b\">") && raw.ends_with(b"</call>"));
+    assert_eq!(record["xml"], String::from_utf8_lossy(raw).as_ref());
+    assert_eq!(
+        record["text"],
+        "call(name=\"b\")\n  p(name=\"command\") = decrypt\n"
+    );
+
+    // The earlier, Latin-1 hit still slices exactly.
+    let out = run_unxml(&["--jsonl", "--select", r#"call[@name="a"]"#, path]);
+    let record: serde_json::Value = serde_json::from_str(out.trim()).unwrap();
+    let start = record["byte_range"][0].as_u64().unwrap() as usize;
+    let end = record["byte_range"][1].as_u64().unwrap() as usize;
+    assert_eq!(
+        &body[start..end],
+        b"<call name=\"a\"><p name=\"command\">caf\xe9</p></call>"
+    );
+}
+
+// `-l` lists only the inputs with a hit, one name per line.
+#[test]
+fn test_files_with_matches() {
+    let out = run_unxml(&[
+        "-l",
+        "--select",
+        r#"item[@id="2"]"#,
+        "test-input/simple.xml",
+        "test-input/data.xml",
+    ]);
+    assert_eq!(out, "test-input/simple.xml\n");
+}

@@ -86,10 +86,31 @@ parallel — fine for tens of thousands of files.
 | `/root/order/line` | absolute path |
 | `order//qty`, `*` | descendant step, any element |
 | `item[@id]`, `item[@id="2"][@lang='fi']` | attribute present / exact value |
+| `order[Status="open"]`, `name[.="x"]`, `[text()="x"]` | child's / own text equals (whitespace-trimmed) |
+| `call[param[@name="command"]="decrypt"]` | nested path predicate: whole blocks by inner value |
+| `[a/b/@c="v"]`, `[../@id="7"]`, `[.//qty]` | any relative path (exists / equals) |
+| `[contains(Note, "late")]`, `[contains(@id, "INV")]` | substring match |
 | `qty[@unit="kg"]/..` | parent of each match (`.` = self) |
 
 Bare names ignore prefixes (`InvoiceLine` finds `cac:InvoiceLine`); prefixed
-names match exactly. No other axes, `[1]` positions, `text()` or functions.
+names match exactly. No other axes, `[1]` positions, `and`/`or`/`!=`, or
+functions besides `contains`. Single-quote the pattern in the shell.
+
+Patterns match the **source XML**, not the rendered output: use real element
+and attribute names even when a mode (`--special`, `--xslt`, ...) renders them
+differently. To keep whole blocks, select the block and put the text condition
+in a predicate — don't select the leaf and grep the rendered text:
+
+```bash
+# --special renders this block as `acme_file_functions()` / `command := decrypt`,
+# but the pattern uses the underlying names:
+unxml --special --select \
+  'builtInMethodParameterList[@name="acme_file_functions"][parameter[@name="command"]="decrypt"]' \
+  'flows/**/*.xml'
+# the enclosing step instead of the call block:
+unxml --special --select \
+  'method[builtInMethodParameterList/parameter[@name="command"]="decrypt"]' 'flows/**/*.xml'
+```
 
 Search, then dump a hit in full:
 
@@ -103,8 +124,21 @@ unxml --select line 'dumps/*.zip!/orders/*.xml'    # entry globs narrow a search
 ```
 
 `--zip` (repeatable, globbed; any zip container incl. `.jar`/`.docx`) reads
-every entry starting with `<`. List only matching file names:
-`unxml --select X ... | grep '^// FILE:'`.
+every entry starting with `<`.
+
+Machine-readable results — prefer these over parsing the text output:
+
+- `-l` — only the names of inputs with a hit, one per line.
+- `--jsonl` — one JSON object per hit: `file` (+ `archive`/`entry` for zip
+  entries), `path` (`a[1]/b[2]`, usable as a `unxml patch` anchor), `name`,
+  `attrs`, `line_range` [first, last], `byte_range` [start, end) into the
+  original file/entry bytes, `text` (rendered), `xml` (raw source).
+
+```bash
+unxml --jsonl --select 'order[@id="7"]' 'data/**/*.xml' | jq -r '.file + ":" + (.line_range[0]|tostring)'
+# read one hit's raw bytes back later:
+tail -c +$((start + 1)) data/a.xml | head -c $((end - start))
+```
 
 ## `--canonical` (diffing)
 
