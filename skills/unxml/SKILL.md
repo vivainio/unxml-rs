@@ -1,6 +1,6 @@
 ---
 name: unxml
-description: Flatten and compare XML, HTML, and JSON files with the `unxml` CLI — read, diff, or fingerprint XML, HTML, JSON, XSLT, XSD, WSDL, Schematron, MSBuild, or Leo (.leo) documents as a terse, token-efficient YAML/Pug-like form. Invoke with /unxml.
+description: Flatten, compare, and search XML, HTML, and JSON files with the `unxml` CLI — read, diff, or fingerprint XML, HTML, JSON, XSLT, XSD, WSDL, Schematron, MSBuild, or Leo (.leo) documents as a terse, token-efficient YAML/Pug-like form, and search many files or zip archives by element/attribute with a mini XPath. Invoke with /unxml.
 disable-model-invocation: true
 ---
 
@@ -70,18 +70,41 @@ always needs the explicit flag.
 - `--hide-ns cbc,cac` — drop prefixes + their `xmlns:` decls from names.
   Repeatable/comma-separated. `--hide-ns ALL` = every prefix. `--auto` also
   auto-hides for known vocabularies (e.g. UBL).
-- `--select InvoiceLine` — only matching subtrees (bare = local name,
-  `cac:InvoiceLine` = full name). Mini XPath: `/a/b`, `a//b`, `*`, `..`, `.`,
-  `[@attr]`, `[@attr="v"]` — e.g. `'order[@id="2"]/line'`,
-  `'qty[@unit="kg"]/..'`. Relative = anywhere (`item` = `//item`); no other
-  axes, positions or functions.
-  Over many files it's a search: non-matching files print nothing (no
-  `// FILE:` header); XML files are text-prefiltered and run in parallel.
-- `--zip 'dumps/*.zip'` — also read every XML/HTML entry in archives, shown as
-  `archive.zip!/inner.xml`. Pass that name back as a file arg (entry part may
-  be a glob: `'a.zip!/orders/*.xml'`) to dump whole entries; `--cat --raw`
-  shows the original XML.
+- `--select InvoiceLine` — render only matching subtrees (see Searching below)
 - `--expand` — inline matching imported templates for `xsl:apply-templates`
+
+## Searching (`--select`, `--zip`)
+
+`--select` takes a mini XPath and renders only the matches. Across many files
+or zip archives it works like grep: non-matching files print nothing (no
+`// FILE:` header), XML is text-prefiltered before parsing, and files run in
+parallel — fine for tens of thousands of files.
+
+| Pattern | Selects |
+| --- | --- |
+| `item` = `//item` | every `item`, anywhere (relative = anywhere) |
+| `/root/order/line` | absolute path |
+| `order//qty`, `*` | descendant step, any element |
+| `item[@id]`, `item[@id="2"][@lang='fi']` | attribute present / exact value |
+| `qty[@unit="kg"]/..` | parent of each match (`.` = self) |
+
+Bare names ignore prefixes (`InvoiceLine` finds `cac:InvoiceLine`); prefixed
+names match exactly. No other axes, `[1]` positions, `text()` or functions.
+
+Search, then dump a hit in full:
+
+```bash
+unxml --select 'order[@id="7"]' 'data/**/*.xml' --zip 'dumps/*.zip'
+# // FILE: dumps/2024.zip!/orders/5000.xml
+# order(id="7") ...
+unxml 'dumps/2024.zip!/orders/5000.xml'            # whole entry, rendered
+unxml --cat --raw 'dumps/2024.zip!/orders/5000.xml' # original XML
+unxml --select line 'dumps/*.zip!/orders/*.xml'    # entry globs narrow a search
+```
+
+`--zip` (repeatable, globbed; any zip container incl. `.jar`/`.docx`) reads
+every entry starting with `<`. List only matching file names:
+`unxml --select X ... | grep '^// FILE:'`.
 
 ## `--canonical` (diffing)
 
