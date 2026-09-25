@@ -1,5 +1,5 @@
 //! Document-level transforms: extension-based mode detection, namespace
-//! hiding, `--select` subtree extraction, and UBL/CII type sniffing.
+//! hiding, `--select` name matching, and UBL/CII type sniffing.
 
 use std::collections::HashSet;
 use std::path::Path;
@@ -109,24 +109,6 @@ pub(crate) fn name_matches_select(name: &str, pattern: &str) -> bool {
     } else {
         let local = name.rsplit(':').next().unwrap_or(name);
         local == pattern
-    }
-}
-
-/// Collect the topmost subtrees whose element name matches `pattern` (Tier-A
-/// `--select`). Matching is by tag name only — no paths, axes, or predicates.
-/// A matched subtree is returned whole and not descended into, so a nested
-/// element of the same name doesn't also produce a separate fragment.
-pub(crate) fn select_subtrees<'a>(
-    elements: &'a [XmlElement],
-    pattern: &str,
-    out: &mut Vec<&'a XmlElement>,
-) {
-    for elem in elements {
-        if name_matches_select(&elem.name, pattern) {
-            out.push(elem);
-        } else {
-            select_subtrees(&elem.children, pattern, out);
-        }
     }
 }
 

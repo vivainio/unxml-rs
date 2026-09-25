@@ -9,13 +9,14 @@ use anyhow::{Context, Result};
 use crate::canonical::canonicalize;
 use crate::document::{
     HIDE_NS_ALL, hide_namespaces, is_cii_document, is_msbuild_document, is_ubl_document,
-    select_subtrees, sniff_hidden_prefixes,
+    sniff_hidden_prefixes,
 };
 use crate::json::render_json;
 use crate::model::{Collapse, FormatOpts, XmlElement};
-use crate::parse::{InputFormat, detect_format, parse_html, parse_xml, read_file_lenient};
+use crate::parse::{InputFormat, decode_lenient, detect_format, parse_html, parse_xml};
 use crate::paths::dump_paths;
 use crate::render::render_comment;
+use crate::xpathmini::XPathMini;
 use crate::xslt::TemplateRegistry;
 
 /// The cross-cutting, CLI-derived options shared by every input. Built once and
@@ -26,7 +27,7 @@ pub(crate) struct ProcessOptions<'a> {
     pub(crate) format_override: Option<&'a str>,
     pub(crate) hide_ns: &'a HashSet<String>,
     pub(crate) sniff: bool,
-    pub(crate) select: Option<&'a str>,
+    pub(crate) select: Option<&'a XPathMini>,
     pub(crate) canonical: bool,
     pub(crate) paths: bool,
     pub(crate) depth: usize,
@@ -66,6 +67,18 @@ pub(crate) fn process_content(
             ));
         }
         return render_json(content, cfg.canonical, cfg.sniff);
+    }
+
+    // Searching many files: an XML document whose raw text lacks a name the
+    // selector needs cannot match, so skip parsing it. (HTML is excluded —
+    // its tag names are case-insensitive in the source.)
+    if format == InputFormat::Xml
+        && let Some(selector) = cfg.select
+        && !selector
+            .required_literals()
+            .all(|lit| content.contains(lit))
+    {
+        return Ok(String::new());
     }
 
     // Parse the content based on detected/specified format. `top_comments` are
@@ -135,9 +148,13 @@ pub(crate) fn process_content(
 
     // Determine the roots to emit: the whole document, or just the subtrees
     // matched by --select.
-    let roots: Vec<&XmlElement> = if let Some(pattern) = cfg.select {
-        let mut matched = Vec::new();
-        select_subtrees(&elements, pattern, &mut matched);
+    let roots: Vec<&XmlElement> = if let Some(selector) = cfg.select {
+        let matched = selector.select(&elements);
+        // No match renders nothing at all (not even an empty --paths dump),
+        // so callers can drop the file from multi-file output.
+        if matched.is_empty() {
+            return Ok(String::new());
+        }
         matched
     } else {
         elements.iter().collect()
@@ -184,34 +201,13 @@ pub(crate) fn process_content(
     Ok(output)
 }
 
-pub(crate) fn process_file(
-    file_path: &str,
-    opts: &FormatOpts,
-    cfg: &ProcessOptions,
-) -> Result<String> {
-    // Build template registry if expand mode is enabled
-    let registry = if cfg.expand && opts.xslt {
-        Some(TemplateRegistry::build_from_file(file_path)?)
-    } else {
-        None
-    };
-
-    // Read the file
-    let content = read_file_lenient(file_path)?;
-
-    process_content(&content, file_path, opts, registry.as_ref(), cfg)
-}
-
 pub(crate) fn process_stdin(opts: &FormatOpts, cfg: &ProcessOptions) -> Result<String> {
     // Read from stdin, tolerating non-UTF-8 input (see read_file_lenient).
     let mut bytes = Vec::new();
     io::stdin()
         .read_to_end(&mut bytes)
         .context("Failed to read from stdin")?;
-    let content = match String::from_utf8(bytes) {
-        Ok(text) => text,
-        Err(e) => e.into_bytes().into_iter().map(|b| b as char).collect(),
-    };
+    let content = decode_lenient(bytes);
 
     // Note: expand mode not supported for stdin since we need file paths for imports
     process_content(&content, "stdin", opts, None, cfg)

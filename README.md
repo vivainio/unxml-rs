@@ -386,6 +386,60 @@ view. `--collapse` affects plain XML only — it is ignored in the dialect modes
 (`--xslt`/`--xsd`/`--wsdl`/`--schematron`/`--msbuild`/`--special`), where
 element nesting is significant, and in `--paths`.
 
+### Searching many files and zip archives (`--select`, `--zip`)
+
+`--select` renders only the elements matched by a small XPath subset:
+
+| Syntax | Meaning |
+| --- | --- |
+| `item` / `//item` | every `item`, anywhere |
+| `/root/order` | an absolute path from the document root |
+| `order/line`, `order//line` | child / descendant steps |
+| `*` | any element |
+| `[@attr]`, `[@attr="v"]` | attribute present / exact value (chainable) |
+| `..`, `.` | parent / self |
+
+It differs from XPath in three ways:
+- A relative pattern matches anywhere, so `item` means `//item`.
+- A bare name ignores namespace prefixes (`InvoiceLine` finds `cac:InvoiceLine`).
+- An element inside another selected element is shown only as part of it.
+  For example, a parent with several matching children is shown once.
+
+There are no other axes, positional predicates or functions.
+
+```bash
+unxml --select InvoiceLine invoice.xml
+unxml --select 'item[@id="2"]' 'data/**/*.xml'
+unxml --select "*[@lang='fi'][@status]" 'data/**/*.xml'
+unxml --select '/Invoice/InvoiceLine[@status="open"]/Item' 'data/**/*.xml'
+unxml --select 'qty[@unit="kg"]/..' 'data/**/*.xml'   # the element holding it
+```
+
+Over many files this works as a search. Files with no match print nothing, not
+even a `// FILE:` header. Before parsing, XML files are scanned for the
+pattern's names (and for plain attribute values like `42` or `INV-7`), and a
+file missing one is skipped. Files are processed in parallel and output
+streams in input order, so `| head` stops early.
+
+`--zip` adds zip archives. It can be repeated and accepts globs, and any zip
+container works (`.jar`, `.docx`, ...). Every entry whose content starts with
+`<` is processed and named `archive.zip!/path/inside.xml`:
+
+```bash
+unxml --select 'order[@id="needle"]' --zip 'dumps/*.zip'
+# // FILE: dumps/2024.zip!/orders/5000.xml
+# order(id="needle")
+```
+
+Pass that name back as a file argument to dump the whole entry. The part after
+`!/` may be a glob:
+
+```bash
+unxml 'dumps/2024.zip!/orders/5000.xml'          # the full document
+unxml --cat --raw 'dumps/2024.zip!/orders/5000.xml'  # the original XML
+unxml --select note 'dumps/*.zip!/orders/*.xml'  # search only some entries
+```
+
 ### Listing document paths (`--paths`)
 
 `--paths` dumps a compact structural summary instead of the full document: the

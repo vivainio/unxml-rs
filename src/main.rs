@@ -7,6 +7,7 @@ mod diff;
 mod diffcmd;
 mod document;
 mod highlight;
+mod inputs;
 mod install;
 mod json;
 mod leo;
@@ -25,6 +26,7 @@ mod schematron;
 mod types;
 mod wsdl;
 mod xmlwrite;
+mod xpathmini;
 mod xsd;
 mod xslt;
 
@@ -34,10 +36,11 @@ use anyhow::{Context, Result};
 use clap::Parser;
 
 use crate::cli::Cli;
-use crate::document::detect_mode_from_ext;
+use crate::inputs::{Output, Renderer, ZipSpec};
 use crate::model::{Collapse, FormatOpts};
-use crate::parse::{detect_format, expand_file_args, read_file_lenient};
-use crate::process::{ProcessOptions, emit, process_file, process_stdin};
+use crate::parse::{decode_lenient, detect_format, expand_file_args, read_file_lenient};
+use crate::process::{ProcessOptions, emit, process_stdin};
+use crate::xpathmini::XPathMini;
 
 fn main() -> Result<()> {
     // `unxml git <args>` is a thin passthrough to `git <args>` with the unxml
@@ -114,13 +117,16 @@ fn main() -> Result<()> {
     let hide_ns: HashSet<String> = cli.hide_ns.iter().cloned().collect();
     let sniff = auto;
 
+    // Parse --select up front so a malformed pattern fails once, not per file.
+    let selector = cli.select.as_deref().map(XPathMini::parse).transpose()?;
+
     // The cross-cutting options shared by every input. The per-file mode
     // (`file_opts`) is passed separately because it can vary under `--auto`.
     let cfg = ProcessOptions {
         format_override: cli.format.as_deref(),
         hide_ns: &hide_ns,
         sniff,
-        select: cli.select.as_deref(),
+        select: selector.as_ref(),
         canonical: cli.canonical,
         paths: cli.paths,
         depth: cli.depth.unwrap_or(0),
@@ -132,7 +138,7 @@ fn main() -> Result<()> {
     // Handle stdin input
     if cli.stdin {
         // When using stdin, files should be empty
-        if !cli.files.is_empty() {
+        if !cli.files.is_empty() || !cli.zip.is_empty() {
             return Err(anyhow::anyhow!(
                 "Cannot specify both --stdin and file arguments"
             ));
@@ -182,38 +188,57 @@ fn main() -> Result<()> {
     }
 
     // Handle file input
-    if cli.files.is_empty() {
+    if cli.files.is_empty() && cli.zip.is_empty() {
         return Err(anyhow::anyhow!(
             "No files specified. Please provide at least one file or glob pattern, or use --stdin."
         ));
     }
 
-    let all_files = expand_file_args(&cli.files)?;
+    // `archive.zip!/entry` arguments name entries inside an archive (the same
+    // form a `// FILE:` header shows); they join the --zip archives.
+    let (entry_args, file_args): (Vec<String>, Vec<String>) = cli
+        .files
+        .into_iter()
+        .partition(|f| ZipSpec::is_entry_arg(f));
+    let all_files = expand_file_args(&file_args)?;
+    let mut zip_specs = ZipSpec::parse_all(&cli.zip)?;
+    zip_specs.extend(ZipSpec::parse_all(&entry_args)?);
 
-    if all_files.is_empty() {
+    if all_files.is_empty() && zip_specs.is_empty() {
         return Err(anyhow::anyhow!(
             "No files found matching the specified patterns."
         ));
     }
 
+    // File header comment only when there is more than one input, which any
+    // archive (or entry glob) may hold.
+    let multiple =
+        all_files.len() + zip_specs.len() > 1 || zip_specs.iter().any(|zip| !zip.is_single_entry());
+
     // --raw skips the unxml transform entirely: read each file's original
     // text and highlight it as-is (XML or HTML, picked from the first file).
     if cli.raw {
-        let multiple = all_files.len() > 1;
+        let mut inputs = Vec::new();
+        for file_path in &all_files {
+            inputs.push((file_path.clone(), read_file_lenient(file_path)?));
+        }
+        for zip in &zip_specs {
+            zip.for_each_entry(|name, bytes| inputs.push((name, decode_lenient(bytes))))
+                .with_context(|| format!("Error reading zip '{}'", zip.archive))?;
+        }
         let mut combined = String::new();
         let mut syntax_name = "XML";
-        for (i, file_path) in all_files.iter().enumerate() {
+        for (i, (name, content)) in inputs.iter().enumerate() {
             if i > 0 {
                 combined.push('\n');
             }
-            let content = read_file_lenient(file_path)?;
             if i == 0 {
-                syntax_name = detect_format(&content, file_path).syntax_name();
+                syntax_name = detect_format(content, name).syntax_name();
             }
             if multiple {
-                combined.push_str(&format!("<!-- FILE: {file_path} -->\n"));
+                combined.push_str(&format!("<!-- FILE: {name} -->\n"));
             }
-            combined.push_str(&content);
+            combined.push_str(content);
         }
         if cli.html {
             print!(
@@ -226,39 +251,51 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    // Process each file, accumulating output so it can be sent to the pager
-    // (or stdout) in one stream.
-    let multiple = all_files.len() > 1;
-    let mut combined = String::new();
-    for (i, file_path) in all_files.iter().enumerate() {
-        // Blank separator line between files (not before the first).
-        if i > 0 {
-            combined.push('\n');
-        }
-
-        // File header comment only when processing more than one file.
-        if multiple {
-            combined.push_str(&format!("// FILE: {file_path}\n"));
-        }
-
-        // When the user didn't force a mode, pick one from this file's
-        // extension; otherwise honour the explicit flags for every file.
-        let mut file_opts = if autodetect {
-            detect_mode_from_ext(file_path)
-        } else {
-            opts.clone()
-        };
-        file_opts.collapse = collapse.clone();
-
-        match process_file(file_path, &file_opts, &cfg) {
-            Ok(output) => combined.push_str(&output),
+    // Render every input (in parallel, emitted in input order). Output streams
+    // to stdout as it is produced, unless it must be post-processed as a whole
+    // (highlighted, or handed to the `bat` pager).
+    let mut out = if cli.html || cli.cat || cli.bat {
+        Output::Buffer(String::new())
+    } else {
+        Output::stdout()
+    };
+    let renderer = Renderer {
+        opts: &opts,
+        autodetect,
+        collapse: &collapse,
+        cfg: &cfg,
+    };
+    let mut first = true;
+    renderer.run(&all_files, &zip_specs, |rendered| {
+        let output = match rendered.result {
+            Ok(output) => Some(output),
             Err(e) => {
-                eprintln!("Error processing file '{file_path}': {e}");
                 // Continue processing other files instead of stopping
+                eprintln!("Error processing file '{}': {e}", rendered.name);
+                None
             }
+        };
+        // Under --select an input without matches is left out entirely, so a
+        // search over many files lists only the hits.
+        if cfg.select.is_some() && output.as_deref().is_none_or(str::is_empty) {
+            return;
         }
-    }
+        // Blank separator line between files (not before the first).
+        if !first {
+            out.push("\n");
+        }
+        first = false;
+        if multiple {
+            out.push(&format!("// FILE: {}\n", rendered.name));
+        }
+        if let Some(output) = output {
+            out.push(&output);
+        }
+    });
 
+    let Some(combined) = out.finish() else {
+        return Ok(());
+    };
     if cli.html {
         print!("{}", highlight::html_page(&combined, cli.html_embed_css)?);
     } else if cli.cat {

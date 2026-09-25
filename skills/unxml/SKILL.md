@@ -70,8 +70,17 @@ always needs the explicit flag.
 - `--hide-ns cbc,cac` — drop prefixes + their `xmlns:` decls from names.
   Repeatable/comma-separated. `--hide-ns ALL` = every prefix. `--auto` also
   auto-hides for known vocabularies (e.g. UBL).
-- `--select InvoiceLine` — only subtrees matching that tag (bare = local name,
-  `cac:InvoiceLine` = full name)
+- `--select InvoiceLine` — only matching subtrees (bare = local name,
+  `cac:InvoiceLine` = full name). Mini XPath: `/a/b`, `a//b`, `*`, `..`, `.`,
+  `[@attr]`, `[@attr="v"]` — e.g. `'order[@id="2"]/line'`,
+  `'qty[@unit="kg"]/..'`. Relative = anywhere (`item` = `//item`); no other
+  axes, positions or functions.
+  Over many files it's a search: non-matching files print nothing (no
+  `// FILE:` header); XML files are text-prefiltered and run in parallel.
+- `--zip 'dumps/*.zip'` — also read every XML/HTML entry in archives, shown as
+  `archive.zip!/inner.xml`. Pass that name back as a file arg (entry part may
+  be a glob: `'a.zip!/orders/*.xml'`) to dump whole entries; `--cat --raw`
+  shows the original XML.
 - `--expand` — inline matching imported templates for `xsl:apply-templates`
 
 ## `--canonical` (diffing)

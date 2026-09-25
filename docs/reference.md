@@ -107,6 +107,20 @@ huge document where you only care about, say, the invoice lines:
 unxml --select InvoiceLine invoice.xml   # bare name ignores prefixes
 ```
 
+The pattern is a small XPath subset: paths (`/a/b`, `a//b`), `*`, `..`, and
+attribute tests `[@attr]` / `[@attr="value"]`. A relative pattern matches
+anywhere:
+
+```bash
+unxml --select 'InvoiceLine[@status="open"]' invoice.xml
+unxml --select "*[@id='42']" invoice.xml
+unxml --select 'ID[@schemeID="0088"]/..' invoice.xml   # parent of each match
+unxml --select 'InvoiceLine/Item/Name' invoice.xml
+```
+
+See [searching many files and zip archives](../README.md#searching-many-files-and-zip-archives---select---zip)
+for using `--select` as a search.
+
 ### Diffing two documents — `--canonical`
 
 Rebinds prefixes to stable names and sorts siblings, so prefix- and order-only

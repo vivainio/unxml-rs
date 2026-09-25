@@ -7,7 +7,7 @@ use clap::Parser;
 #[command(about = "Simplify and 'flatten' XML and HTML files")]
 #[command(version)]
 pub(crate) struct Cli {
-    /// XML or HTML files to process (supports glob patterns)
+    /// XML or HTML files to process (supports glob patterns; see also --zip)
     pub(crate) files: Vec<String>,
 
     /// Force input format (xml, html, or json). If omitted, it is auto-detected
@@ -145,13 +145,22 @@ pub(crate) struct Cli {
     #[arg(long, value_delimiter = ',')]
     pub(crate) hide_ns: Vec<String>,
 
-    /// Render only the subtrees whose element name matches this tag
+    /// Render only the elements selected by this XPath-like pattern
     ///
-    /// Renders only matching subtrees instead of the whole document. Matching
-    /// is by tag name only (no paths or predicates): a bare name like
-    /// `InvoiceLine` matches on the local name so it ignores namespace
-    /// prefixes, while a prefixed name like `cac:InvoiceLine` matches the
-    /// full name. Each matched subtree is rendered as a top-level fragment.
+    /// A small XPath subset: `/a/b` (from the root), `a/b` or `//a`
+    /// (anywhere), `a//b`, `*`, `..` (parent), `.`, and attribute tests
+    /// `[@attr]` / `[@attr="value"]` (either quote style, chainable), e.g.
+    /// `item[@id="2"]`, `order[@status='open']/line`, `qty[@unit="kg"]/..`.
+    /// Unlike XPath, a relative pattern matches anywhere (`item` = `//item`),
+    /// and a bare name like `InvoiceLine` matches the local name, ignoring
+    /// namespace prefixes, while `cac:InvoiceLine` matches the full name
+    /// (attribute names likewise). No other axes, positions or functions.
+    /// Each selected element is rendered as a top-level fragment; one inside
+    /// another selected element is shown only as part of it. Documents with
+    /// no match produce no output, not even a `// FILE:` header, so this
+    /// doubles as a search over many files or `--zip` archives. XML files
+    /// are text-scanned for the pattern's names before parsing, and skipped
+    /// when one is missing.
     #[arg(long)]
     pub(crate) select: Option<String>,
 
@@ -219,6 +228,21 @@ pub(crate) struct Cli {
     /// --xslt/--xsd/--wsdl/--schematron/--msbuild/--special and --paths modes.
     #[arg(long, require_equals = true, value_delimiter = ',', num_args = 0..)]
     pub(crate) collapse: Option<Vec<String>>,
+
+    /// Also process every XML/HTML entry inside these zip archives
+    ///
+    /// Repeatable, and glob patterns are supported (`--zip 'dumps/*.zip'`).
+    /// Any zip container works (`.zip`, `.jar`, `.docx`, ...). Entries whose
+    /// content doesn't start with `<` are skipped. Each entry is shown as
+    /// `archive.zip!/path/in/archive.xml`, and its mode is picked from that
+    /// inner name under --auto. Archives are processed after plain files.
+    ///
+    /// That `archive.zip!/entry` form also works as a plain file argument
+    /// (or here) to read just those entries — paste a `// FILE:` name from a
+    /// search to dump the whole document. The entry part may be a glob,
+    /// e.g. `'bundle.zip!/orders/*.xml'`.
+    #[arg(long, value_name = "ARCHIVE")]
+    pub(crate) zip: Vec<String>,
 
     /// Read input from stdin (assumes XML format)
     #[arg(long)]

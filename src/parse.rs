@@ -57,10 +57,15 @@ pub(crate) fn expand_file_args(patterns: &[String]) -> Result<Vec<String>> {
 /// matching Unicode code point, so this never fails).
 pub(crate) fn read_file_lenient(file_path: &str) -> Result<String> {
     let bytes = fs::read(file_path).with_context(|| format!("Failed to read file: {file_path}"))?;
-    Ok(match String::from_utf8(bytes) {
+    Ok(decode_lenient(bytes))
+}
+
+/// Decode bytes as UTF-8, falling back to Latin-1 (see `read_file_lenient`).
+pub(crate) fn decode_lenient(bytes: Vec<u8>) -> String {
+    match String::from_utf8(bytes) {
         Ok(text) => text,
         Err(e) => e.into_bytes().into_iter().map(|b| b as char).collect(),
-    })
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -80,16 +85,24 @@ impl InputFormat {
     }
 }
 
+/// The format implied by a file's extension alone, if it is decisive.
+pub(crate) fn format_from_extension(file_path: &str) -> Option<InputFormat> {
+    let ext = Path::new(file_path)
+        .extension()?
+        .to_string_lossy()
+        .to_lowercase();
+    match ext.as_str() {
+        "html" | "htm" => Some(InputFormat::Html),
+        "xml" | "xsl" | "xsd" | "wsdl" => Some(InputFormat::Xml),
+        "json" => Some(InputFormat::Json),
+        _ => None,
+    }
+}
+
 pub(crate) fn detect_format(content: &str, file_path: &str) -> InputFormat {
     // Check file extension first
-    if let Some(extension) = Path::new(file_path).extension() {
-        let ext = extension.to_string_lossy().to_lowercase();
-        match ext.as_str() {
-            "html" | "htm" => return InputFormat::Html,
-            "xml" | "xsl" | "xsd" | "wsdl" => return InputFormat::Xml,
-            "json" => return InputFormat::Json,
-            _ => {}
-        }
+    if let Some(format) = format_from_extension(file_path) {
+        return format;
     }
 
     // Check content for HTML-specific indicators
@@ -294,8 +307,7 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                 // now-current (post-tag) position by this tag's raw length
                 // (`<` + `e.as_ref()` + `>`) — the same trick already used
                 // below for a comment's start offset.
-                let tag_start =
-                    (reader.buffer_position() as usize).saturating_sub(e.as_ref().len() + 2);
+                let tag_start = (reader.buffer_position() as usize).saturating_sub(e.len() + 2);
                 element.start_line = offset_to_line(&line_starts, tag_start);
 
                 // Parse attributes
@@ -367,8 +379,7 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                 // unreliable, so derive the start from the post-tag position
                 // minus this self-closing tag's raw length (`<` + `e.as_ref()`
                 // + `/>`).
-                let tag_start =
-                    (reader.buffer_position() as usize).saturating_sub(e.as_ref().len() + 3);
+                let tag_start = (reader.buffer_position() as usize).saturating_sub(e.len() + 3);
                 element.start_line = offset_to_line(&line_starts, tag_start);
 
                 // Parse attributes for empty elements
@@ -413,7 +424,7 @@ pub(crate) fn parse_xml(content: &str) -> Result<ParsedXml> {
                     // because `trim_text` drops the intervening whitespace, so
                     // `pos_before` alone would not locate the `<!--`.
                     let comment_start =
-                        (reader.buffer_position() as usize).saturating_sub(e.as_ref().len() + 7);
+                        (reader.buffer_position() as usize).saturating_sub(e.len() + 7);
                     let inline = last_sibling_end > 0
                         && content
                             .get(last_sibling_end..comment_start)
