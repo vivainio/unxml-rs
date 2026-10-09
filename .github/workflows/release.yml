@@ -97,7 +97,7 @@ jobs:
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
     - name: Create Release
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: ${{ github.ref_name }}
         name: Release ${{ github.ref_name }}
@@ -136,41 +136,10 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-wheels:
-    name: Build wheel (${{ matrix.target }})
-    strategy:
-      matrix:
-        include:
-          - target: x86_64-unknown-linux-gnu
-            os: ubuntu-latest
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-          - target: x86_64-apple-darwin
-            os: macos-latest
-          - target: aarch64-apple-darwin
-            os: macos-latest
-    runs-on: ${{ matrix.os }}
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set version from tag
-      shell: bash
-      run: |
-        cargo install cargo-edit --locked
-        cargo set-version "${GITHUB_REF#refs/tags/v}"
-
-    - name: Build wheel
-      uses: PyO3/maturin-action@v1
-      with:
-        target: ${{ matrix.target }}
-        args: --release --out dist
-        manylinux: auto
-
-    - name: Upload wheel artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: wheels-${{ matrix.target }}
-        path: dist/
+    name: Build wheels
+    permissions:
+      contents: read
+    uses: vivainio/actions/.github/workflows/maturin-wheels.yml@51443b0c31ab8be7e8f3fc5787bf473a177cc935
 
   publish-pypi:
     name: Publish to PyPI
@@ -179,15 +148,7 @@ jobs:
     environment: pypi
     permissions:
       id-token: write  # OIDC token for PyPI Trusted Publishing
+      actions: read  # Download wheel artifacts
     steps:
-    - name: Download all wheels
-      uses: actions/download-artifact@v4
-      with:
-        path: dist
-        pattern: wheels-*
-        merge-multiple: true
-
-    - name: Publish to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        packages-dir: dist/ 
+    - name: Publish wheels
+      uses: vivainio/actions/publish-pypi-artifacts@51443b0c31ab8be7e8f3fc5787bf473a177cc935
